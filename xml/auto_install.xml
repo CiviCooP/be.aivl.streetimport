@@ -7,7 +7,7 @@
       <title>Specifieke gegevens straatwerving</title>
       <extends>Activity</extends>
       <extends_entity_column_value_option_group>activity_type</extends_entity_column_value_option_group>
-      <extends_entity_column_value>Straatwerving</extends_entity_column_value>
+      <extends_entity_column_value>street_recruitment</extends_entity_column_value>
       <style>Inline</style>
       <collapse_display>0</collapse_display>
       <help_pre></help_pre>
@@ -25,7 +25,7 @@
       <title>Specifieke gegevens welkomstgesprek</title>
       <extends>Activity</extends>
       <extends_entity_column_value_option_group>activity_type</extends_entity_column_value_option_group>
-      <extends_entity_column_value>Welkomstgesprek</extends_entity_column_value>
+      <extends_entity_column_value>welcome_call</extends_entity_column_value>
       <style>Inline</style>
       <collapse_display>0</collapse_display>
       <help_pre></help_pre>
