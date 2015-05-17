@@ -1,0 +1,22 @@
+{
+  "supplier":{
+    "name":"supplier",
+    "title":"Extra gegevens leverancier",
+    "extends":"Organization",
+    "extends_entity_column_value":"supplier",
+    "style":"Tab",
+    "table_name":"civicrm_value_supplier",
+    "is_reserved":1,
+    "collapse_display":0,
+    "is_active":1,
+    "fields":{
+      "testfield":{
+        "name":"testfield",
+        "label":"test veld",
+        "data_type":"String",
+        "html_type":"Text",
+        "is_active":1
+      }
+    }
+  }
+}

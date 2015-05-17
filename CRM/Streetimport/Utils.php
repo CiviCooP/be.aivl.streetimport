@@ -10,10 +10,47 @@
 class CRM_Streetimport_Utils {
 
   /**
+   * Method to get custom field with name and custom_group_id
+   *
+   * @param string $customFieldName
+   * @param int $customGroupId
+   * @return array|bool
+   * @access public
+   * @static
+   */
+  public static function getCustomFieldWithNameCustomGroupId($customFieldName, $customGroupId) {
+    try {
+      $customField = civicrm_api3('CustomField', 'Getsingle', array('name' => $customFieldName, 'custom_group_id' => $customGroupId));
+      return $customField;
+    } catch (CiviCRM_API3_Exception $ex) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Method to get custom group with name
+   *
+   * @param string $customGroupName
+   * @return array|bool
+   * @access public
+   * @static
+   */
+  public static function getCustomGroupWithName($customGroupName) {
+    try {
+      $customGroup = civicrm_api3('CustomGroup', 'Getsingle', array('name' => $customGroupName));
+      return $customGroup;
+    } catch (CiviCRM_API3_Exception $ex) {
+      return FALSE;
+    }
+  }
+
+  /**
    * Function to get activity type with name
    *
    * @param string $activityTypeName
    * @return array|bool
+   * @access public
+   * @static
    */
   public static function getActivityTypeWithName($activityTypeName) {
     $activityTypeOptionGroupId = self::getActivityTypeOptionGroupId();
@@ -33,6 +70,8 @@ class CRM_Streetimport_Utils {
    *
    * @param string $contactSubTypeName
    * @return array|bool
+   * @access public
+   * @static
    */
   public static function getContactSubTypeWithName($contactSubTypeName) {
     try {
@@ -48,6 +87,8 @@ class CRM_Streetimport_Utils {
    *
    * @param string $nameAB
    * @return array|bool
+   * @access public
+   * @static
    */
   public static function getRelationshipTypeWithName($nameAB) {
     try {
@@ -86,6 +127,8 @@ class CRM_Streetimport_Utils {
    * @return array
    * @throws Exception when params invalid
    * @throws Exception when error from API create
+   * @access public
+   * @static
    */
   public static function createActivityType($params) {
     $activityTypeData = array();
@@ -119,6 +162,8 @@ class CRM_Streetimport_Utils {
    * @return array
    * @throws Exception when params['name'] is empty or not there
    * @throws Exception when error from API ContactType Create
+   * @access public
+   * @static
    */
   public static function createContactSubType($params) {
     $contactSubType = array();
@@ -146,6 +191,8 @@ class CRM_Streetimport_Utils {
    * @return array
    * @throws Exception when params invalid
    * @throws Exception when error from API ContactType Create
+   * @access public
+   * @static
    */
   public static function createRelationshipType($params) {
     $relationshipType = array();
@@ -167,6 +214,64 @@ class CRM_Streetimport_Utils {
       }
     }
     return $relationshipType['values'][$relationshipType['id']];
+  }
+
+  /**
+   * Method to create custom group
+   *
+   * @param $params
+   * @return array
+   * @throws Exception when params invalid
+   * @throws Exception when error from API CustomGroup Create
+   * @access public
+   * @static
+   */
+  public static function createCustomGroup($params) {
+    $customGroup = array();
+    if (!isset($params['name']) || empty($params['name']) || !isset($params['extends']) || empty($params['extends'])) {
+      throw new Exception('When trying to create a Custom Group name and extends are mandatory parameters and can not be empty');
+    }
+    if (!isset($params['title']) || empty($params['title'])) {
+      $params['title'] = self::buildLabelFromName($params['name']);
+    }
+    if (self::getCustomGroupWithName($params['name']) == FALSE) {
+      try {
+        $customGroup = civicrm_api3('CustomGroup', 'Create', $params);
+      } catch (CiviCRM_API3_Exception $ex) {
+        throw new Exception('Could not create custom group with name '.$params['name']
+          .' to extends '.$params['extends'].', error from API CustomGroup Create: '.$ex->getMessage());
+      }
+    }
+    return $customGroup['values'][$customGroup['id']];
+  }
+
+  /**
+   * Method to create custom field
+   *
+   * @param $params
+   * @return array
+   * @throws Exception when params invalid
+   * @throws Exception when error from API CustomField Create
+   * @access public
+   * @static
+   */
+  public static function createCustomField($params) {
+    $customField = array();
+    if (!isset($params['name']) || empty($params['name']) || !isset($params['custom_group_id']) || empty($params['custom_group_id'])) {
+      throw new Exception('When trying to create a Custom Field name and custom_group_id are mandatory parameters and can not be empty');
+    }
+    if (!isset($params['label']) || empty($params['label'])) {
+      $params['label'] = self::buildLabelFromName($params['name'], $params['custom_group_id']);
+    }
+    if (self::getCustomFieldWithNameCustomGroupId($params['name']) == FALSE) {
+      try {
+        $customField = civicrm_api3('CustomField', 'Create', $params);
+      } catch (CiviCRM_API3_Exception $ex) {
+        throw new Exception('Could not create custom field with name '.$params['name']
+          .' in custom group '.$params['custom_group_id'].', error from API CustomField Create: '.$ex->getMessage());
+      }
+    }
+    return $customField['values'][$customField['id']];
   }
 
   /**
