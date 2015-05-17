@@ -13,7 +13,7 @@ class CRM_Streetimport_Utils {
    * Function to get activity type with name
    *
    * @param string $activityTypeName
-   * @return array
+   * @return array|bool
    */
   public static function getActivityTypeWithName($activityTypeName) {
     $activityTypeOptionGroupId = self::getActivityTypeOptionGroupId();
@@ -24,7 +24,37 @@ class CRM_Streetimport_Utils {
       $activityType = civicrm_api3('OptionValue', 'Getsingle', $params);
       return $activityType;
     } catch (CiviCRM_API3_Exception $ex) {
-      return array();
+      return FALSE;
+    }
+  }
+
+  /**
+   * Function to get contact sub type with name
+   *
+   * @param string $contactSubTypeName
+   * @return array|bool
+   */
+  public static function getContactSubTypeWithName($contactSubTypeName) {
+    try {
+      $contactSubType = civicrm_api3('ContactType', 'Getsingle', array('name' => $contactSubTypeName));
+      return $contactSubType;
+    } catch (CiviCRM_API3_Exception $ex) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Function to get relationship type with name_a_b
+   *
+   * @param string $nameAB
+   * @return array|bool
+   */
+  public static function getRelationshipTypeWithName($nameAB) {
+    try {
+      $relationshipType = civicrm_api3('RelationshipType', 'Getsingle', array('name_a_b' => $nameAB));
+      return $relationshipType;
+    } catch (CiviCRM_API3_Exception $ex) {
+      return FALSE;
     }
   }
 
@@ -58,6 +88,7 @@ class CRM_Streetimport_Utils {
    * @throws Exception when error from API create
    */
   public static function createActivityType($params) {
+    $activityTypeData = array();
     $params['option_group_id'] = self::getActivityTypeOptionGroupId();
     if (!isset($params['name']) || empty($params['name'])) {
       throw new Exception('When trying to create an Activity Type name is a mandatory parameter and can not be empty');
@@ -69,13 +100,73 @@ class CRM_Streetimport_Utils {
     if (!isset($params['is_active'])) {
       $params['is_active'] = 1;
     }
-    try {
-      $activityType = civicrm_api3('OptionValue', 'Create', $params);
-      return $activityType['values'];
-    } catch (CiviCRM_API3_Exception $ex) {
-      throw new Exception('Could not create activity type with name '.$params['name']
-        .', error from API OptionValue Create: '.$ex->getMessage());
+    if (self::getActivityTypeWithName($params['name']) == FALSE) {
+      try {
+        $activityType = civicrm_api3('OptionValue', 'Create', $params);
+        $activityTypeData = $activityType['values'][$activityType['id']];
+      } catch (CiviCRM_API3_Exception $ex) {
+        throw new Exception('Could not create activity type with name ' . $params['name']
+          . ', error from API OptionValue Create: ' . $ex->getMessage());
+      }
     }
+    return $activityTypeData;
+  }
+
+  /**
+   * Method to create contact sub type
+   *
+   * @param $params
+   * @return array
+   * @throws Exception when params['name'] is empty or not there
+   * @throws Exception when error from API ContactType Create
+   */
+  public static function createContactSubType($params) {
+    $contactSubType = array();
+    if (!isset($params['name']) || empty($params['name'])) {
+      throw new Exception('When trying to create a Contact Sub Type name is a mandatory parameter and can not be empty');
+    }
+    if (!isset($params['label']) || empty($params['label'])) {
+      $params['label'] = self::buildLabelFromName($params['name']);
+    }
+    if (self::getContactSubTypeWithName($params['name']) == FALSE) {
+      try {
+        $contactSubType = civicrm_api3('ContactType', 'Create', $params);
+      } catch (CiviCRM_API3_Exception $ex) {
+        throw new Exception('Could not create contact sub type with name '.$params['name']
+          .', error from API ContactType Create: '.$ex->getMessage());
+      }
+    }
+    return $contactSubType['values'][$contactSubType['id']];
+  }
+
+  /**
+   * Method to create relationship type
+   *
+   * @param $params
+   * @return array
+   * @throws Exception when params invalid
+   * @throws Exception when error from API ContactType Create
+   */
+  public static function createRelationshipType($params) {
+    $relationshipType = array();
+    if (!isset($params['name_a_b']) || empty($params['name_a_b']) || !isset($params['name_b_a']) || empty($params['name_b_a'])) {
+      throw new Exception('When trying to create a Relationship Type name_a_b and name_b_a are mandatory parameter and can not be empty');
+    }
+    if (!isset($params['label_a_b']) || empty($params['label_a_b'])) {
+      $params['label_a_b'] = self::buildLabelFromName($params['name_a_b']);
+    }
+    if (!isset($params['label_b_a']) || empty($params['label_b_a'])) {
+      $params['label_b_a'] = self::buildLabelFromName($params['name_b_a']);
+    }
+    if (self::getRelationshipTypeWithName($params['name_a_b']) == FALSE) {
+      try {
+        $relationshipType = civicrm_api3('RelationshipType', 'Create', $params);
+      } catch (CiviCRM_API3_Exception $ex) {
+        throw new Exception('Could not create relationship type with name '.$params['name_a_b']
+          .', error from API RelationshipType Create: '.$ex->getMessage());
+      }
+    }
+    return $relationshipType['values'][$relationshipType['id']];
   }
 
   /**

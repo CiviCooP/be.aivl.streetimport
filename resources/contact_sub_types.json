@@ -1,0 +1,14 @@
+{
+  "supplier":
+    {
+      "name": "supplier",
+      "label":"Leverancier",
+      "parent_id":3
+    },
+  "recruiter":
+    {
+      "name": "recruiter",
+      "label":"Werver",
+      "parent_id":1
+    }
+}
