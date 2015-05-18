@@ -122,18 +122,43 @@ _streetimport_civix_civicrm_angularModules($angularModules);
 function streetimport_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _streetimport_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
-
 /**
- * Functions below this ship commented out. Uncomment as required.
+ * Implements hook_civicrm_navigationMenu
  *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
+ */
+function streetimport_civicrm_navigationMenu(&$params) {
 
-/**
- * Implements hook_civicrm_preProcess().
- *
- * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_preProcess
- *
-function streetimport_civicrm_preProcess($formName, &$form) {
-
+  //add menu entry for Import settings to Administer>CiviContribute menu
+  $importSettingsUrl = 'civicrm/admin/setting/aivl_import_settings';
+  // now, by default we want to add it to the CiviContribute Administer menu -> find it
+  $administerMenuId = 0;
+  $administerCiviContributeMenuId = 0;
+  foreach ($params as $key => $value) {
+    if ($value['attributes']['name'] == 'Administer') {
+      $administerMenuId = $key;
+      foreach ($params[$administerMenuId]['child'] as $childKey => $childValue) {
+        if ($childValue['attributes']['name'] == 'CiviContribute') {
+          $administerCiviContributeMenuId = $childKey;
+          break;
+        }
+      }
+      break;
+    }
+  }
+  if (empty($administerMenuId)) {
+    error_log('be.aivl.streetimport: Cannot find parent menu Administer/CiviContribute for '.$importSettingsUrl);
+  } else {
+    $importSettingsMenu = array (
+      'label' => ts('AIVL Import Settings',array('domain' => 'be.aivl.streetimport')),
+      'name' => 'AIVL Import Settings',
+      'url' => $importSettingsUrl,
+      'permission' => 'administer CiviCRM',
+      'operator' => NULL,
+      'parentID' => $administerCiviContributeMenuId,
+      'navID' => CRM_Streetimport_Utils::createUniqueNavID($params[$administerMenuId]['child']),
+      'active' => 1
+    );
+    CRM_Streetimport_Utils::addNavigationMenuEntry($params[$administerMenuId]['child'][$administerCiviContributeMenuId], $importSettingsMenu);
+  }
 }
-
-*/

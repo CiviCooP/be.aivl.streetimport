@@ -9,8 +9,10 @@
 class CRM_Streetimport_Config {
 
   private static $_singleton;
-  private $resourcesPath = null;
 
+  protected $resourcesPath = null;
+  protected $aivlLegalName = null;
+  protected $importSettings = array();
   protected $recruiterContactSubType = array();
   protected $supplierContactSubType = array();
   protected $recruiterRelationshipType = array();
@@ -29,11 +31,33 @@ class CRM_Streetimport_Config {
   function __construct() {
     $settings = civicrm_api3('Setting', 'Getsingle', array());
     $this->resourcesPath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
+    $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
 
     $this->setContactSubTypes();
     $this->setRelationshipTypes();
     $this->setActivityTypes();
     $this->setCustomData();
+    $this->setImportSettings();
+  }
+
+  /**
+   * Method to retrieve import settings
+   *
+   * @return array
+   * @access public
+   */
+  public function getImportSettings() {
+    return $this->importSettings;
+  }
+
+  /**
+   * Method to retrieve legal name AIVL
+   *
+   * @return string
+   * @access public
+   */
+  public function getAivlLegalName() {
+    return $this->aivlLegalName;
   }
 
   /**
@@ -125,6 +149,22 @@ class CRM_Streetimport_Config {
       self::$_singleton = new CRM_Streetimport_Config();
     }
     return self::$_singleton;
+  }
+
+  public function saveImportSettings($params) {
+    foreach ($params as $key => $value) {
+      if (isset($this->importSettings[$key])) {
+        $this->importSettings[$key]['contact_id'] = $value;
+      }
+    }
+    $fileName = $this->resourcesPath.'import_settings.json';
+    try {
+      $fh = fopen($fileName, 'w');
+    } catch (Exception $ex) {
+      throw new Exception('Could not open import_settings.json, contact your system administrator. Error reported: '.$ex->getMessage());
+    }
+    fwrite($fh, json_encode($this->importSettings,JSON_PRETTY_PRINT));
+    fclose($fh);
   }
 
   /**
@@ -271,5 +311,20 @@ class CRM_Streetimport_Config {
       }
     }
     return $customFieldParams;
+  }
+
+  /**
+   * Method to set the Import Settings property
+   *
+   * @throws Exception when file not found
+   * @access protected
+   */
+  protected function setImportSettings() {
+    $jsonFile = $this->resourcesPath.'import_settings.json';
+    if (!file_exists($jsonFile)) {
+      throw new Exception('Could not load import_settings configuration file for extension, contact your system administrator!');
+    }
+    $importSettingsJson = file_get_contents($jsonFile);
+    $this->importSettings = json_decode($importSettingsJson, true);
   }
 }
