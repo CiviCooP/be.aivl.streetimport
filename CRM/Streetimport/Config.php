@@ -7,6 +7,7 @@
  * @license AGPL-3.0
  */
 class CRM_Streetimport_Config {
+
   private static $_singleton;
   private $resourcesPath = null;
 
@@ -17,6 +18,10 @@ class CRM_Streetimport_Config {
   protected $welcomeCallActivityType = array();
   protected $followUpCallActivityType= array();
   protected $importErrorActivityType = array();
+  protected $streetRecruitmentCustomGroup = array();
+  protected $streetRecruitmentCustomFields = array();
+  protected $welcomeCallCustomGroup = array();
+  protected $welcomeCallCustomFields = array();
 
   /**
    * Constructor method
@@ -28,6 +33,7 @@ class CRM_Streetimport_Config {
     $this->setContactSubTypes();
     $this->setRelationshipTypes();
     $this->setActivityTypes();
+    $this->setCustomData();
   }
 
   /**
@@ -75,7 +81,7 @@ class CRM_Streetimport_Config {
   }
 
   /**
-   * Method to retrieve recruiter relatioinship type data
+   * Method to retrieve recruiter relationship type data
    *
    * @param string $key
    * @return mixed
@@ -84,7 +90,6 @@ class CRM_Streetimport_Config {
   public function getRecruiterRelationshipType($key= 'id' ) {
     return $this->recruiterRelationshipType[$key];
   }
-
 
   /**
    * Method to retrieve supplier contact sub type data
@@ -130,7 +135,8 @@ class CRM_Streetimport_Config {
   protected function setActivityTypes() {
     $jsonFile = $this->resourcesPath.'activity_types.json';
     if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load activity types configuration file for extension, contact your system administrator!');
+      throw new Exception('Could not load activity types configuration file for extension,
+      contact your system administrator!');
     }
     $activityTypesJson = file_get_contents($jsonFile);
     $activityTypes = json_decode($activityTypesJson, true);
@@ -157,7 +163,8 @@ class CRM_Streetimport_Config {
   protected function setRelationshipTypes() {
     $jsonFile = $this->resourcesPath.'relationship_types.json';
     if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load relationship types configuration file for extension, contact your system administrator!');
+      throw new Exception('Could not load relationship types configuration file for extension,
+      contact your system administrator!');
     }
     $relationshipTypesJson = file_get_contents($jsonFile);
     $relationshipTypes = json_decode($relationshipTypesJson, true);
@@ -176,20 +183,93 @@ class CRM_Streetimport_Config {
    *
    * @throws Exception when resource file could not be loaded
    */
-  protected function setContactSubTypes() {
-    $jsonFile = $this->resourcesPath.'contact_sub_types.json';
+  protected function setContactSubTypes()
+  {
+    $jsonFile = $this->resourcesPath . 'contact_sub_types.json';
     if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load contact sub types configuration file for extension, contact your system administrator!');
+      throw new Exception('Could not load contact sub types configuration file for extension,
+      contact your system administrator!');
     }
     $contactTypesJson = file_get_contents($jsonFile);
     $contactSubTypes = json_decode($contactTypesJson, true);
     foreach ($contactSubTypes as $params) {
-      $propertyName = $params['name'].'ContactSubType';
+      $propertyName = $params['name'] . 'ContactSubType';
       $contactSubType = CRM_Streetimport_Utils::getContactSubTypeWithName($params['name']);
       if (!$contactSubType) {
         $contactSubType = CRM_Streetimport_Utils::createContactSubType($params);
       }
       $this->$propertyName = $contactSubType;
     }
+  }
+
+  protected function setCustomData() {
+    $jsonFile = $this->resourcesPath.'custom_data.json';
+    if (!file_exists($jsonFile)) {
+      throw new Exception('Could not load custom data configuration file for extension, contact your system administrator!');
+    }
+    $customDataJson = file_get_contents($jsonFile);
+    $customData = json_decode($customDataJson, true);
+    foreach ($customData as $customGroupName => $customGroupData) {
+      $propertyCustomGroup = $customGroupName.'CustomGroup';
+      $customGroup = CRM_Streetimport_Utils::getCustomGroupWithName($customGroupName);
+      if (!$customGroup) {
+        $customGroupParams = $this->buildCustomGroupParams($customGroupData);
+        $customGroup = CRM_Streetimport_Utils::createCustomGroup($customGroupParams);
+      }
+      $this->$propertyCustomGroup = $customGroup;
+      $propertyCustomFields = $customGroupName.'CustomFields';
+      $createdCustomFields = array();
+      foreach ($customGroupData['fields'] as $customFieldName => $customFieldData) {
+        $customField = CRM_Streetimport_Utils::getCustomFieldWithNameCustomGroupId($customFieldName, $customGroup['id']);
+        if (!$customField) {
+          $customFieldData['custom_group_id'] = $customGroup['id'];
+          $customFieldParams = $customFieldData;
+          $customField = CRM_Streetimport_Utils::createCustomField($customFieldParams);
+        }
+        $customFieldId = $customField['id'];
+        $createdCustomFields[$customFieldId] = $customField;
+      }
+      $this->$propertyCustomFields = $createdCustomFields;
+    }
+  }
+
+  /**
+   * Method to build param list for custom group creation
+   *
+   * @param array $customGroupData
+   * @return array $customGroupParams
+   * @access protected
+   */
+  protected function buildCustomGroupParams($customGroupData) {
+    $customGroupParams = array();
+    foreach ($customGroupData as $name => $value) {
+      if ($name != 'fields') {
+        $customGroupParams[$name] = $value;
+      }
+    }
+    if ($customGroupParams['extends'] == 'Activity') {
+      $extendsActivity = CRM_Streetimport_Utils::getActivityTypeWithName($customGroupData['extends_entity_column_value']);
+      $customGroupParams['extends_entity_column_value'] = CRM_Core_DAO::VALUE_SEPARATOR.$extendsActivity['value'];
+    }
+    return $customGroupParams;
+  }
+
+  /**
+   * Method to build param list for custom field creation
+   *
+   * @param array $customFieldData
+   * @return array $customFieldParams
+   * @access protected
+   */
+  protected function buildCustomFieldParams($customFieldData) {
+    $customFieldParams = array();
+    foreach ($customFieldData as $name => $value) {
+      if ($name == "option_group") {
+        $customFieldParams['option_group_id'] = CRM_Streetimport_Utils::getOptionGroupIdWithName($value);
+      } else {
+        $customFieldParams[$name] = $value;
+      }
+    }
+    return $customFieldParams;
   }
 }

@@ -53,7 +53,7 @@ class CRM_Streetimport_Utils {
    * @static
    */
   public static function getActivityTypeWithName($activityTypeName) {
-    $activityTypeOptionGroupId = self::getActivityTypeOptionGroupId();
+    $activityTypeOptionGroupId = self::getOptionGroupIdWithName('activity_type');
     $params = array(
       'option_group_id' => $activityTypeOptionGroupId,
       'name' => $activityTypeName);
@@ -100,22 +100,23 @@ class CRM_Streetimport_Utils {
   }
 
   /**
-   * Function to get the option group id of activity type
+   * Function to get the option group id
    *
-   * @return int $activityTypeOptionGroupId
+   * @param string $optionGroupName
+   * @return int $optionGroupId
    * @throws Exception when option group not found
    * @access public
    * @static
    */
-  public static function getActivityTypeOptionGroupId() {
+  public static function getOptionGroupIdWithName($optionGroupName) {
     $params = array(
-      'name' => 'activity_type',
+      'name' => $optionGroupName,
       'return' => 'id');
     try {
-      $activityTypeOptionGroupId = civicrm_api3('OptionGroup', 'Getvalue', $params);
-      return $activityTypeOptionGroupId;
+      $optionGroupId = civicrm_api3('OptionGroup', 'Getvalue', $params);
+      return $optionGroupId;
     } catch (CiviCRM_API3_Exception $ex) {
-      throw new Exception('Could not find a valid option group for name activity_type, error from
+      throw new Exception('Could not find a valid option group for name '.$optionGroupName.', error from
         API OptionGroup Getvalue: ' . $ex->getMessage());
     }
   }
@@ -132,7 +133,7 @@ class CRM_Streetimport_Utils {
    */
   public static function createActivityType($params) {
     $activityTypeData = array();
-    $params['option_group_id'] = self::getActivityTypeOptionGroupId();
+    $params['option_group_id'] = self::getOptionGroupIdWithName('activity_type');
     if (!isset($params['name']) || empty($params['name'])) {
       throw new Exception('When trying to create an Activity Type name is a mandatory parameter and can not be empty');
     }
@@ -263,7 +264,7 @@ class CRM_Streetimport_Utils {
     if (!isset($params['label']) || empty($params['label'])) {
       $params['label'] = self::buildLabelFromName($params['name'], $params['custom_group_id']);
     }
-    if (self::getCustomFieldWithNameCustomGroupId($params['name']) == FALSE) {
+    if (self::getCustomFieldWithNameCustomGroupId($params['name'], $params['custom_group_id']) == FALSE) {
       try {
         $customField = civicrm_api3('CustomField', 'Create', $params);
       } catch (CiviCRM_API3_Exception $ex) {
