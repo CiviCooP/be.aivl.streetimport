@@ -11,24 +11,28 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
   protected $default_encoding  = 'UTF8';
   
   /** this will hold the open file */
-  protected $reader = NULL;
+  protected $reader  = NULL;
 
   /** this will hold the open file */
-  protected $header = NULL;
+  protected $header  = NULL;
 
   /** this will hold the record to be delivered next */
-  protected $next   = NULL;
+  protected $next    = NULL;
+  protected $line_nr = 0;
 
   /**
    * Will reset the status of the data source
    */
   public function reset() {
     // try loading the given file
-    $this->reader = fopen($this->uri, 'r');
+    $this->reader  = fopen($this->uri, 'r');
+    $this->header  = NULL;
+    $this->next    = NULL;
+    $this->line_nr = 0;
 
     if (empty($this->reader)) {
       // TODO: error handling
-      error_log("FILE NOT FOUND");
+      $this->result->logFatal("Unable to read file '{$this->uri}'.");
       $this->reader = NULL;
       return;
     }
@@ -37,7 +41,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     $this->header = fgetcsv($this->reader, 0, $this->default_delimiter);
     if ($this->header == NULL) {
       // TODO: error handling
-      error_log("NO HEADER FOUND");
+      $this->result->logFatal("File '{$this->uri}' does not contain headers.");
       $this->reader = NULL;
       return;
     }
@@ -81,6 +85,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
 
     // read next data blob
     $this->next = NULL;
+    $this->line_nr += 1;
     $data = fgetcsv($this->reader, 0, $this->default_delimiter);
     if ($data == NULL) {
       // there is no more records => reset
@@ -95,6 +100,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
         }
       }
       $this->next = $this->applyMapping($record);
+      $this->next['__id'] = $this->line_nr;
     }
   }
 }

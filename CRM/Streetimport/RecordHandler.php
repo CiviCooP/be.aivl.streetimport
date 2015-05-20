@@ -7,9 +7,15 @@
  */
 abstract class CRM_Streetimport_RecordHandler {
 
+  /**
+   * stores the result/logging object
+   */ 
+  protected $result = NULL;
+
   static $_default_handers = NULL;
 
-  public function __construct() {
+  public function __construct($result) {
+    $this->result = $result;
   }
 
   /** 
@@ -34,11 +40,11 @@ abstract class CRM_Streetimport_RecordHandler {
    *
    * @return an array of handler instances
    */
-  public static function getDefaultHandlers() {
+  public static function getDefaultHandlers($result) {
     if (self::$_default_handers==NULL) {
       self::$_default_handers = array(
-        new CRM_Streetimport_StreetRecruitmentRecordHandler(),
-        new CRM_Streetimport_WelcomeCallRecordHandler(),
+        new CRM_Streetimport_StreetRecruitmentRecordHandler($result),
+        new CRM_Streetimport_WelcomeCallRecordHandler($result),
       );
     }
     return self::$_default_handers;
@@ -53,12 +59,14 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   public static function processDataSource($dataSource, $handlers = NULL) {
     if ($handlers==NULL) {
-      $handlers = CRM_Streetimport_RecordHandler::getDefaultHandlers();
+      $handlers = CRM_Streetimport_RecordHandler::getDefaultHandlers($dataSource->result);
     }
 
     $dataSource->reset();
+    $counter = 0;
     while ($dataSource->hasNext()) {
       $record = $dataSource->next();
+      $counter += 1;
       $record_processed = FALSE;
       foreach ($handlers as $handler) {
         if ($handler->canProcessRecord($record)) {
@@ -72,7 +80,7 @@ abstract class CRM_Streetimport_RecordHandler {
 
       if (!$record_processed) {
         // no handlers found. 
-        // TODO: what to do? => error handling
+        $this->result->logImport('#' . ($counter + 1), false, '', 'No handers found.');
       }
     }
   }

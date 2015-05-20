@@ -8,6 +8,11 @@
 abstract class CRM_Streetimport_DataSource {
 
   /**
+   * stores the result/logging object
+   */ 
+  public $result = NULL;
+
+  /**
    * this array holds an array,
    *  mapping the source's attributes to the internally understood ones
    */
@@ -18,7 +23,8 @@ abstract class CRM_Streetimport_DataSource {
    */
   protected $uri = NULL;
 
-  public function __construct($uri, $mapping=NULL) {
+  public function __construct($uri, $result, $mapping=NULL) {
+    $this->result = $result;
     $this->uri = $uri;
     if ($mapping==NULL) {
       // load default mapping

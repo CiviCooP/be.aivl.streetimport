@@ -15,9 +15,10 @@
  * @access public
  */
 function civicrm_api3_streetimport_importcsvfile($params) {
-  $dataSource = new CRM_Streetimport_FileCsvDataSource($params['filepath']);
+  $result = new CRM_Streetimport_ImportResult();
+  $dataSource = new CRM_Streetimport_FileCsvDataSource($params['filepath'], $result);
   CRM_Streetimport_RecordHandler::processDataSource($dataSource);
-  return civicrm_api3_create_success();
+  return $result->toAPIResult();
 }
 
 /**
