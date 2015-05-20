@@ -1,13 +1,13 @@
 <?php
 /**
- * This importer will take a file and 
+ * This importer will take a local csv file parse individual records
  *
  * @author Björn Endres (SYSTOPIA) <endres@systopia.de>
  * @license AGPL-3.0
  */
-class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_CsvDataSource {
+class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
 
-  protected $default_delimiter = ';';
+  protected $default_delimiter = ',';
   protected $default_encoding  = 'UTF8';
   
   /** this will hold the open file */
@@ -24,14 +24,26 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_CsvDataSource 
    */
   public function reset() {
     // try loading the given file
-    $this->reader = fopen($this->url, 'r');
+    $this->reader = fopen($this->uri, 'r');
+
+    if (empty($this->reader)) {
+      // TODO: error handling
+      error_log("FILE NOT FOUND");
+      $this->reader = NULL;
+      return;
+    }
 
     // read header
     $this->header = fgetcsv($this->reader, 0, $this->default_delimiter);
-    error_log(print_r($this->header, 1));
-    // foreach ($line as $item) {
-    //   array_push($decoded_line, mb_convert_encoding($item, mb_internal_encoding(), $this->default_encoding));
-    // }
+    if ($this->header == NULL) {
+      // TODO: error handling
+      error_log("NO HEADER FOUND");
+      $this->reader = NULL;
+      return;
+    }
+
+    // prepare the next record
+    $this->loadNext();
   }
 
   /**
@@ -40,7 +52,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_CsvDataSource 
    * @return true if there is more records available via next()
    */
   public function hasNext() {
-    return ($next != NULL);
+    return ($this->next != NULL);
   }
 
   /**
@@ -58,7 +70,31 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_CsvDataSource 
     }
   }
 
+  /**
+   * will load the next data record from the file
+   */
   protected function loadNext() {
+    if ($this->reader == NULL) {
+      // either not initialised or complete...
+      return NULL;
+    }
+
+    // read next data blob
     $this->next = NULL;
+    $data = fgetcsv($this->reader, 0, $this->default_delimiter);
+    if ($data == NULL) {
+      // there is no more records => reset
+      fclose($this->reader);
+      $this->reader = NULL;
+    } else {
+      // data blob read, build record
+      $record = array();
+      foreach ($this->header as $index => $key) {
+        if (isset($data[$index])) {
+          $record[$key] = $data[$index];
+        }
+      }
+      $this->next = $this->applyMapping($record);
+    }
   }
 }

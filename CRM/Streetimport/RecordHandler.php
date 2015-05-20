@@ -18,7 +18,7 @@ abstract class CRM_Streetimport_RecordHandler {
    * @param $record  an array of key=>value pairs
    * @return true or false
    */
-  protected abstract function canProcessRecord($record);
+  public abstract function canProcessRecord($record);
 
   /** 
    * process the given record
@@ -27,7 +27,7 @@ abstract class CRM_Streetimport_RecordHandler {
    * @return true
    * @throws exception if failed
    */
-  protected abstract function processRecord($record);
+  public abstract function processRecord($record);
 
   /**
    * get the default set of handlers
@@ -72,7 +72,7 @@ abstract class CRM_Streetimport_RecordHandler {
 
       if (!$record_processed) {
         // no handlers found. 
-        // TODO: what to do?
+        // TODO: what to do? => error handling
       }
     }
   }
