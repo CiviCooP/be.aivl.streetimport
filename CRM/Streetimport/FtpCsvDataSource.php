@@ -7,7 +7,4 @@
  */
 class CRM_Streetimport_FtpCsvDataSource extends CRM_Streetimport_CsvDataSource {
 
-  public function __construct() {
-  }
-
 }

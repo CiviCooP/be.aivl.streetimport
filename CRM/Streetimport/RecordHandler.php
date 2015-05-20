@@ -62,7 +62,7 @@ abstract class CRM_Streetimport_RecordHandler {
       $record_processed = FALSE;
       foreach ($handlers as $handler) {
         if ($handler->canProcessRecord($record)) {
-          $handler->processRecord($record)
+          $handler->processRecord($record);
           $record_processed = TRUE;
 
           // TODO: if we want to allow multiple processing, this needs to be commented out:
