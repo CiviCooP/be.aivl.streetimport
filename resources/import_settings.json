@@ -2,11 +2,11 @@
     "admin_id": {
         "name": "admin_id",
         "label": "Foutenafhandeling door",
-        "contact_id": "1809"
+        "value": "1809"
     },
     "fundraiser_id": {
         "name": "fundraiser_id",
         "label": "Opvolgcontact door",
-        "contact_id": "1809"
+        "value": "1809"
     }
 }

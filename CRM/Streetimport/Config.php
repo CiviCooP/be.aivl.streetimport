@@ -154,7 +154,7 @@ class CRM_Streetimport_Config {
   public function saveImportSettings($params) {
     foreach ($params as $key => $value) {
       if (isset($this->importSettings[$key])) {
-        $this->importSettings[$key]['contact_id'] = $value;
+        $this->importSettings[$key]['value'] = $value;
       }
     }
     $fileName = $this->resourcesPath.'import_settings.json';

@@ -12,7 +12,12 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
 
   protected $importSettings = array();
 
-  function buildQuickForm() {
+  /**
+   * Overridden parent method to build the form
+   *
+   * @access public
+   */
+  public function buildQuickForm() {
     $this->getImportSettings();
     $employeeList = $this->getEmployeeList();
     foreach ($this->importSettings as $settingName => $settingValues) {
@@ -45,11 +50,31 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     parent::buildQuickForm();
   }
 
-  function postProcess() {
+  /**
+   * Overridden parent method to set default values
+   * @return array
+   */
+  function setDefaultValues() {
+    $defaults = array();
+    foreach ($this->importSettings as $settingName => $settingValues) {
+      $defaults[$settingName] = $settingValues['value'];
+    }
+    return $defaults;
+  }
+
+  /**
+   * Overridden parent method to deal with processing after succesfull submit
+   *
+   * @access public
+   */
+  public function postProcess() {
     $this->saveImportSettings($this->_submitValues);
+    $userContext = CRM_Core_Session::USER_CONTEXT;
+    if (empty($userContext)) {
+      $session = CRM_Core_Session::singleton();
+      $session->pushUserContext(CRM_Utils_System::url('civicrm', '', true));
+    }
     CRM_Core_Session::setStatus(ts('AIVL Import Settings saved'), 'Saved', 'success');
-    $session = CRM_Core_Session::singleton();
-    CRM_Utils_System::redirect($session->readUserContext());
   }
 
   /**
@@ -67,7 +92,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @access public
    * @static
    */
-  static function validateImportSettings($fields) {
+  public static function validateImportSettings($fields) {
     if (!isset($fields['admin_id']) || empty($fields['admin_id'])) {
       $errors['admin_id'] = 'This field can not be empty, you have to select a contact!';
     }
@@ -86,7 +111,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    *
    * @return array (string)
    */
-  function getRenderableElementNames() {
+  public function getRenderableElementNames() {
     $elementNames = array();
     foreach ($this->_elements as $element) {
       /** @var HTML_QuickForm_Element $element */
@@ -145,6 +170,12 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $extensionConfig = CRM_Streetimport_Config::singleton();
     $this->importSettings = $extensionConfig->getImportSettings();
   }
+
+  /**
+   * Method to save the import settings
+   *
+   * @param array $formValues
+   */
   protected function saveImportSettings($formValues) {
     $saveValues = array();
     foreach ($formValues as $key => $value) {
