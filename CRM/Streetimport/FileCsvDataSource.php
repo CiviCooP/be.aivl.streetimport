@@ -28,11 +28,11 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     $this->reader  = fopen($this->uri, 'r');
     $this->header  = NULL;
     $this->next    = NULL;
-    $this->line_nr = 0;
+    $this->line_nr = 1;
 
     if (empty($this->reader)) {
       // TODO: error handling
-      $this->result->logFatal("Unable to read file '{$this->uri}'.");
+      $this->logger->logFatal("Unable to read file '{$this->uri}'.");
       $this->reader = NULL;
       return;
     }
@@ -41,7 +41,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     $this->header = fgetcsv($this->reader, 0, $this->default_delimiter);
     if ($this->header == NULL) {
       // TODO: error handling
-      $this->result->logFatal("File '{$this->uri}' does not contain headers.");
+      $this->logger->logFatal("File '{$this->uri}' does not contain headers.");
       $this->reader = NULL;
       return;
     }
@@ -100,7 +100,9 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
         }
       }
       $this->next = $this->applyMapping($record);
-      $this->next['__id'] = $this->line_nr;
+
+      // set ID if not defined by file/mapping
+      if (empty($this->next['__id'])) $this->next['__id'] = $this->line_nr;      
     }
   }
 }

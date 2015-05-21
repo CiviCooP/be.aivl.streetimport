@@ -10,7 +10,7 @@ abstract class CRM_Streetimport_DataSource {
   /**
    * stores the result/logging object
    */ 
-  public $result = NULL;
+  public $logger = NULL;
 
   /**
    * this array holds an array,
@@ -23,8 +23,8 @@ abstract class CRM_Streetimport_DataSource {
    */
   protected $uri = NULL;
 
-  public function __construct($uri, $result, $mapping=NULL) {
-    $this->result = $result;
+  public function __construct($uri, $logger, $mapping=NULL) {
+    $this->logger = $logger;
     $this->uri = $uri;
     if ($mapping==NULL) {
       // load default mapping

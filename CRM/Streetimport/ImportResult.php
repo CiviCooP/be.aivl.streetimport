@@ -92,7 +92,7 @@ class CRM_Streetimport_ImportResult {
   public function logFatal($message, $abort = false) {
     $this->logMessage($message, FATAL);
     if ($abort) {
-      throw new Exception($message, $this);
+      throw new Exception($message);
     }
   }
 
