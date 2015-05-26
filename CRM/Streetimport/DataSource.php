@@ -8,6 +8,11 @@
 abstract class CRM_Streetimport_DataSource {
 
   /**
+   * stores the result/logging object
+   */ 
+  public $logger = NULL;
+
+  /**
    * this array holds an array,
    *  mapping the source's attributes to the internally understood ones
    */
@@ -18,7 +23,8 @@ abstract class CRM_Streetimport_DataSource {
    */
   protected $uri = NULL;
 
-  public function __construct($uri, $mapping=NULL) {
+  public function __construct($uri, $logger, $mapping=NULL) {
+    $this->logger = $logger;
     $this->uri = $uri;
     if ($mapping==NULL) {
       // load default mapping
@@ -27,7 +33,6 @@ abstract class CRM_Streetimport_DataSource {
       $mappings_path = $settings['extensionsDir'].'/be.aivl.streetimport/resources/default_mapping.json';
       $mappings_contenct = file_get_contents($mappings_path);
       $mapping = json_decode($mappings_contenct, true);
-      error_log(print_r($mapping,1));
     }
     $this->mapping = $mapping;
   }
@@ -64,8 +69,8 @@ abstract class CRM_Streetimport_DataSource {
   protected function applyMapping($record, $restrict=false) {
     $new_record = array();
     foreach ($record as $key => $value) {
-      if (isset($this->mapping['key'])) {
-        $new_key = $this->mapping['key'];
+      if (isset($this->mapping[$key])) {
+        $new_key = $this->mapping[$key];
       } else {
         if ($restrict) {
           continue;

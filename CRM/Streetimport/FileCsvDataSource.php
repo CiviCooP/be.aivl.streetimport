@@ -1,37 +1,53 @@
 <?php
 /**
- * This importer will take a file and 
+ * This importer will take a local csv file parse individual records
  *
  * @author Björn Endres (SYSTOPIA) <endres@systopia.de>
  * @license AGPL-3.0
  */
-class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_CsvDataSource {
+class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
 
-  protected $default_delimiter = ';';
+  protected $default_delimiter = ',';
   protected $default_encoding  = 'UTF8';
   
   /** this will hold the open file */
-  protected $reader = NULL;
+  protected $reader  = NULL;
 
   /** this will hold the open file */
-  protected $header = NULL;
+  protected $header  = NULL;
 
   /** this will hold the record to be delivered next */
-  protected $next   = NULL;
+  protected $next    = NULL;
+  protected $line_nr = 0;
 
   /**
    * Will reset the status of the data source
    */
   public function reset() {
     // try loading the given file
-    $this->reader = fopen($this->url, 'r');
+    $this->reader  = fopen($this->uri, 'r');
+    $this->header  = NULL;
+    $this->next    = NULL;
+    $this->line_nr = 1;
+
+    if (empty($this->reader)) {
+      // TODO: error handling
+      $this->logger->logFatal("Unable to read file '{$this->uri}'.");
+      $this->reader = NULL;
+      return;
+    }
 
     // read header
     $this->header = fgetcsv($this->reader, 0, $this->default_delimiter);
-    error_log(print_r($this->header, 1));
-    // foreach ($line as $item) {
-    //   array_push($decoded_line, mb_convert_encoding($item, mb_internal_encoding(), $this->default_encoding));
-    // }
+    if ($this->header == NULL) {
+      // TODO: error handling
+      $this->logger->logFatal("File '{$this->uri}' does not contain headers.");
+      $this->reader = NULL;
+      return;
+    }
+
+    // prepare the next record
+    $this->loadNext();
   }
 
   /**
@@ -58,7 +74,35 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_CsvDataSource 
     }
   }
 
+  /**
+   * will load the next data record from the file
+   */
   protected function loadNext() {
+    if ($this->reader == NULL) {
+      // either not initialised or complete...
+      return NULL;
+    }
+
+    // read next data blob
     $this->next = NULL;
+    $this->line_nr += 1;
+    $data = fgetcsv($this->reader, 0, $this->default_delimiter);
+    if ($data == NULL) {
+      // there is no more records => reset
+      fclose($this->reader);
+      $this->reader = NULL;
+    } else {
+      // data blob read, build record
+      $record = array();
+      foreach ($this->header as $index => $key) {
+        if (isset($data[$index])) {
+          $record[$key] = $data[$index];
+        }
+      }
+      $this->next = $this->applyMapping($record);
+
+      // set ID if not defined by file/mapping
+      if (empty($this->next['__id'])) $this->next['__id'] = $this->line_nr;      
+    }
   }
 }

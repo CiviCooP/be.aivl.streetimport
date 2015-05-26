@@ -7,9 +7,18 @@
  */
 abstract class CRM_Streetimport_RecordHandler {
 
-  static $_default_handers = NULL;
+  /**
+   * stores the result/logging object
+   */ 
+  protected $logger = NULL;
 
-  public function __construct() {
+  /** for cached contact lookup **/
+  static protected $contact_cache = array();
+
+
+
+  public function __construct($logger) {
+    $this->logger = $logger;
   }
 
   /** 
@@ -18,7 +27,7 @@ abstract class CRM_Streetimport_RecordHandler {
    * @param $record  an array of key=>value pairs
    * @return true or false
    */
-  protected abstract function canProcessRecord($record);
+  public abstract function canProcessRecord($record);
 
   /** 
    * process the given record
@@ -27,21 +36,18 @@ abstract class CRM_Streetimport_RecordHandler {
    * @return true
    * @throws exception if failed
    */
-  protected abstract function processRecord($record);
+  public abstract function processRecord($record);
 
   /**
    * get the default set of handlers
    *
    * @return an array of handler instances
    */
-  public static function getDefaultHandlers() {
-    if (self::$_default_handers==NULL) {
-      self::$_default_handers = array(
-        new CRM_Streetimport_StreetRecruitmentRecordHandler(),
-        new CRM_Streetimport_WelcomeCallRecordHandler(),
-      );
-    }
-    return self::$_default_handers;
+  public static function getDefaultHandlers($logger) {
+    return array(
+      new CRM_Streetimport_StreetRecruitmentRecordHandler($logger),
+      new CRM_Streetimport_WelcomeCallRecordHandler($logger),
+    );
   }
 
   /** 
@@ -53,12 +59,14 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   public static function processDataSource($dataSource, $handlers = NULL) {
     if ($handlers==NULL) {
-      $handlers = CRM_Streetimport_RecordHandler::getDefaultHandlers();
+      $handlers = CRM_Streetimport_RecordHandler::getDefaultHandlers($dataSource->logger);
     }
 
     $dataSource->reset();
+    $counter = 0;
     while ($dataSource->hasNext()) {
       $record = $dataSource->next();
+      $counter += 1;
       $record_processed = FALSE;
       foreach ($handlers as $handler) {
         if ($handler->canProcessRecord($record)) {
@@ -72,7 +80,7 @@ abstract class CRM_Streetimport_RecordHandler {
 
       if (!$record_processed) {
         // no handlers found. 
-        // TODO: what to do?
+        $this->logger->logImport('#' . ($counter + 1), false, '', 'No handers found.');
       }
     }
   }
@@ -91,5 +99,49 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   protected function createActivity($params) {
     // TODO: implement
+    $this->logger->logError("createActivity not implemented!");
+  }
+
+  /**
+   * look up contact
+   *
+   * @param $cached  if true, the contact will be keept on cache
+   * @return array with contact entity
+   */
+  protected function getContact($contact_id, $cached = true) {
+    if (empty($record['Recruiting organization ID']) || ((int)  $record['Recruiting organization ID'])==0) {
+      $this->logger->logWarn("Invalid ID for contact lookup: '{$contact_id}'");
+      return NULL;
+    }
+
+    if ($cached && isset(self::$contact_cache[$contact_id])) {
+      return self::$contact_cache[$contact_id];
+    }
+
+    try {
+      $contact = civicrm_api3('Contact', 'getsingle', array('id' => (int) $contact_id));
+
+      if ($cached) {
+        self::$contact_cache[$contact_id] = $contact;
+      }
+
+      return $contact;
+
+    } catch (CiviCRM_API3_Exception $e) {
+      $this->logger->logWarn("Contact lookup failed: '{$contact_id}'");
+    }
+    
+    return NULL;
+  }
+
+
+  /** 
+   * Create a new contact with the give data
+   *
+   * @return array with contact entity
+   */
+  protected function createContact($contact_data, $cached = true) {
+     // TODO: implement
+    $this->logger->logError("createActivity not implemented!");   
   }
 }
