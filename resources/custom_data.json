@@ -1,4 +1,39 @@
 {
+  "ExternalDonorId":{
+    "name":"externalDonorId",
+    "title":"Externe Donor Identificatie",
+    "extends":"Contact",
+    "style":"Tab",
+    "is_multiple":1,
+    "is_active":1,
+    "is_reserved":1,
+    "collapse_dsiplay":0,
+    "table_name":"civicrm_value_external_donor_id",
+    "fields":{
+      "recruiting_organization_id":{
+        "name":"recruiting_organization_id",
+        "label":"Wervingsorganisatie",
+        "data_type":"ContactReference",
+        "html_type":"Autocomplete-Select",
+        "is_searchable":1,
+        "is_view":1,
+        "weight":-20,
+        "column_name":"recruiting_organization_id",
+        "is_active":1
+      },
+      "external_donor_id":{
+        "name":"external_donor_id",
+        "label":"Extern Donor ID",
+        "data_type":"String",
+        "html_type":"Text",
+        "is_searchable":1,
+        "is_view":1,
+        "weight":-10,
+        "column_name":"external_donor_id",
+        "is_active":1
+      }
+    }
+  },
   "streetRecruitment":{
     "name":"streetRecruitment",
     "title":"Specifieke gegevens straatwerving",
