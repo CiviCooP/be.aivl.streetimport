@@ -85,6 +85,13 @@ abstract class CRM_Streetimport_RecordHandler {
     }
   }
   
+  /**
+   * Check, if $data[$key] is set and true wrt the configuration
+   */
+  protected function isTrue($data, $key) {
+    $true_value = 'J';   // TODO: config
+    return !empty($data[$key]) && $data[$key] == $true_value;
+  }
 
 
 
@@ -270,6 +277,22 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logError($ex->getMessage());
       return NULL;
     }
+  }
+
+  /**
+   * add contact to given group ID
+   */
+  protected function addContactToGroup($contact_id, $group_id) {
+    $this->logger->logError("addContactToGroup not implemented!");
+    return NULL;
+  }
+
+  /**
+   * create membership with given data
+   */
+  protected function createMembership($membership_data) {
+    $this->logger->logError("createMembership not implemented!");
+    return NULL;
   }
 
   /**

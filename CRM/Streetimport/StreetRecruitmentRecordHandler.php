@@ -48,14 +48,29 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                             'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
                             ));
 
-    // TODO: create SEPA mandate
+    // create SEPA mandate
+    $this->createSDDMandate(array(
+      // TODO: stuff
+      ));
 
-    // TODO: add to group XX
+    // If newsletter wanted, add to newsletter group
+    if ($this->isTrue($record, "Newsletter")) {
+      $newsletter_group_id = 1; // TODO: config
+      $this->addContactToGroup($donor['id'], $newsletter_group_id);
+    }
+    
+    // create membership
+    if ($this->isTrue($record, "Member")) {
+      $this->createMembership(array(
+        'contact_id'         => $donor['id'],
+        'membership_type_id' => 1,   // TODO: config
+        // ...
+      ));
+    }
 
-    // TODO: create membership
 
     // create activity 'Opvolgingsgesprek'
-    if (!empty($record["Follow Up Call"]) && $record["Follow Up Call"] == 'J') { // TODO: config (J)
+    if ($this->isTrue($record, "Follow Up Call")) {
       $this->createActivity(array(
                               'activity_type_id'   => 2,                   // TODO: config (FollowUp)
                               'subject'            => 'Opvolgingsgesprek', // TODO: config
@@ -81,9 +96,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     // TODO: lookup by "DonorID"
 
     // create base contact
-    $organisation_yes_string = 'J'; // TODO: config
     $contact_data = array();
-    if (!empty($record['Organization Yes/No']) && $record['Organization Yes/No'] == $organisation_yes_string) {
+    if ($this->isTrue($record, 'Organization Yes/No')) {
       $contact_data['contact_type']      = 'Organization';
       $contact_data['organization_name'] = CRM_Utils_Array::value('Last Name',  $record);
     } elseif (empty($record['First Name'])) {

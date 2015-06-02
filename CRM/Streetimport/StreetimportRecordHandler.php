@@ -135,6 +135,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   protected function setDonorID($contact_id, $donor_id) {
     // TODO: implement
+    $this->logger->logError("setDonorID not implemented!");
   }
 
   /**
@@ -144,7 +145,17 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   protected function getContactForDonorID($donor_id) {
     // TODO: implement
+    $this->logger->logError("getContactForDonorID not implemented!");
     return NULL;
+  }
+
+  /**
+   * Create CiviSEPA mandate
+   */
+  protected function createSDDMandate($mandate_data) {
+    // TODO: implement
+    $this->logger->logError("createSDDMandate not implemented!");
+    return NULL;    
   }
  
 }
