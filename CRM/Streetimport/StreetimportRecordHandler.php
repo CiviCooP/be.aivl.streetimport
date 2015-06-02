@@ -61,6 +61,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * @return $recruiter array with contact entity
    */
   protected function processRecruiter($record, $recruiting_organisation) {
+    $config = CRM_Streetimport_Config::singleton();
     $recruiter = NULL;
     if (!empty($record['Recruiter ID'])) {
       $recruiter = $this->getContact($record['Recruiter ID']);
@@ -109,8 +110,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       //     will be generated  and assigned to the admin ID entered as a param"
       if (!$recruiter_known) {
         $this->createActivity(array(
-                              'activity_type_id'   => 2,                   // TODO: config (FollowUp)
-                              'subject'            => 'Incompleet werver contact', // TODO: config
+                              'activity_type_id'   => $config->getImportErrorActivityType(),
+                              'subject'            => $config->translate("Incomplete Recruiter Contact"),
                               'status_id'          => 1,                   // TODO: config
                               'activity_date_time' => date('YmdHis'),
                               'target_contact_id'  => (int) $donor['id'],

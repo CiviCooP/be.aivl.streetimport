@@ -25,6 +25,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    * @throws exception if failed
    */
   public function processRecord($record) {
+    $config = CRM_Streetimport_Config::singleton();
     $this->logger->logDebug("Processing 'StreetRecruitment' record #{$record['__id']}...");
 
     // lookup recruiting organisation
@@ -38,8 +39,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
     // create activity "Straatwerving"
     $this->createActivity(array(
-                            'activity_type_id'   => 2,               // TODO: config (Straatwerving)
-                            'subject'            => 'Straatwerving', // TODO: config
+                            'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
+                            'subject'            => $config->translate("Street Recruitment"),
                             'status_id'          => 1,               // TODO: config
                             'activity_date_time' => date('YmdHis'),
                             'target_contact_id'  => (int) $donor['id'],
@@ -55,7 +56,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
     // If newsletter wanted, add to newsletter group
     if ($this->isTrue($record, "Newsletter")) {
-      $newsletter_group_id = 1; // TODO: config
+      $newsletter_group_id = $config->getNewsletterGroupID();
       $this->addContactToGroup($donor['id'], $newsletter_group_id);
     }
     
@@ -63,7 +64,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     if ($this->isTrue($record, "Member")) {
       $this->createMembership(array(
         'contact_id'         => $donor['id'],
-        'membership_type_id' => 1,   // TODO: config
+        'membership_type_id' => $config->getMembershipTypeID(),
         // ...
       ));
     }
@@ -72,13 +73,13 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     // create activity 'Opvolgingsgesprek'
     if ($this->isTrue($record, "Follow Up Call")) {
       $this->createActivity(array(
-                              'activity_type_id'   => 2,                   // TODO: config (FollowUp)
-                              'subject'            => 'Opvolgingsgesprek', // TODO: config
+                              'activity_type_id'   => $config->getFollowUpCallActivityType(),
+                              'subject'            => $config->translate("Follow Up Call"),
                               'status_id'          => 1,                   // TODO: config
                               'activity_date_time' => date('YmdHis', strtotime("+1 day")),
                               'target_contact_id'  => (int) $donor['id'],
                               'source_contact_id'  => $recruiter['id'],
-                              'assignee_contact_id'=> 3,                   // TODO: config - fundraiser
+                              'assignee_contact_id'=> $config->getFundraiserContactID(),
                               'details'            => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
                               ));
     }

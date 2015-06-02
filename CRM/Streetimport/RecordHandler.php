@@ -89,8 +89,9 @@ abstract class CRM_Streetimport_RecordHandler {
    * Check, if $data[$key] is set and true wrt the configuration
    */
   protected function isTrue($data, $key) {
-    $true_value = 'J';   // TODO: config
-    return !empty($data[$key]) && $data[$key] == $true_value;
+    $config = CRM_Streetimport_Config::singleton();
+    $accepted_yes_values = $config->getAcceptedYesValues();
+    return !empty($data[$key]) && in_array($data[$key], $accepted_yes_values);
   }
 
 
