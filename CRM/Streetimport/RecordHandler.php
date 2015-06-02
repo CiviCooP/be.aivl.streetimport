@@ -175,9 +175,31 @@ abstract class CRM_Streetimport_RecordHandler {
    *
    * @return array with activity entity
    */
-  protected function createActivity($data) {
-    // TODO: implement
-    $this->logger->logError("createActivity not implemented!");
+  protected function createActivity($data, $assigned_contact_ids=NULL) {
+    
+    // TODO: $data sanitation
+
+    // remark: using BAOs, the API here is somewhat messy
+    $activity = CRM_Activity_BAO_Activity::create($data);
+    if (empty($activity->id)) {
+      $this->logger->logError("Couldn't create activity.");
+      return NULL;
+    }
+
+    // create assignments
+    if (!empty($assigned_contact_ids) && is_array($assigned_contact_ids)) {
+      foreach ($assigned_contact_ids as $contact_id) {
+        $assignment_parameters = array(
+          'activity_id'    => $activity->id,
+          'contact_id'     => $contact_id,
+          'record_type_id' => 1  // ASSIGNEE
+        );
+        CRM_Activity_BAO_ActivityContact::create($assignment_parameters);        
+      }
+    }
+
+    $this->logger->logDebug("Activity [{$activity->id}] created: '{$data['subject']}'");
+    return $activity;
   }
 
   /** 
@@ -248,5 +270,39 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logError($ex->getMessage());
       return NULL;
     }
+  }
+
+  /**
+   * uses SMARTY to render a template
+   *
+   * @return string 
+   */
+  public function renderTemplate($template_path, $vars) {
+    $smarty = CRM_Core_Smarty::singleton();
+
+    // first backup orgininal variables, since smarty instance is a singleton
+    $oldVars = $smarty->get_template_vars();
+    $backupFrame = array();
+    foreach ($vars as $key => $value) {
+      $key = str_replace(' ', '_', $key);
+      $backupFrame[$key] = isset($oldVars[$key]) ? $oldVars[$key] : NULL;
+    }
+
+    // then assign new variables
+    foreach ($vars as $key => $value) {
+      $key = str_replace(' ', '_', $key);
+      $smarty->assign($key, $value);
+    }
+
+    // create result
+    $result =  $smarty->fetch($template_path);
+
+    // reset smarty variables
+    foreach ($backupFrame as $key => $value) {
+      $key = str_replace(' ', '_', $key);
+      $smarty->assign($key, $value);
+    }
+
+    return $result;
   }
 }

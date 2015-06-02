@@ -38,7 +38,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   protected function getRecruitingOrganisation($record) {
     if (empty($record['Recruiting organization ID'])) {
-      error_log(print_r($record,1));
       $this->logger->abort("Recruiting organization ID not given.");
       return NULL;
     }
@@ -61,35 +60,40 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    *
    * @return $recruiter array with contact entity
    */
-  protected function processRecruiter($record) {
+  protected function processRecruiter($record, $recruiting_organisation) {
     $recruiter = NULL;
     if (!empty($record['Recruiter ID'])) {
       $recruiter = $this->getContact($record['Recruiter ID']);
     }
 
     if ($recruiter==NULL) {
+      $this->logger->logDebug("Recruiter not found, creting new one...");      
       // "If the contact is not known, a contact of the contact subtype 'Werver' is to be created"
       $recruiter_data = array(
         'contact_type'     => 'Individual',
         'contact_sub_type' => $this->getConfigValue('Recruiter'),
-        'first_name'       => $record['Recruiter First Name'],
-        'last_name'        => $record['Recruiter Last Name'],
-        'prefix'           => $record['Recruiter Prefix'],
+        'first_name'       => CRM_Utils_Array::value('Recruiter First Name', $record),
+        'last_name'        => CRM_Utils_Array::value('Recruiter Last Name',  $record),
+        'prefix'           => CRM_Utils_Array::value('Recruiter Prefix', $record),
       );
+      $recruiter_known = TRUE;
       
       // "If the first name and last name are empty, the values 'Unknown Werver' 
       //  "and 'Organization name of recruiting org' will be used as first and last name."
       if (empty($record['Recruiter First Name']) && empty($record['Recruiter Last Name'])) {
         $recruiter_data['first_name'] = $this->getConfigValue('Unknown Recruiter');
-        $recruiter_data['last_name']  = $recruiting_organisation['organization_name'];
+        $recruiter_data['last_name']  = CRM_Utils_Array::value('organization_name', $recruiting_organisation);
         $recruiter_data['prefix']     = '';
+        $recruiter_known = FALSE;
       }
 
       // check if we had already created the recruiter
       $recruiter_key = "{$recruiter_data['last_name']}//{$recruiter_data['first_name']}//{$recruiter_data['prefix']}";
       if (!empty($this->created_recruiters[$recruiter_key])) {
         // ...and indeed we have
-        return $this->created_recruiters[$recruiter_key];
+        $recruiter = $this->created_recruiters[$recruiter_key];
+        $this->logger->logDebug("Recruiter [{$recruiter['id']}] already created.");
+        return $recruiter;
       }
 
       // else, we have to create the recruiter...
@@ -103,16 +107,24 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
       // "In all cases where the contact is not known, an activity of the type 'Incompleet werver contact' 
       //     will be generated  and assigned to the admin ID entered as a param"
-      $this->createActivity(array(
-                              'type'     => $this->getConfigValue('Bad data import'),
-                              'title'    => 'Incompleet werver contact',
-                              'assignee' => (int) $record['Admin ID'],
-                              'target'   => (int) $recruiter['id'],
-                              'details'  => ''
-                              ));
+      if (!$recruiter_known) {
+        $this->createActivity(array(
+                              'activity_type_id'   => 2,                   // TODO: config (FollowUp)
+                              'subject'            => 'Incompleet werver contact', // TODO: config
+                              'status_id'          => 1,                   // TODO: config
+                              'activity_date_time' => date('YmdHis'),
+                              'target_contact_id'  => (int) $donor['id'],
+                              'source_contact_id'  => $recruiter['id'],
+                              'assignee_contact_id'=> (int) $record['Admin ID'],
+                              'details'            => $this->renderTemplate('activities/IncompleteRecruiterContact.tpl', $record),
+                              ));        
+      }
 
       // finally, store the result so we don't create the same recruiter over and over
       $this->created_recruiters[$recruiter_key] = $recruiter;
+      $this->logger->logDebug("Recruiter [{$recruiter['id']}] created.");
+    } else {
+      $this->logger->logDebug("Recruiter [{$record['Recruiter ID']}] found.");
     }
 
     return $recruiter;

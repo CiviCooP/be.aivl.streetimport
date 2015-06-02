@@ -31,23 +31,42 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $recruiting_organisation = $this->getRecruitingOrganisation($record);
 
     // look up / create recruiter
-    $recruiter = $this->processRecruiter($record);
+    $recruiter = $this->processRecruiter($record, $recruiting_organisation);
 
     // look up / create donor
     $donor = $this->processDonor($record);
 
-
-
-    // "For the Straatwerving or Welkomstgesprek activiteit that will be generated, 
-    //    the recruiter will be set as source and assignee.")
+    // create activity "Straatwerving"
     $this->createActivity(array(
-                            'type'     => 'Welkomstgesprek',
-                            'title'    => 'Welkomstgesprek',
-                            'assignee' => (int) $recruiter['id'],
-                            'target'   => (int) $recruiter['id'],
+                            'activity_type_id'   => 2,               // TODO: config (Straatwerving)
+                            'subject'            => 'Straatwerving', // TODO: config
+                            'status_id'          => 1,               // TODO: config
+                            'activity_date_time' => date('YmdHis'),
+                            'target_contact_id'  => (int) $donor['id'],
+                            'source_contact_id'  => $recruiter['id'],
+                            //'assignee_contact_id'=> $recruiter['id'],
+                            'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
                             ));
 
+    // TODO: create SEPA mandate
 
+    // TODO: add to group XX
+
+    // TODO: create membership
+
+    // create activity 'Opvolgingsgesprek'
+    if (!empty($record["Follow Up Call"]) && $record["Follow Up Call"] == 'J') { // TODO: config (J)
+      $this->createActivity(array(
+                              'activity_type_id'   => 2,                   // TODO: config (FollowUp)
+                              'subject'            => 'Opvolgingsgesprek', // TODO: config
+                              'status_id'          => 1,                   // TODO: config
+                              'activity_date_time' => date('YmdHis', strtotime("+1 day")),
+                              'target_contact_id'  => (int) $donor['id'],
+                              'source_contact_id'  => $recruiter['id'],
+                              'assignee_contact_id'=> 3,                   // TODO: config - fundraiser
+                              'details'            => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
+                              ));
+    }
 
     $this->logger->logImport($record['__id'], true, 'StreetRecruitment');
   }
@@ -66,15 +85,15 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $contact_data = array();
     if (!empty($record['Organization Yes/No']) && $record['Organization Yes/No'] == $organisation_yes_string) {
       $contact_data['contact_type']      = 'Organization';
-      $contact_data['organization_name'] = CRM_Utils_Array::value('Last Name', $record);
+      $contact_data['organization_name'] = CRM_Utils_Array::value('Last Name',  $record);
     } elseif (empty($record['First Name'])) {
       $contact_data['contact_type']      = 'Household';
-      $contact_data['household_name']    = CRM_Utils_Array::value('Last Name', $record);
+      $contact_data['household_name']    = CRM_Utils_Array::value('Last Name',  $record);
     } else {
       $contact_data['contact_type']      = 'Individual';
       $contact_data['first_name']        = CRM_Utils_Array::value('First Name', $record);
-      $contact_data['last_name']         = CRM_Utils_Array::value('Last Name', $record);
-      $contact_data['prefix']            = CRM_Utils_Array::value('Prefix', $record);
+      $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
+      $contact_data['prefix']            = CRM_Utils_Array::value('Prefix',     $record);
       $contact_data['birth_date']        = CRM_Utils_Array::value('Birth date (format jjjj-mm-dd)', $record);
     }
     $donor = $this->createContact($contact_data, true);
@@ -87,12 +106,12 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $address = $this->createAddress(array(
         'contact_id'       => $donor['id'],
         'location_type_id' => 1, // TODO: config
-        'street_name'      => CRM_Utils_Array::value('Street Name',   $record),
+        'street_name'      => CRM_Utils_Array::value('Street Name',         $record),
         'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
-        'street_unit'      => CRM_Utils_Array::value('Street Unit',   $record),
-        'postal_code'      => CRM_Utils_Array::value('Postal code',   $record),
-        'street_address'   => trim(CRM_Utils_Array::value('Street Name',   $record) . ' ' . CRM_Utils_Array::value('Street Number', $record) . ' ' . CRM_Utils_Array::value('Street Unit',   $record)),
-        'city'             => CRM_Utils_Array::value('City',          $record),
+        'street_unit'      => CRM_Utils_Array::value('Street Unit',         $record),
+        'postal_code'      => CRM_Utils_Array::value('Postal code',         $record),
+        'street_address'   => trim(CRM_Utils_Array::value('Street Name',    $record) . ' ' . CRM_Utils_Array::value('Street Number', $record) . ' ' . CRM_Utils_Array::value('Street Unit',   $record)),
+        'city'             => CRM_Utils_Array::value('City',                $record),
         'country_id'       => 1020, // TODO: move to config
       ));
 
@@ -129,5 +148,6 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
         'email'            => CRM_Utils_Array::value('Email', $record),
       ));
     
+    return $donor;
   }
 }
