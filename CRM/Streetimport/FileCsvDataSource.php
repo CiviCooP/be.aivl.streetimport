@@ -32,7 +32,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
 
     if (empty($this->reader)) {
       // TODO: error handling
-      $this->logger->logFatal("Unable to read file '{$this->uri}'.");
+      $this->logger->abort("Unable to read file '{$this->uri}'.");
       $this->reader = NULL;
       return;
     }
@@ -41,7 +41,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     $this->header = fgetcsv($this->reader, 0, $this->default_delimiter);
     if ($this->header == NULL) {
       // TODO: error handling
-      $this->logger->logFatal("File '{$this->uri}' does not contain headers.");
+      $this->logger->abort("File '{$this->uri}' does not contain headers.");
       $this->reader = NULL;
       return;
     }

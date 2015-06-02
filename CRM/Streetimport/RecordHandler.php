@@ -94,32 +94,24 @@ abstract class CRM_Streetimport_RecordHandler {
    *************************************************/
 
   /**
-   * common service function for all handlers:
-   *  create an activity with the given parameters
-   */
-  protected function createActivity($params) {
-    // TODO: implement
-    $this->logger->logError("createActivity not implemented!");
-  }
-
-  /**
    * look up contact
    *
    * @param $cached  if true, the contact will be keept on cache
    * @return array with contact entity
    */
   protected function getContact($contact_id, $cached = true) {
-    if (empty($record['Recruiting organization ID']) || ((int)  $record['Recruiting organization ID'])==0) {
+    if (empty($contact_id) || ((int)  $contact_id)==0) {
       $this->logger->logWarn("Invalid ID for contact lookup: '{$contact_id}'");
       return NULL;
     }
 
+    $contact_id = (int) $contact_id;
     if ($cached && isset(self::$contact_cache[$contact_id])) {
       return self::$contact_cache[$contact_id];
     }
 
     try {
-      $contact = civicrm_api3('Contact', 'getsingle', array('id' => (int) $contact_id));
+      $contact = civicrm_api3('Contact', 'getsingle', array('id' => $contact_id));
 
       if ($cached) {
         self::$contact_cache[$contact_id] = $contact;
@@ -140,8 +132,90 @@ abstract class CRM_Streetimport_RecordHandler {
    *
    * @return array with contact entity
    */
-  protected function createContact($contact_data, $cached = true) {
-     // TODO: implement
-    $this->logger->logError("createActivity not implemented!");   
+  protected function createContact($contact_data) {
+    // verify data
+    if (empty($contact_data['contact_type'])) {
+      $this->logger->logError("Contact missing contact_type");
+      return NULL;
+    }
+    if ($contact_data['contact_type'] == 'Organization') {
+      if (empty($contact_data['organization_name'])) {
+        $this->logger->logError("Contact missing organization_name");
+        return NULL;
+      }      
+    } else {
+      if (empty($contact_data['first_name']) && empty($contact_data['last_name'])) {
+        $this->logger->logError("Contact missing first/last_name");
+        return NULL;
+      }
+    }
+
+    // create via API
+    try {
+      return civicrm_api3('Contact', 'create', $contact_data);
+    } catch (CiviCRM_API3_Exception $e) {
+      $this->logger->logError($ex->getMessage());
+      return NULL;
+    }
+  }
+
+  /** 
+   * Create an activity with the given data
+   *
+   * @return array with activity entity
+   */
+  protected function createActivity($data) {
+    // TODO: implement
+    $this->logger->logError("createActivity not implemented!");
+  }
+
+  /** 
+   * Create an email entity with the given data
+   *
+   * @return array with email entity
+   */
+  protected function createEmail($data) {
+    // verify data
+    if (empty($data['email'])) {
+      return NULL;
+    }
+
+    // create via API
+    try {
+      return civicrm_api3('Email', 'create', $data);
+    } catch (CiviCRM_API3_Exception $e) {
+      $this->logger->logError($ex->getMessage());
+      return NULL;
+    }
+  }
+
+  /** 
+   * Create an address entity with the given data
+   *
+   * @return array with address entity
+   */
+  protected function createAddress($data) {
+    // TODO: implement
+    $this->logger->logError("createActivity not implemented!");
+  }
+
+  /** 
+   * Create an phone entity with the given data
+   *
+   * @return array with phone entity
+   */
+  protected function createPhone($data) {
+    // verify data
+    if (empty($data['phone'])) {
+      return NULL;
+    }
+
+    // create via API
+    try {
+      return civicrm_api3('Phone', 'create', $data);
+    } catch (CiviCRM_API3_Exception $e) {
+      $this->logger->logError($ex->getMessage());
+      return NULL;
+    }
   }
 }

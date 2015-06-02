@@ -89,11 +89,18 @@ class CRM_Streetimport_ImportResult {
    * shortcut for logMessage($message, ERROR)
    * @param abort  if true, an exception will be raised, stopping the execution
    */
-  public function logFatal($message, $abort = false) {
+  public function logFatal($message) {
     $this->logMessage($message, FATAL);
-    if ($abort) {
-      throw new Exception($message);
-    }
+  }
+
+  /**
+   * shortcut for logFatal AND throwing an exception (with the same message)
+   * @throws Exception
+   */
+  public function abort($message) {
+    $this->logFatal($message);
+    // TODO: use a specific exception type?
+    throw new Exception($message);
   }
 
   /**
