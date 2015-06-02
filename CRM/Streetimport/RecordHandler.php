@@ -119,7 +119,7 @@ abstract class CRM_Streetimport_RecordHandler {
 
       return $contact;
 
-    } catch (CiviCRM_API3_Exception $e) {
+    } catch (CiviCRM_API3_Exception $ex) {
       $this->logger->logWarn("Contact lookup failed: '{$contact_id}'");
     }
     
@@ -143,6 +143,11 @@ abstract class CRM_Streetimport_RecordHandler {
         $this->logger->logError("Contact missing organization_name");
         return NULL;
       }      
+    } elseif ($contact_data['contact_type'] == 'Household') {
+      if (empty($contact_data['household_name'])) {
+        $this->logger->logError("Contact missing household_name");
+        return NULL;
+      }
     } else {
       if (empty($contact_data['first_name']) && empty($contact_data['last_name'])) {
         $this->logger->logError("Contact missing first/last_name");
@@ -150,10 +155,16 @@ abstract class CRM_Streetimport_RecordHandler {
       }
     }
 
+
+    // TOOD: look up contact
+
+
     // create via API
     try {
-      return civicrm_api3('Contact', 'create', $contact_data);
-    } catch (CiviCRM_API3_Exception $e) {
+      $contact = civicrm_api3('Contact', 'create', $contact_data);
+      $this->logger->logDebug("Contact [{$contact['id']}] created.");      
+      return $contact;
+    } catch (CiviCRM_API3_Exception $ex) {
       $this->logger->logError($ex->getMessage());
       return NULL;
     }
@@ -182,8 +193,10 @@ abstract class CRM_Streetimport_RecordHandler {
 
     // create via API
     try {
-      return civicrm_api3('Email', 'create', $data);
-    } catch (CiviCRM_API3_Exception $e) {
+      $email = civicrm_api3('Email', 'create', $data);
+      $this->logger->logDebug("Email '{$data['email']}' created for contact [{$data['contact_id']}].");      
+      return $email;
+    } catch (CiviCRM_API3_Exception $ex) {
       $this->logger->logError($ex->getMessage());
       return NULL;
     }
@@ -195,8 +208,24 @@ abstract class CRM_Streetimport_RecordHandler {
    * @return array with address entity
    */
   protected function createAddress($data) {
-    // TODO: implement
-    $this->logger->logError("createActivity not implemented!");
+    // verify data
+    $required_address_attributes = array("city", "street_name", "country_id", "contact_id");
+    foreach ($required_address_attributes as $attribute) {
+      if (empty($data[$attribute])) {
+        $this->logger->logError("Address missing $attribute");
+        return NULL;
+      }
+    }
+
+    // create via API
+    try {
+      $address = civicrm_api3('Address', 'create', $data);
+      $this->logger->logDebug("Address [{$address['id']}] created for contact [{$data['contact_id']}].");
+      return $address;
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError($ex->getMessage());
+      return NULL;
+    }
   }
 
   /** 
@@ -212,8 +241,10 @@ abstract class CRM_Streetimport_RecordHandler {
 
     // create via API
     try {
-      return civicrm_api3('Phone', 'create', $data);
-    } catch (CiviCRM_API3_Exception $e) {
+      $phone = civicrm_api3('Phone', 'create', $data);
+      $this->logger->logDebug("Phone '{$data['phone']}' created for contact [{$data['contact_id']}].");      
+      return $phone;
+    } catch (CiviCRM_API3_Exception $ex) {
       $this->logger->logError($ex->getMessage());
       return NULL;
     }

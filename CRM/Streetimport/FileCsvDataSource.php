@@ -28,7 +28,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     $this->reader  = fopen($this->uri, 'r');
     $this->header  = NULL;
     $this->next    = NULL;
-    $this->line_nr = 1;
+    $this->line_nr = 0;
 
     if (empty($this->reader)) {
       // TODO: error handling

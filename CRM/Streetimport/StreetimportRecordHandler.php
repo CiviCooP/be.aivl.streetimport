@@ -36,8 +36,9 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * If it does not, create activity of type ‘Foutieve data import’ with 
    * relevant error message in subject and details. No further processing of file possible."
    */
-  protected function getRecruitingOrganisation() {
+  protected function getRecruitingOrganisation($record) {
     if (empty($record['Recruiting organization ID'])) {
+      error_log(print_r($record,1));
       $this->logger->abort("Recruiting organization ID not given.");
       return NULL;
     }
@@ -46,6 +47,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $this->logger->abort("Recruiting organization [{$record['Recruiting organization ID']}] not found.", true);
       return NULL;
     }
+    $this->logger->logDebug("Recruiting organization identified as contact [{$recruiting_organisation['id']}]");
     return $recruiting_organisation;
   }
 
@@ -115,4 +117,22 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
     return $recruiter;
   }
+
+  /**
+   * Manages the contact_id <-> donor_id (external) mapping
+   */
+  protected function setDonorID($contact_id, $donor_id) {
+    // TODO: implement
+  }
+
+  /**
+   * Manages the contact_id <-> donor_id (external) mapping
+   * 
+   * @return mixed contact_id or NULL if not found
+   */
+  protected function getContactForDonorID($donor_id) {
+    // TODO: implement
+    return NULL;
+  }
+ 
 }
