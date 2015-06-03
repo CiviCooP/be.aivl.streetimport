@@ -48,8 +48,8 @@ class CRM_Streetimport_Config {
     $this->setActivityTypes();
     $this->setCustomData();
     $this->setImportSettings();
-    $this->setNewsletterGroup();
-    $this->setMembershipType();
+    //$this->setNewsletterGroup();
+    //$this->setMembershipType();
   }
 
   /**
