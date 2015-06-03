@@ -112,11 +112,11 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         $this->createActivity(array(
                               'activity_type_id'   => $config->getImportErrorActivityType(),
                               'subject'            => $config->translate("Incomplete Recruiter Contact"),
-                              'status_id'          => 1,                   // TODO: config
+                              'status_id'          => $config->getImportErrorActivityStatusId(),
                               'activity_date_time' => date('YmdHis'),
-                              'target_contact_id'  => (int) $donor['id'],
-                              'source_contact_id'  => $recruiter['id'],
-                              'assignee_contact_id'=> (int) $record['Admin ID'],
+                              'target_contact_id'  => (int) $recruiter['id'],
+                              'source_contact_id'  => (int) $recruiter['id'],
+                              'assignee_contact_id'=> $config->getAdminContactID(),
                               'details'            => $this->renderTemplate('activities/IncompleteRecruiterContact.tpl', $record),
                               ));        
       }
@@ -133,9 +133,21 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
   /**
    * Manages the contact_id <-> donor_id (external) mapping
+   *
+   * @param int $contactId
+   * @param int $donorId
+   * @param int $recruitingOrganizationId
    */
-  protected function setDonorID($contact_id, $donor_id) {
-    // TODO: implement
+  protected function setDonorID($contactId, $donorId, $recruitingOrganizationId) {
+    $extensionConfig = CRM_Streetimport_Config::singleton();
+    $tableName = $extensionConfig->getExternalDonorIdCustomGroup('table_name');
+    $query = 'REPLACE INTO '.$tableName.' SET recruiting_organization_id = %1,
+      external_donor_id = %2, entity_id = %3';
+    $params = array(
+      1 => array($recruitingOrganizationId, 'Positive'),
+      2 => array($donorId, 'String'),
+      3 => array($contactId, 'Positive')
+    );
     $this->logger->logError("setDonorID not implemented!");
   }
 
@@ -144,9 +156,21 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * 
    * @return mixed contact_id or NULL if not found
    */
-  protected function getContactForDonorID($donor_id) {
-    // TODO: implement
-    $this->logger->logError("getContactForDonorID not implemented!");
+  protected function getContactForDonorID($donorId) {
+    $extensionConfig = CRM_Streetimport_Config::singleton();
+    $tableName = $extensionConfig->getExternalDonorIdCustomGroup('table_name');
+    $customField = $extensionConfig->getExternalDonorIdCustomFields('external_donor_id');
+    $query = 'SELECT entity_id FROM '.$tableName.' WHERE '.$customField['column_name'].' = %1';
+    $params = array(1 => array($donorId, 'Positive'));
+    $dao = CRM_Core_DAO::executeQuery($query, $params);
+    if ($dao->N > 1) {
+      $this->logger->logError('More than one contact found for donor ID '.$donorId);
+    } else {
+      if ($dao->fetch) {
+        return $dao->entity_id;
+      }
+    }
+    $this->logger->logError('No contact found with donor ID '.$donorId);
     return NULL;
   }
 

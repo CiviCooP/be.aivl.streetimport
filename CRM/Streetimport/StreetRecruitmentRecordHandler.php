@@ -38,11 +38,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     // look up / create donor
     $donor = $this->processDonor($record);
 
-    // store external donor id on donor contact
-    $this->saveExternalDonorId($donor, $recruiting_organisation, $record);
-
     // create activity "Straatwerving"
-    $this->createActivity(array(
+    $createdActvity = $this->createActivity(array(
                             'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
                             'subject'            => $config->translate("Street Recruitment"),
                             'status_id'          => $config->getStreetRecruitmentActivityStatusId(),
@@ -51,7 +48,9 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                             'source_contact_id'  => $recruiter['id'],
                             //'assignee_contact_id'=> $recruiter['id'],
                             'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
-                            ));
+                              ));
+    // add custom data to the created activity
+    $this->saveActivityCustomData('street_recruitment', $record, $createdActivity['id']);
 
     // create SEPA mandate
     $this->createSDDMandate(array(
@@ -116,7 +115,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       $contact_data['birth_date']        = CRM_Utils_Array::value('Birth date (format jjjj-mm-dd)', $record);
     }
     $donor = $this->createContact($contact_data, true);
-    $this->setDonorID($donor['id'], $record['DonorID']);
+    $this->setDonorID($donor['id'], $record['DonorID'], $record['Recruiting Organization ID']);
     if (empty($donor)) {
       $this->logger->abort("Cannot create new donor. Import failed.");
     }
@@ -168,27 +167,5 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       ));
     
     return $donor;
-  }
-
-  /**
-   * Method to save the external donor id with the recruiting org id in a custom group
-   * for contact
-   *
-   * @param array $donor
-   * @param array $recruitingOrganisation
-   * @param array $record
-   * @access public
-   */
-  public function saveExternalDonorId($donor, $recruitingOrganisation, $record) {
-    $extensionConfig = CRM_Streetimport_Config::singleton();
-    $tableName = $extensionConfig->getExternalDonorIdCustomGroup('table_name');
-    $query = 'REPLACE INTO '.$tableName.' SET recruiting_organization_id = %1,
-      external_donor_id = %2, entity_id = %3';
-    $params = array(
-      1 => array($recruitingOrganisation['id'], 'Positive'),
-      2 => array($record['Donor ID'], 'String'),
-      3 => array($donor['id'], 'Positive')
-    );
-    CRM_Core_DAO::executeQuery($query, $params);
   }
 }
