@@ -66,6 +66,27 @@ class CRM_Streetimport_Utils {
   }
 
   /**
+   * Function to get activity status id with name
+   *
+   * @param string $activityStatusName
+   * @return int|bool
+   * @access public
+   * @static
+   */
+  public static function getActivityStatusIdWithName($activityStatusName) {
+    $activityStatusOptionGroupId = self::getOptionGroupIdWithName('activity_status');
+    $params = array(
+      'option_group_id' => $activityStatusOptionGroupId,
+      'name' => $activityStatusName);
+    try {
+      $activityStatus = civicrm_api3('OptionValue', 'Getsingle', $params);
+      return $activityStatus['value'];
+    } catch (CiviCRM_API3_Exception $ex) {
+      return FALSE;
+    }
+  }
+
+  /**
    * Function to get contact sub type with name
    *
    * @param string $contactSubTypeName

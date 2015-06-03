@@ -45,7 +45,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $this->createActivity(array(
                             'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
                             'subject'            => $config->translate("Street Recruitment"),
-                            'status_id'          => 1,               // TODO: config
+                            'status_id'          => $config->getStreetRecruitmentActivityStatusId(),
                             'activity_date_time' => date('YmdHis'),
                             'target_contact_id'  => (int) $donor['id'],
                             'source_contact_id'  => $recruiter['id'],
@@ -79,7 +79,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       $this->createActivity(array(
                               'activity_type_id'   => $config->getFollowUpCallActivityType(),
                               'subject'            => $config->translate("Follow Up Call"),
-                              'status_id'          => 1,                   // TODO: config
+                              'status_id'          => $config->getFollowUpCallActivityStatusId(),
                               'activity_date_time' => date('YmdHis', strtotime("+1 day")),
                               'target_contact_id'  => (int) $donor['id'],
                               'source_contact_id'  => $recruiter['id'],

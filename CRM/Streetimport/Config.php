@@ -28,6 +28,9 @@ class CRM_Streetimport_Config {
   protected $externalDonorIdCustomFields = array();
   protected $streetRecruitmentImportType = null;
   protected $welcomeCallImportType = null;
+  protected $acceptedYesValues = array();
+  protected $newsLetterGroupId = null;
+  protected $membershipTypeId = null;
 
   /**
    * Constructor method
@@ -38,12 +41,15 @@ class CRM_Streetimport_Config {
     $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
     $this->streetRecruitmentImportType = 1;
     $this->welcomeCallImportType = 2;
+    $this->acceptedYesValues = array('J', 'j', 'Ja', 'ja', 'true', 'waar', 'yes', 'Yes');
 
     $this->setContactSubTypes();
     $this->setRelationshipTypes();
     $this->setActivityTypes();
     $this->setCustomData();
     $this->setImportSettings();
+    $this->setNewsletterGroup();
+    $this->setMembershipType();
   }
 
   /**
@@ -97,6 +103,45 @@ class CRM_Streetimport_Config {
   public function translate($string) {
     // TODO: @Erik how should this happen?
     return ts($string);
+  }
+
+  /**
+   * Method to get the default activity status for street recruitment
+   *
+   * @return mixed
+   */
+  public function getStreetRecruitmentActivityStatusId() {
+    return CRM_Streetimport_Utils::getActivityStatusIdWithName('completed');
+  }
+
+  /**
+   * Method to get the default activity status for welcome call
+   *
+   * @return int
+   * @access public
+   */
+  public function getWelcomeCallActivityStatusId() {
+    return CRM_Streetimport_Utils::getActivityStatusIdWithName('completed');
+  }
+
+  /**
+   * Method to get the default activity status for import error
+   *
+   * @return int
+   * @access public
+   */
+  public function getImportErrorActivityStatusId() {
+    return CRM_Streetimport_Utils::getActivityStatusIdWithName('scheduled');
+  }
+
+  /**
+   * Method to get the default activity status for follow up call
+   *
+   * @return int
+   * @access public
+   */
+  public function getFollowUpCallActivityStatusId() {
+    return CRM_Streetimport_Utils::getActivityStatusIdWithName('scheduled');
   }
 
   /**
@@ -179,38 +224,35 @@ class CRM_Streetimport_Config {
   /**
    * Method to retrieve the newsletter group id
    *
-   * @param string $key
    * @return integer
    * @access public
    */
-  public function getNewsletterGroupID($key= 'id' ) {
-    // TODO: @Erik - implement
-    return 1;
+  public function getNewsletterGroupID() {
+    // @TODO: get newsletter group from AIVL (ErikH)
+
+    return $this->newsLetterGroupId;
   }
 
   /**
    * Method to retrieve the membership type ID
    *
-   * @param string $key
    * @return integer
    * @access public
    */
-  public function getMembershipTypeID($key= 'id' ) {
-    // TODO: @Erik - implement
-    return 1;
+  public function getMembershipTypeID() {
+    // @TODO: get membership type from AIVL (ErikH)
+    return $this->membershipTypeId;
   }
 
   /**
    * Method to retrieve a list of values, 
    * that will be interpreted as TRUE/POSITIVE/YES
    *
-   * @param string $key
    * @return array
    * @access public
    */
-  public function getAcceptedYesValues($key= 'id' ) {
-    // TODO: @Erik - implement
-    return array('J', 'j', '1', 'Ja', 'ja', 'true');
+  public function getAcceptedYesValues() {
+    return $this->acceptedYesValues;
   }
   
   /**
