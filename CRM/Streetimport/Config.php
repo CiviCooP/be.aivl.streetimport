@@ -61,6 +61,19 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * This method offers translation of strings, such as
+   *  - activity subjects
+   *  - ...
+   *
+   * @return string
+   * @access public
+   */
+  public function translate($string) {
+    // TODO: @Erik how should this happen?
+    return ts($string);
+  }
+
+  /**
    * Method to retrieve import error activity type data
    *
    * @param string $key
@@ -135,6 +148,56 @@ class CRM_Streetimport_Config {
    */
   public function getRecruiterContactSubType($key= 'id' ) {
     return $this->recruiterContactSubType[$key];
+  }
+
+  /**
+   * Method to retrieve the newsletter group id
+   *
+   * @param string $key
+   * @return integer
+   * @access public
+   */
+  public function getNewsletterGroupID($key= 'id' ) {
+    // TODO: @Erik - implement
+    return 1;
+  }
+
+  /**
+   * Method to retrieve the membership type ID
+   *
+   * @param string $key
+   * @return integer
+   * @access public
+   */
+  public function getMembershipTypeID($key= 'id' ) {
+    // TODO: @Erik - implement
+    return 1;
+  }
+
+  /**
+   * Method to retrieve a list of values, 
+   * that will be interpreted as TRUE/POSITIVE/YES
+   *
+   * @param string $key
+   * @return array
+   * @access public
+   */
+  public function getAcceptedYesValues($key= 'id' ) {
+    // TODO: @Erik - implement
+    return array('J', 'j', '1', 'Ja', 'ja', 'true');
+  }
+  
+  /**
+   * Method to retrieve the default fundraiser contact 
+   * (assignee of activities)
+   *
+   * @param string $key
+   * @return integer
+   * @access public
+   */
+  public function getFundraiserContactID($key= 'id' ) {
+    // TODO: @Erik - implement
+    return 1;
   }
 
   /**

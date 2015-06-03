@@ -1,4 +1,5 @@
 "Type","Admin ID","Fundraiser ID","Recruiting organization ID","WerverID","Werver Voornaam","Werver Achternaam","Werver Aanspreking","Organisatie J/N","CampagneID","Prefix","DonorID","Voornaam","Achternaam","Straatnaam","Huisnummer","Busnummer","Postcode","Gemeente","Geboortedatum","Vaste telefoon 1","Vaste telefoon 2","Mobiel 1","Mobiel 2","Mailadres","IBAN","Bic","Bank","Wervingsdatum","Import Date","Nieuwsbrief (J/N)","Lidmaatschap (J/N)","Interessegebieden","Wervingslocatie","Wervingstype","Opmerkingen","Mandaatcode","Bedrag","Periode (maand, kwartaal, half jaar, jaar, eenmalig)","Frequentie in periode (standaard 1)","Begindatum","Einddatum","Annulering (J/N)","Fiscaal Attest (J/N)","Opvolgingsgesprek (J/N)"
-1,2,2,"AIVl",4,"Björn","Andras","Herr","N",1,,4,"Erik","Hummus","Baker Street","221b","wut?",,,,,,,,,,,,2015-05-20,2015-05-20,,,,,,,,,,,,,,,
-2,2,2,"AIVl",4,"Björn","Andras","Herr","N",1,,4,"Erik","Hummus","Baker Street","221b","wut?",,,,,,,,,,,,2015-05-20,2015-05-20,,,,,,,,,,,,,,,
-
+1,2,2,2,4,"Björn","Andras","Herr","N",1,,4,"Erik","Hummus","Baker Street","221b","TXL",,"Blåberg",1975-10-10,12345678,,1231242,,"hummus@fritj.es",,,,"2015-05-20","2015-05-20",,,,,,,,,,,,,,,
+1,2,2,2,4,"Björn","Andras","Herr","J",1,,4,,"Hummus LTD","Baker Street","221b","TXL",,"Greenberg",,,,,,"hummus@fritj.es",,,,"2015-05-20","2015-05-20",,,,,,,,,,,,,,,"J"
+1,2,2,2,4,"Björn","Andras","Herr","N",1,,4,,"The Hummuses","Baker Street","221b","TXL",,"Greenberg",,,,,,"hummus@fritj.es",,,,"2015-05-20","2015-05-20",,,,,,,,,,,,,,,
+2,2,2,2,4,"Björn","Andras","Herr","N",1,,4,"Erik","Hummus","Baker Street","221b","TXL",,,,,,,,,,,,"2015-05-20","2015-05-20",,,,,,,,,,,,,,,
