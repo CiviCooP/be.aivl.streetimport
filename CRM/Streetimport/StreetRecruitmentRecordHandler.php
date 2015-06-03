@@ -55,7 +55,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     // TODO: implement: $this->saveActivityCustomData('street_recruitment', $record, $createdActivity['id']);
 
     // STEP 6: create SEPA mandate
-    $mandate = $this->processMandate($record);
+    $mandate = $this->processMandate($record, $donor['id']);
 
     // STEP 7: add to newsletter group if requested
     if ($this->isTrue($record, "Newsletter")) {
@@ -179,20 +179,41 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    *
    * @return array with entity data
    */
-  protected function processMandate($record) {
+  protected function processMandate($record, $donor_id) {
     $config = CRM_Streetimport_Config::singleton();
-    $mandate_data = $config->extractSDDtype(CRM_Utils_Array::value('Frequency Unit', $record));
 
-    return $this->createSDDMandate(array(
-      'iban'               => CRM_Utils_Array::value('IBAN',  $record),
-      'bic'                => CRM_Utils_Array::value('Bic',  $record),
-      'bank_name'          => CRM_Utils_Array::value('Bank Name',  $record),
-      'start_date'         => CRM_Utils_Array::value('Start Date',  $record),
-      'end_date'           => CRM_Utils_Array::value('End Date',  $record),
-      'reference'          => CRM_Utils_Array::value('Mandate Reference',  $record),
-      'amount'             => CRM_Utils_Array::value('Amount',  $record),
-      'frequency_unit'     => CRM_Utils_Array::value('Frequency Unit',  $record),
-      'frequency_interval' => CRM_Utils_Array::value('Frequency Interval',  $record),
-    ));
+    // check values
+    $frequency_unit = CRM_Utils_Array::value('Frequency Unit', $record);
+    if (empty($frequency_unit)) {
+      $this->logger->logWarning("No SDD specified, no mandate created.");
+      return NULL;
+    }
+
+
+    // extract the mandate type from the 'Frequency Unit' field
+    $mandate_data = $config->extractSDDtype();
+    if (!$mandate_data) {
+      $this->logger->logError("Bad mandate specification: " . CRM_Utils_Array::value('Frequency Unit', $record));
+      return NULL;
+    }
+
+    // multiply the frequency_interval, if a value > 1 is given
+    $frequency_interval = (int) CRM_Utils_Array::value('Frequency Unit', $record);
+    if ($frequency_interval > 1) {
+      $mandate_data['frequency_interval'] = $mandate_data['frequency_interval'] * $frequency_interval;
+    }
+
+    // fill the other required fields
+    $mandate_data['contact_id'] = $donor_id;
+    $mandate_data['reference']  = CRM_Utils_Array::value('Mandate Reference', $record);
+    $mandate_data['amount']     = (float) CRM_Utils_Array::value('Amount', $record);
+    $mandate_data['start_date'] = CRM_Utils_Array::value('Start Date', $record);
+    $mandate_data['end_date']   = CRM_Utils_Array::value('End Date', $record);
+    $mandate_data['iban']       = CRM_Utils_Array::value('IBAN', $record);
+    $mandate_data['bic']        = CRM_Utils_Array::value('Bic', $record);
+    $mandate_data['bank_name']  = CRM_Utils_Array::value('Bank Name', $record);
+    // don't set $mandate_data['creditor_id'], use default
+
+    return $this->createSDDMandate($mandate_data);
   }
 }

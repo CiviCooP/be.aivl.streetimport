@@ -79,6 +79,13 @@ class CRM_Streetimport_ImportResult {
   }
 
   /**
+   * shortcut for logMessage($message, WARN)
+   */
+  public function logWarning($message) {
+    $this->logMessage($message, WARN);
+  }
+
+  /**
    * shortcut for logMessage($message, ERROR)
    */
   public function logError($message) {
