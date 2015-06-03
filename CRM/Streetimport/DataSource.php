@@ -23,10 +23,10 @@ abstract class CRM_Streetimport_DataSource {
    */
   protected $uri = NULL;
 
-  public function __construct($uri, $logger, $mapping=NULL) {
+  public function __construct($uri, $logger, $mapping = NULL) {
     $this->logger = $logger;
     $this->uri = $uri;
-    if ($mapping==NULL) {
+    if ($mapping == NULL) {
       // load default mapping
       // TODO: move to config
       $settings = civicrm_api3('Setting', 'Getsingle', array());

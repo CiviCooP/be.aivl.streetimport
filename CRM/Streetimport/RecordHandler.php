@@ -79,8 +79,11 @@ abstract class CRM_Streetimport_RecordHandler {
       }
 
       if (!$record_processed) {
-        // no handlers found. 
-        $this->logger->logImport('#' . ($counter + 1), false, '', 'No handers found.');
+        // no handlers found.
+
+        // TODO: can not be used like this in static function
+
+        //$this->logger->logImport('#' . ($counter + 1), false, '', 'No handlers found.');
       }
     }
   }
@@ -104,7 +107,7 @@ abstract class CRM_Streetimport_RecordHandler {
   /**
    * look up contact
    *
-   * @param $cached  if true, the contact will be keept on cache
+   * @param $cached  if true, the contact will be kept on cache
    * @return array with contact entity
    */
   protected function getContact($contact_id, $cached = true) {

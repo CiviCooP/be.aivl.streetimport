@@ -41,16 +41,18 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     // TODO: implement
 
     // STEP 5: create activity "Straatwerving"
-    $this->createActivity(array(
+    $createdActvity = $this->createActivity(array(
                             'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
                             'subject'            => $config->translate("Street Recruitment"),
-                            'status_id'          => 1,               // TODO: config
+                            'status_id'          => $config->getStreetRecruitmentActivityStatusId(),
                             'activity_date_time' => date('YmdHis'),
                             'target_contact_id'  => (int) $donor['id'],
                             'source_contact_id'  => $recruiter['id'],
                             //'assignee_contact_id'=> $recruiter['id'],
                             'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
-                            ));
+                              ));
+    // add custom data to the created activity
+    // TODO: implement: $this->saveActivityCustomData('street_recruitment', $record, $createdActivity['id']);
 
     // STEP 6: create SEPA mandate
     $mandate = $this->processMandate($record);
@@ -76,7 +78,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       $this->createActivity(array(
                               'activity_type_id'   => $config->getFollowUpCallActivityType(),
                               'subject'            => $config->translate("Follow Up Call"),
-                              'status_id'          => 1,                   // TODO: config
+                              'status_id'          => $config->getFollowUpCallActivityStatusId(),
                               'activity_date_time' => date('YmdHis', strtotime("+1 day")),
                               'target_contact_id'  => (int) $donor['id'],
                               'source_contact_id'  => $recruiter['id'],
@@ -117,7 +119,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       $contact_data['birth_date']        = CRM_Utils_Array::value('Birth date (format jjjj-mm-dd)', $record);
     }
     $donor = $this->createContact($contact_data, true);
-    $this->setDonorID($donor['id'], $record['DonorID']);
+    $this->setDonorID($donor['id'], $record['DonorID'], $record['Recruiting Organization ID']);
     if (empty($donor)) {
       $this->logger->abort("Cannot create new donor. Import failed.");
     }
