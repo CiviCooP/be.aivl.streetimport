@@ -244,6 +244,12 @@ class CRM_Streetimport_Config {
     return $this->membershipTypeId;
   }
 
+  public function getImportFileLocation() {
+    // @TODO implement ErikH
+  }
+  public function getProcessedFileLocation() {
+    // @TODO Implement ERikH
+  }
   /**
    * Method to retrieve a list of values, 
    * that will be interpreted as TRUE/POSITIVE/YES
@@ -447,6 +453,7 @@ class CRM_Streetimport_Config {
     }
     $customDataJson = file_get_contents($jsonFile);
     $customData = json_decode($customDataJson, true);
+
     foreach ($customData as $customGroupName => $customGroupData) {
       $propertyCustomGroup = $customGroupName.'CustomGroup';
       $customGroup = CRM_Streetimport_Utils::getCustomGroupWithName($customGroupName);
