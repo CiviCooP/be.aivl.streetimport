@@ -178,9 +178,17 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * Create CiviSEPA mandate
    */
   protected function createSDDMandate($mandate_data) {
-    // TODO: implement
-    $this->logger->logError("createSDDMandate not implemented!");
-    return NULL;    
+    // TODO: sanity checks?
+
+    try {
+      $result = civicrm_api3('SepaMandate', 'createfull', $mandate_data);
+      $mandate = $result['values'][$result['id']];
+      $this->logger->logDebug("SDD mandate [{$mandate['id']}] created, reference is '{$mandate['reference']}'");
+      return $mandate;
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError("Error while trying to create mandate. Error was: " . $ex->getMessage());
+      return NULL;
+    }
   }
  
 }
