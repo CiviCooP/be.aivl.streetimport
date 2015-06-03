@@ -121,6 +121,23 @@ class CRM_Streetimport_Utils {
   }
 
   /**
+   * Function to get the group with a name
+   *
+   * @param string $groupName
+   * @return array|bool
+   * @access public
+   * @static
+   */
+  public static function getGroupWithName($groupName) {
+    try {
+      $group = civicrm_api3('Group', 'Getsingle', array('name' => $groupName));
+      return $group;
+    } catch (CiviCRM_API3_Exception $ex) {
+      return FALSE;
+    }
+  }
+
+  /**
    * Function to get the option group id
    *
    * @param string $optionGroupName
@@ -140,6 +157,35 @@ class CRM_Streetimport_Utils {
       throw new Exception('Could not find a valid option group for name '.$optionGroupName.', error from
         API OptionGroup Getvalue: ' . $ex->getMessage());
     }
+  }
+
+  /**
+   * Function to create group if not exists yet
+   *
+   * @param array $params
+   * @return array $groupData
+   * @throws Exception when error in API Group Create
+   * @access public
+   * @static
+   */
+  public static function createGroup($params) {
+    $groupData = array();
+    if (self::getGroupWithName($params['name']) == FALSE) {
+      if (!isset($params['is_active'])) {
+        $params['is_active'] = 1;
+        if (empty($params['title']) || !isset($params['title'])) {
+          $params['title'] = self::buildLabelFromName($params['name']);
+        }
+      }
+      try {
+        $group = civicrm_api3('Group', 'Create', $params);
+        $groupData = $group['values'];
+      } catch (CiviCRM_API3_Exception $ex) {
+        throw new Exception('Could not create group type with name ' . $params['name']
+          . ', error from API Group Create: ' . $ex->getMessage());
+      }
+    }
+    return $groupData;
   }
 
   /**

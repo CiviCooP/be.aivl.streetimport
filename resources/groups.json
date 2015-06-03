@@ -2,7 +2,6 @@
   "newsletter": {
     "name": "aivl_digital_newsletter",
     "title": "Elektronische Nieuwsbrief",
-    "group_type":2,
     "is_active":1,
     "is_reserved":1,
     "description":"Groep voor contacten die de elektronische nieuwsbrief moeten krijgen"

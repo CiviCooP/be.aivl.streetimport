@@ -48,6 +48,7 @@ class CRM_Streetimport_Config {
     $this->setActivityTypes();
     $this->setCustomData();
     $this->setImportSettings();
+    $this->setGroups();
   }
 
   /**
@@ -228,7 +229,6 @@ class CRM_Streetimport_Config {
   public function getNewsletterGroupID() {
     $importSettings = $this->getImportSettings();
     return $importSettings['newsletter_group_id']['value'];
-    return $this->newsLetterGroupId;
   }
 
   /**
@@ -238,15 +238,30 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getMembershipTypeID() {
-    // @TODO: get membership type from AIVL (ErikH)
-    return $this->membershipTypeId;
+    $importSettings = $this->getImportSettings();
+    return $importSettings['membership_type_id']['value'];
   }
 
+  /**
+   * Method to retrieve import file location
+   *
+   * @return string
+   * @access public
+   */
   public function getImportFileLocation() {
-    // @TODO implement ErikH
+    $importSettings = $this->getImportSettings();
+    return $importSettings['import_location']['value'];
   }
+
+  /**
+   * Method to retrieve location for processed file
+   *
+   * @return string
+   * @access public
+   */
   public function getProcessedFileLocation() {
-    // @TODO Implement ERikH
+    $importSettings = $this->getImportSettings();
+    return $importSettings['processed_location']['value'];
   }
   /**
    * Method to retrieve a list of values, 
@@ -444,6 +459,33 @@ class CRM_Streetimport_Config {
     }
   }
 
+  /**
+   * Method to create or get groups
+   *
+   * @throws Exception when resource file could not be loaded
+   */
+  protected function setGroups() {
+    $jsonFile = $this->resourcesPath . 'groups.json';
+    if (!file_exists($jsonFile)) {
+      throw new Exception('Could not load groups configuration file for extension,
+      contact your system administrator!');
+    }
+    $groupJson = file_get_contents($jsonFile);
+    $groups = json_decode($groupJson, true);
+    foreach ($groups as $params) {
+      $group = CRM_Streetimport_Utils::getGroupWithName($params['name']);
+      if (!$group) {
+        CRM_Streetimport_Utils::createGroup($params);
+      }
+    }
+  }
+
+  /**
+   * Method to set the custom data groups and fields
+   *
+   * @throws Exception when config json could not be loaded
+   * @access protected
+   */
   protected function setCustomData() {
     $jsonFile = $this->resourcesPath.'custom_data.json';
     if (!file_exists($jsonFile)) {
