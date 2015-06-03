@@ -80,10 +80,7 @@ abstract class CRM_Streetimport_RecordHandler {
 
       if (!$record_processed) {
         // no handlers found.
-
-        // TODO: can not be used like this in static function
-
-        //$this->logger->logImport('#' . ($counter + 1), false, '', 'No handlers found.');
+        $dataSource->logger->logImport('#' . ($counter + 1), false, '', 'No handlers found.');
       }
     }
   }

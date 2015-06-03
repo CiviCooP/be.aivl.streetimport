@@ -173,6 +173,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     return $donor;
   }
 
+
+
   /**
    * will extract the required information for a SEPA mandate 
    *  and create it accordingly
@@ -213,6 +215,16 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       $start_date_parsed = strtotime("now");
     }
 
+    // get the signature date
+    $signature_date = CRM_Utils_Array::value("Recruitment Date (format jjjj-mm-dd)", $record);
+    $signature_date_parsed = strtotime($signature_date);
+    if (empty($signature_date_parsed)) {
+      if (!empty($signature_date)) {
+        $this->logger->logWarning("Couldn't parse signature date '$signature_date'. Set to start now.");
+      }
+      $signature_date_parsed = strtotime("now");
+    }
+
     // get the start date
     $end_date = CRM_Utils_Array::value('End Date', $record);
     $end_date_parsed = strtotime($end_date);
@@ -231,19 +243,19 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     }
 
     // fill the other required fields
-    $mandate_data['contact_id'] = $donor_id;
-    $mandate_data['reference']  = CRM_Utils_Array::value('Mandate Reference', $record);
-    $mandate_data['amount']     = (float) CRM_Utils_Array::value('Amount', $record);
-    $mandate_data['start_date'] = date('YmdHis', $start_date_parsed);
-    $mandate_data['iban']       = CRM_Utils_Array::value('IBAN', $record);
-    $mandate_data['bic']        = CRM_Utils_Array::value('Bic', $record);
-    $mandate_data['bank_name']  = CRM_Utils_Array::value('Bank Name', $record);
+    $mandate_data['contact_id']    = $donor_id;
+    $mandate_data['reference']     = CRM_Utils_Array::value('Mandate Reference', $record);
+    $mandate_data['amount']        = (float) CRM_Utils_Array::value('Amount', $record);
+    $mandate_data['start_date']    = date('YmdHis', $start_date_parsed);
+    $mandate_data['creation_date'] = date('YmdHis', $signature_date_parsed);
+    $mandate_data['iban']          = CRM_Utils_Array::value('IBAN', $record);
+    $mandate_data['bic']           = CRM_Utils_Array::value('Bic', $record);
+    $mandate_data['bank_name']     = CRM_Utils_Array::value('Bank Name', $record);
 
-    // TODO:
-    $mandate_data['creation_date']      = date('YmdHis', strtotime("-2 day"));
+    // TODO: check with AIVl:
     $mandate_data['financial_type_id']  = 1;
 
-    // don't set $mandate_data['creditor_id'], use default
+    // don't set $mandate_data['creditor_id'], use default creditor
 
     return $this->createSDDMandate($mandate_data);
   }
