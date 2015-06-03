@@ -8,5 +8,30 @@
         "name": "fundraiser_id",
         "label": "Opvolgcontact door",
         "value": "1809"
+    },
+    "import_location": {
+        "name": "import_location",
+        "label": "Folder waar csv bestand opgehaald wordt",
+        "value": "\/var\/www\/aivllokaal\/sites\/default\/files\/civicrm\/"
+    },
+    "processed_location": {
+        "name": "processed_location",
+        "label": "Folder voor csv bestand na verwerking",
+        "value": "\/var\/www\/aivllokaal\/sites\/default\/files\/processed\/"
+    },
+    "newsletter_group_id": {
+        "name": "newsletter_group_id",
+        "label": "Groep voor nieuwsbrief",
+        "value": "4"
+    },
+    "membership_type_id": {
+        "name": "membership_type_id",
+        "label": "Lidmaatschap",
+        "value": "1"
+    },
+    "offset_days": {
+        "name": "offset_days",
+        "label": "Dagen tussen import en 1e SDD",
+        "value": "14"
     }
 }

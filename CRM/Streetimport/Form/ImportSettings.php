@@ -20,6 +20,8 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
   public function buildQuickForm() {
     $this->getImportSettings();
     $employeeList = $this->getEmployeeList();
+    $groupList = $this->getGroupList();
+    $membershipTypeList = $this->getMembershipTypeList();
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
         case 'admin_id':
@@ -27,6 +29,12 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           break;
         case 'fundraiser_id':
           $this->add('select', $settingName, $settingValues['label'], $employeeList);
+          break;
+        case 'newsletter_group_id':
+          $this->add('select', $settingName, $settingValues['label'], $groupList);
+          break;
+        case 'membership_type_id':
+          $this->add('select', $settingName, $settingValues['label'], $membershipTypeList);
           break;
         default:
           $this->add('text', $settingName, $settingValues['label']);
@@ -121,6 +129,50 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
       }
     }
     return $elementNames;
+  }
+
+  /**
+   * Method to get list of active groups to select newsletter group from
+   *
+   * @return array
+   * @access protected
+   */
+  protected function getGroupList() {
+    $groupList = array();
+    $params = array(
+      'is_active' => 1,
+      'options' => array('limit' => 0));
+    try {
+      $activeGroups = civicrm_api3('Group', 'Get', $params);
+    } catch (CiviCRM_API3_Exception $ex) {}
+    foreach ($activeGroups['values'] as $activeGroup) {
+      $groupList[$activeGroup['id']] = $activeGroup['title'];
+    }
+    $groupList[0] = ts('- select -');
+    asort($groupList);
+    return $groupList;
+  }
+
+  /**
+   * Method to get list of active membership types
+   *
+   * @return array
+   * @access protected
+   */
+  protected function getMembershipTypeList() {
+    $membershipTypeList = array();
+    $params = array(
+      'is_active' => 1,
+      'options' => array('limit' => 99999));
+    try {
+      $activeMembershipTypes = civicrm_api3('MembershipType', 'Get', $params);
+    } catch (CiviCRM_API3_Exception $ex) {}
+    foreach ($activeMembershipTypes['values'] as $activeMembershipType) {
+      $membershipTypeList[$activeMembershipType['id']] = $activeMembershipType['name'];
+    }
+    $membershipTypeList[0] = ts('- select -');
+    asort($membershipTypeList);
+    return $membershipTypeList;
   }
 
   /**
