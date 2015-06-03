@@ -1,5 +1,5 @@
 {
-  "ExternalDonorId":{
+  "externalDonorId":{
     "name":"externalDonorId",
     "title":"Externe Donor Identificatie",
     "extends":"Contact",

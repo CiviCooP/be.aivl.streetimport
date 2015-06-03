@@ -17,14 +17,14 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
 
   protected function getConfigValue($key) {
-    // TODO: replace with config/ts lookup
-    if ($key=='Recruiter') {
-      return 'Werver';
-    } elseif ($key=='Unknown Recruiter') {
-      return 'Unknown Werver';
-    } else {
-      return 'LOOKUP-ERROR';
+    $returnValue = 'LOOKUP-ERROR';
+    $extensionConfig = CRM_Streetimport_Config::singleton();
+    switch ($key) {
+      case 'Recruiter':
+        $returnValue = $extensionConfig->getRecruiterContactSubType();
+        break;
     }
+    return $returnValue;
   }
 
 

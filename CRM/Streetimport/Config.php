@@ -24,6 +24,10 @@ class CRM_Streetimport_Config {
   protected $streetRecruitmentCustomFields = array();
   protected $welcomeCallCustomGroup = array();
   protected $welcomeCallCustomFields = array();
+  protected $externalDonorIdCustomGroup = array();
+  protected $externalDonorIdCustomFields = array();
+  protected $streetRecruitmentImportType = null;
+  protected $welcomeCallImportType = null;
 
   /**
    * Constructor method
@@ -32,6 +36,8 @@ class CRM_Streetimport_Config {
     $settings = civicrm_api3('Setting', 'Getsingle', array());
     $this->resourcesPath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
     $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
+    $this->streetRecruitmentImportType = 1;
+    $this->welcomeCallImportType = 2;
 
     $this->setContactSubTypes();
     $this->setRelationshipTypes();
@@ -48,6 +54,26 @@ class CRM_Streetimport_Config {
    */
   public function getImportSettings() {
     return $this->importSettings;
+  }
+
+  /**
+   * Method to get the street recruitment import type
+   *
+   * @return int
+   * @access public
+   */
+  public function getStreetRecruitmentImportType() {
+    return $this->streetRecruitmentImportType;
+  }
+
+  /**
+   * Method to get the welcome call import type
+   *
+   * @return int
+   * @access public
+   */
+  public function getWelcomeCallImportType() {
+    return $this->welcomeCallImportType;
   }
 
   /**
@@ -191,13 +217,54 @@ class CRM_Streetimport_Config {
    * Method to retrieve the default fundraiser contact 
    * (assignee of activities)
    *
-   * @param string $key
    * @return integer
    * @access public
    */
-  public function getFundraiserContactID($key= 'id' ) {
-    // TODO: @Erik - implement
-    return 1;
+  public function getFundraiserContactID() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['fundraiser_id'];
+  }
+
+  /**
+   * Method to retrieve the default admin handler contact
+   * (assignee of activities)
+   *
+   * @return integer
+   * @access public
+   */
+  public function getAdminContactID() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['admin_id'];
+  }
+
+  /**
+   * Method to get the external donor id custom group (whole array or specific element)
+   *
+   * @param null $key
+   * @return mixed
+   * @access public
+   */
+  public function getExternalDonorIdCustomGroup($key = null) {
+    if (empty($key)) {
+      return $this->externalDonorIdCustomGroup;
+    } else {
+      return $this->externalDonorIdCustomGroup[$key];
+    }
+  }
+
+  /**
+   * Method to get the custom fields for external donor id (whole array or specific field array)
+   *
+   * @param null $key
+   * @return array
+   * @access public
+   */
+  public function getExternalDonorIdCustomFields($key = null) {
+    if (empty($key)) {
+      return $this->externalDonorIdCustomFields;
+    } else {
+      return $this->externalDonorIdCustomFields[$key];
+    }
   }
 
   /**
