@@ -48,8 +48,6 @@ class CRM_Streetimport_Config {
     $this->setActivityTypes();
     $this->setCustomData();
     $this->setImportSettings();
-    // TODO: implement: $this->setNewsletterGroup();
-    // TODO: implement: $this->setMembershipType();
   }
 
   /**
@@ -228,8 +226,8 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getNewsletterGroupID() {
-    // @TODO: get newsletter group from AIVL (ErikH)
-
+    $importSettings = $this->getImportSettings();
+    return $importSettings['newsletter_group_id']['value'];
     return $this->newsLetterGroupId;
   }
 
@@ -296,7 +294,7 @@ class CRM_Streetimport_Config {
    */
   public function getFundraiserContactID() {
     $importSettings = $this->getImportSettings();
-    return $importSettings['fundraiser_id'];
+    return $importSettings['fundraiser_id']['value'];
   }
 
   /**
@@ -308,7 +306,7 @@ class CRM_Streetimport_Config {
    */
   public function getAdminContactID() {
     $importSettings = $this->getImportSettings();
-    return $importSettings['admin_id'];
+    return $importSettings['admin_id']['value'];
   }
 
   /**
