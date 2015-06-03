@@ -48,8 +48,8 @@ class CRM_Streetimport_Config {
     $this->setActivityTypes();
     $this->setCustomData();
     $this->setImportSettings();
-    //$this->setNewsletterGroup();
-    //$this->setMembershipType();
+    // TODO: implement: $this->setNewsletterGroup();
+    // TODO: implement: $this->setMembershipType();
   }
 
   /**
@@ -253,6 +253,32 @@ class CRM_Streetimport_Config {
    */
   public function getAcceptedYesValues() {
     return $this->acceptedYesValues;
+  }
+
+  /**
+   * extract the SDD parameters type, frequency_unit, frequency_interval
+   *  from the given, localised parameter
+   *
+   * @param $unit_ln10  the localised unit string
+   * @return array with the given values or NULL if failed
+   */
+  public function extractSDDtype($unit_ln10) {
+    $unit_ln10 = strtolower(trim($unit_ln10));
+    
+    if ($unit_ln10 == 'maand') {
+      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 1);
+    } elseif ($unit_ln10 == 'kwartaal') {
+      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 3);
+    } elseif ($unit_ln10 == 'half jaar') {
+      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 6);
+    } elseif ($unit_ln10 == 'jaar') {
+      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'year', 'frequency_interval' => 1);
+    } elseif ($unit_ln10 == 'eenmalig') {
+      $sdd_type = array('type' => 'OOFF', 'frequency_unit' => NULL, 'frequency_interval' => NULL);
+    } else {
+      $sdd_type = NULL;
+    }
+    return $sdd_type;
   }
   
   /**

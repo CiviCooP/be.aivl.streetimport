@@ -28,17 +28,19 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $config = CRM_Streetimport_Config::singleton();
     $this->logger->logDebug("Processing 'StreetRecruitment' record #{$record['__id']}...");
 
-    // lookup recruiting organisation
+    // STEP 1: lookup recruiting organisation
     $recruiting_organisation = $this->getRecruitingOrganisation($record);
 
-
-    // look up / create recruiter
+    // STEP 2: look up / create recruiter
     $recruiter = $this->processRecruiter($record, $recruiting_organisation);
 
-    // look up / create donor
+    // STEP 3: look up / create donor
     $donor = $this->processDonor($record);
 
-    // create activity "Straatwerving"
+    // STEP 4: copy all to custom fields
+    // TODO: implement
+
+    // STEP 5: create activity "Straatwerving"
     $createdActvity = $this->createActivity(array(
                             'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
                             'subject'            => $config->translate("Street Recruitment"),
@@ -50,20 +52,18 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                             'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
                               ));
     // add custom data to the created activity
-    $this->saveActivityCustomData('street_recruitment', $record, $createdActivity['id']);
+    // TODO: implement: $this->saveActivityCustomData('street_recruitment', $record, $createdActivity['id']);
 
-    // create SEPA mandate
-    $this->createSDDMandate(array(
-      // TODO: stuff
-      ));
+    // STEP 6: create SEPA mandate
+    $mandate = $this->processMandate($record, $donor['id']);
 
-    // If newsletter wanted, add to newsletter group
+    // STEP 7: add to newsletter group if requested
     if ($this->isTrue($record, "Newsletter")) {
       $newsletter_group_id = $config->getNewsletterGroupID();
       $this->addContactToGroup($donor['id'], $newsletter_group_id);
     }
     
-    // create membership
+    // STEP 8: create membership if requested
     if ($this->isTrue($record, "Member")) {
       $this->createMembership(array(
         'contact_id'         => $donor['id'],
@@ -73,7 +73,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     }
 
 
-    // create activity 'Opvolgingsgesprek'
+    // STEP 8: create activity 'Opvolgingsgesprek' if requested
     if ($this->isTrue($record, "Follow Up Call")) {
       $this->createActivity(array(
                               'activity_type_id'   => $config->getFollowUpCallActivityType(),
@@ -87,8 +87,12 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                               ));
     }
 
+    // DONE
     $this->logger->logImport($record['__id'], true, 'StreetRecruitment');
   }
+
+
+
 
 
   /**
@@ -167,5 +171,49 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       ));
     
     return $donor;
+  }
+
+  /**
+   * will extract the required information for a SEPA mandate 
+   *  and create it accordingly
+   *
+   * @return array with entity data
+   */
+  protected function processMandate($record, $donor_id) {
+    $config = CRM_Streetimport_Config::singleton();
+
+    // check values
+    $frequency_unit = CRM_Utils_Array::value('Frequency Unit', $record);
+    if (empty($frequency_unit)) {
+      $this->logger->logWarning("No SDD specified, no mandate created.");
+      return NULL;
+    }
+
+
+    // extract the mandate type from the 'Frequency Unit' field
+    $mandate_data = $config->extractSDDtype();
+    if (!$mandate_data) {
+      $this->logger->logError("Bad mandate specification: " . CRM_Utils_Array::value('Frequency Unit', $record));
+      return NULL;
+    }
+
+    // multiply the frequency_interval, if a value > 1 is given
+    $frequency_interval = (int) CRM_Utils_Array::value('Frequency Unit', $record);
+    if ($frequency_interval > 1) {
+      $mandate_data['frequency_interval'] = $mandate_data['frequency_interval'] * $frequency_interval;
+    }
+
+    // fill the other required fields
+    $mandate_data['contact_id'] = $donor_id;
+    $mandate_data['reference']  = CRM_Utils_Array::value('Mandate Reference', $record);
+    $mandate_data['amount']     = (float) CRM_Utils_Array::value('Amount', $record);
+    $mandate_data['start_date'] = CRM_Utils_Array::value('Start Date', $record);
+    $mandate_data['end_date']   = CRM_Utils_Array::value('End Date', $record);
+    $mandate_data['iban']       = CRM_Utils_Array::value('IBAN', $record);
+    $mandate_data['bic']        = CRM_Utils_Array::value('Bic', $record);
+    $mandate_data['bank_name']  = CRM_Utils_Array::value('Bank Name', $record);
+    // don't set $mandate_data['creditor_id'], use default
+
+    return $this->createSDDMandate($mandate_data);
   }
 }
