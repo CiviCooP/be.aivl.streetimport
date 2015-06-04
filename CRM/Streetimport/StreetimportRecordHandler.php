@@ -104,7 +104,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       }
 
       // ..."with a relationship 'Werver' to the recruiting organization."
-      $this->createRelationship($this->getConfigValue('Recruiter'), $recruiter['id'], $recruiting_organisation['id']);
+      $this->createRelationship($recruiter['id'], $recruiting_organisation['id'], $config->getRecruiterRelationshipType());
 
       // "In all cases where the contact is not known, an activity of the type 'Incompleet werver contact' 
       //     will be generated  and assigned to the admin ID entered as a param"

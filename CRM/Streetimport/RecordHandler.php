@@ -297,6 +297,14 @@ abstract class CRM_Streetimport_RecordHandler {
   }
 
   /**
+   * create a relationship with given data
+   */
+  protected function createRelationship($contactA_id, $contactB_id, $relationship_type_id) {
+    $this->logger->logError("createRelationship not implemented!");
+    return NULL;
+  }
+
+  /**
    * uses SMARTY to render a template
    *
    * @return string 
