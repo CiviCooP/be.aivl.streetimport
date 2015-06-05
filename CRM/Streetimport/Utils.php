@@ -184,12 +184,15 @@ class CRM_Streetimport_Utils {
          * correct group name directly in database because creating with API causes
          * id to be added at the end of name which kind of defeats the idea of
          * having the same name in each install
+         * Core bug https://issues.civicrm.org/jira/browse/CRM-14062, resolved in 4.4.4
          */
-        $query = 'UPDATE civicrm_group SET name = %1 WHERE id = %2';
-        $queryParams = array(
-          1 => array($params['name'], 'String'),
-          2 => array($group['id'], 'Integer'));
-        CRM_Core_DAO::executeQuery($query, $queryParams);
+        if (CRM_Core_BAO_Domain::version() < 4.5) {
+          $query = 'UPDATE civicrm_group SET name = %1 WHERE id = %2';
+          $queryParams = array(
+            1 => array($params['name'], 'String'),
+            2 => array($group['id'], 'Integer'));
+          CRM_Core_DAO::executeQuery($query, $queryParams);
+        }
 
         $groupData = $group['values'];
       } catch (CiviCRM_API3_Exception $ex) {
