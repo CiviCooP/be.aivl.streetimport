@@ -277,6 +277,50 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get the default location type
+   *
+   * @return int
+   * @access public
+   */
+  public function getLocationTypeId() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['location_type_id']['value'];
+  }
+
+  /**
+   * Method to get the extra location type
+   *
+   * @return int
+   * @access public
+   */
+  public function getOtherLocationTypeId() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['other_location_type_id']['value'];
+  }
+
+  /**
+   * Method to get the phone type id of phone
+   *
+   * @return int
+   * @access public
+   */
+  public function getPhonePhoneTypeId() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['phone_phone_type_id']['value'];
+  }
+
+  /**
+   * Method to get the phone type id of mobile
+   *
+   * @return int
+   * @access public
+   */
+  public function getMobilePhoneTypeId() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['mobile_phone_type_id']['value'];
+  }
+
+  /**
    * Method to retrieve a list of values, 
    * that will be interpreted as TRUE/POSITIVE/YES
    *

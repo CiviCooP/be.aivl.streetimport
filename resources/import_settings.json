@@ -33,5 +33,25 @@
         "name": "offset_days",
         "label": "Dagen tussen import en 1e SDD",
         "value": "14"
+    },
+    "phone_phone_type_id": {
+        "name": "phone_phone_type_id",
+        "label": "Telefoontype voor vaste nummers",
+        "value": "1"
+    },
+    "mobile_phone_type_id": {
+        "name": "mobile_phone_type_id",
+        "label": "Telefoontype voor mobiele nummers",
+        "value": "2"
+    },
+    "location_type_id": {
+        "name": "location_type_id",
+        "label": "Locatietype voor adres en eerste telefoon",
+        "value": "1"
+    }
+    "other_location_type_id": {
+        "name": "other_location_type_id",
+        "label": "Locatietype voor eventuele extra telefoon",
+        "value": "1"
     }
 }

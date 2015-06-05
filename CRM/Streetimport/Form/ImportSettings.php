@@ -22,6 +22,9 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $employeeList = $this->getEmployeeList();
     $groupList = $this->getGroupList();
     $membershipTypeList = $this->getMembershipTypeList();
+    $phoneTypeList = $this->getPhoneTypeList();
+    $locationTypeList = $this->getLocationTypeList();
+
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
         case 'admin_id':
@@ -35,6 +38,18 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           break;
         case 'membership_type_id':
           $this->add('select', $settingName, $settingValues['label'], $membershipTypeList, TRUE);
+          break;
+        case 'phone_phone_type_id':
+          $this->add('select', $settingName, $settingValues['label'], $phoneTypeList, TRUE);
+          break;
+        case 'mobile_phone_type_id':
+          $this->add('select', $settingName, $settingValues['label'], $phoneTypeList, TRUE);
+          break;
+        case 'location_type_id':
+          $this->add('select', $settingName, $settingValues['label'], $locationTypeList, TRUE);
+          break;
+        case 'other_location_type_id':
+          $this->add('select', $settingName, $settingValues['label'], $locationTypeList, TRUE);
           break;
         default:
           $this->add('text', $settingName, $settingValues['label'], array(), TRUE);
@@ -113,6 +128,22 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     if (!isset($fields['membership_type_id']) || empty($fields['membership_type_id'])) {
       $errors['membership_type_id'] = 'This field can not be empty, you have to select a membership type!';
     }
+    if (!isset($fields['phone_phone_type_id']) || empty($fields['phone_phone_type_id'])) {
+      $errors['phone_phone_type_id'] = 'This field can not be empty, you have to select a phone type!';
+    }
+    if (!isset($fields['mobile_phone_type_id']) || empty($fields['mobile_phone_type_id'])) {
+      $errors['mobile_phone_type_id'] = 'This field can not be empty, you have to select a phone type!';
+    }
+    if (!isset($fields['location_type_id']) || empty($fields['location_type_id'])) {
+      $errors['location_type_id'] = 'This field can not be empty, you have to select a location type!';
+    }
+    if (!isset($fields['other_location_type_id']) || empty($fields['other_location_type_id'])) {
+      $errors['other_location_type_id'] = 'This field can not be empty, you have to select a location type!';
+    } else {
+      if ($fields['other_location_type_id'] == $fields['location_type_id']) {
+        $errors['other_location_type_id'] = 'Other location type can not be the same as the main one';
+      }
+    }
     if (!ctype_digit($fields['offset_days'])) {
       $errors['offset_days'] = 'This field can only contain numbers!';
     }
@@ -182,6 +213,59 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $membershipTypeList[0] = ts('- select -');
     asort($membershipTypeList);
     return $membershipTypeList;
+  }
+
+  /**
+   * Method to get list of active location types
+   *
+   * @return array
+   * @access protected
+   */
+  protected function getLocationTypeList() {
+    $locationTypeList = array();
+    $params = array(
+      'is_active' => 1,
+      'options' => array('limit' => 99999));
+    try {
+      $activeLocationTypes = civicrm_api3('LocationType', 'Get', $params);
+    } catch (CiviCRM_API3_Exception $ex) {}
+    foreach ($activeLocationTypes['values'] as $activeLocationType) {
+      $locationTypeList[$activeLocationType['id']] = $activeLocationType['display_name'];
+    }
+    $locationTypeList[0] = ts('- select -');
+    asort($locationTypeList);
+    return $locationTypeList;
+  }
+
+  /**
+   * Method to get list of active phone types
+   *
+   * @return array
+   * @throws Exception when no option group phone_type found
+   * @access protected
+   */
+  protected function getPhoneTypeList() {
+    $phoneTypeList = array();
+    $optionGroupParams = array(
+      'name' => 'phone_type',
+      'return' => 'id');
+    try {
+      $optionGroupId = civicrm_api3('OptionGroup', 'Getvalue', $optionGroupParams);
+      $optionValueParams = array(
+        'option_group_id' => $optionGroupId,
+        'is_active' => 1,
+        'options' => array('limit' => 99999));
+      $optionValues = civicrm_api3('OptionValue', 'Get', $optionValueParams);
+      foreach ($optionValues['values'] as $optionValue) {
+        $phoneTypeList[$optionValue['value']] = $optionValue['label'];
+      }
+      $phoneTypeList[0] = ts('- select -');
+      asort($phoneTypeList);
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception(ts('Could not find an option group with name phone_type, contact your system administrator.
+      Error from API OptionGroup Getvalue: '.$ex->getMessage()));
+    }
+    return $phoneTypeList;
   }
 
   /**
