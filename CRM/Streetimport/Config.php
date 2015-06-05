@@ -264,6 +264,18 @@ class CRM_Streetimport_Config {
     $importSettings = $this->getImportSettings();
     return $importSettings['processed_location']['value'];
   }
+
+  /**
+   * Method to get the offset days
+   *
+   * @return int
+   * @access public
+   */
+  public function getOffsetDays() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['offset_days']['value'];
+  }
+
   /**
    * Method to retrieve a list of values, 
    * that will be interpreted as TRUE/POSITIVE/YES
