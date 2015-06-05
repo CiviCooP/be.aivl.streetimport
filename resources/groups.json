@@ -5,5 +5,12 @@
     "is_active":1,
     "is_reserved":1,
     "description":"Groep voor contacten die de elektronische nieuwsbrief moeten krijgen"
+  },
+  "recruiting_organizations": {
+    "name":"recruiting_organizations",
+    "title": "Wervingsorganisaties",
+    "is_active":1,
+    "is_reserver":1,
+    "description": "Groep voor wervingsorganisaties (nodig voor custom group externe donor identificatie)"
   }
 }

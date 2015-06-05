@@ -31,6 +31,7 @@ class CRM_Streetimport_Config {
   protected $acceptedYesValues = array();
   protected $newsLetterGroupId = null;
   protected $membershipTypeId = null;
+  protected $recruitingOrganizationsGroupId = null;
 
   /**
    * Constructor method
@@ -223,7 +224,7 @@ class CRM_Streetimport_Config {
   /**
    * Method to retrieve the newsletter group id
    *
-   * @return integer
+   * @return int
    * @access public
    */
   public function getNewsletterGroupID() {
@@ -477,6 +478,9 @@ class CRM_Streetimport_Config {
       if (!$group) {
         CRM_Streetimport_Utils::createGroup($params);
       }
+      if ($params['name'] == "recruiting_organizations") {
+        $this->recruitingOrganizationsGroupId = $group['id'];
+      }
     }
   }
 
@@ -508,6 +512,9 @@ class CRM_Streetimport_Config {
         $customField = CRM_Streetimport_Utils::getCustomFieldWithNameCustomGroupId($customFieldName, $customGroup['id']);
         if (!$customField) {
           $customFieldData['custom_group_id'] = $customGroup['id'];
+          if ($customFieldName = 'recruiting_organization_id') {
+            $customFieldData['filter'] = 'action=lookup&group='.$this->recruitingOrganizationsGroupId;
+          }
           $customFieldParams = $customFieldData;
           $customField = CRM_Streetimport_Utils::createCustomField($customFieldParams);
         }
