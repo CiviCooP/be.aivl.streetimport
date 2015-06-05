@@ -25,19 +25,19 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
         case 'admin_id':
-          $this->add('select', $settingName, $settingValues['label'], $employeeList);
+          $this->add('select', $settingName, $settingValues['label'], $employeeList, TRUE);
           break;
         case 'fundraiser_id':
-          $this->add('select', $settingName, $settingValues['label'], $employeeList);
+          $this->add('select', $settingName, $settingValues['label'], $employeeList, TRUE);
           break;
         case 'newsletter_group_id':
-          $this->add('select', $settingName, $settingValues['label'], $groupList);
+          $this->add('select', $settingName, $settingValues['label'], $groupList, TRUE);
           break;
         case 'membership_type_id':
-          $this->add('select', $settingName, $settingValues['label'], $membershipTypeList);
+          $this->add('select', $settingName, $settingValues['label'], $membershipTypeList, TRUE);
           break;
         default:
-          $this->add('text', $settingName, $settingValues['label']);
+          $this->add('text', $settingName, $settingValues['label'], array(), TRUE);
           break;
       }
     }
@@ -78,7 +78,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
   public function postProcess() {
     $this->saveImportSettings($this->_submitValues);
     $userContext = CRM_Core_Session::USER_CONTEXT;
-    if (empty($userContext)) {
+    if (empty($userContext) || $userContext == 'userContext') {
       $session = CRM_Core_Session::singleton();
       $session->pushUserContext(CRM_Utils_System::url('civicrm', '', true));
     }
@@ -106,6 +106,15 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     }
     if (!isset($fields['fundraiser_id']) || empty($fields['fundraiser_id'])) {
       $errors['fundraiser_id'] = 'This field can not be empty, you have to select a contact!';
+    }
+    if (!isset($fields['newsletter_group_id']) || empty($fields['newsletter_group_id'])) {
+      $errors['newsletter_group_id'] = 'This field can not be empty, you have to select a group!';
+    }
+    if (!isset($fields['membership_type_id']) || empty($fields['membership_type_id'])) {
+      $errors['membership_type_id'] = 'This field can not be empty, you have to select a membership type!';
+    }
+    if (!ctype_digit($fields['offset_days'])) {
+      $errors['offset_days'] = 'This field can only contain numbers!';
     }
     if (empty($errors)) {
       return TRUE;
