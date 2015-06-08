@@ -151,7 +151,7 @@ class CRM_Streetimport_Config {
    * @return mixed
    * @access public
    */
-  public function getImportErrorActivityType($key= 'id' ) {
+  public function getImportErrorActivityType($key= 'value' ) {
     return $this->importErrorActivityType[$key];
   }
 
@@ -162,7 +162,7 @@ class CRM_Streetimport_Config {
    * @return mixed
    * @access public
    */
-  public function getFollowUpCallActivityType($key= 'id' ) {
+  public function getFollowUpCallActivityType($key= 'value' ) {
     return $this->followUpCallActivityType[$key];
   }
 
@@ -173,7 +173,7 @@ class CRM_Streetimport_Config {
    * @return mixed
    * @access public
    */
-  public function getWelcomeCallActivityType($key= 'id' ) {
+  public function getWelcomeCallActivityType($key= 'value' ) {
     return $this->welcomeCallActivityType[$key];
   }
 
@@ -184,7 +184,7 @@ class CRM_Streetimport_Config {
    * @return mixed
    * @access public
    */
-  public function getStreetRecruitmentActivityType($key= 'id' ) {
+  public function getStreetRecruitmentActivityType($key= 'value' ) {
     return $this->streetRecruitmentActivityType[$key];
   }
 
