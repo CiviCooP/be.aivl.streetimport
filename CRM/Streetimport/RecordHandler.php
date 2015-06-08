@@ -143,22 +143,22 @@ abstract class CRM_Streetimport_RecordHandler {
   protected function createContact($contact_data) {
     // verify data
     if (empty($contact_data['contact_type'])) {
-      $this->logger->logError("Contact missing contact_type");
+      $this->logger->logError("Contact missing contact_type", "Create Contact Error");
       return NULL;
     }
     if ($contact_data['contact_type'] == 'Organization') {
       if (empty($contact_data['organization_name'])) {
-        $this->logger->logError("Contact missing organization_name");
+        $this->logger->logError("Contact missing organization_name", "Create Contact Error");
         return NULL;
       }      
     } elseif ($contact_data['contact_type'] == 'Household') {
       if (empty($contact_data['household_name'])) {
-        $this->logger->logError("Contact missing household_name");
+        $this->logger->logError("Contact missing household_name", "Create Contact Error");
         return NULL;
       }
     } else {
       if (empty($contact_data['first_name']) && empty($contact_data['last_name'])) {
-        $this->logger->logError("Contact missing first/last_name");
+        $this->logger->logError("Contact missing first/last_name", "Create Contact Error");
         return NULL;
       }
     }
@@ -173,7 +173,7 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logDebug("Contact [{$contact['id']}] created.");      
       return $contact;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage());
+      $this->logger->logError($ex->getMessage(), "Create Contact Error");
       return NULL;
     }
   }
@@ -190,7 +190,7 @@ abstract class CRM_Streetimport_RecordHandler {
     // remark: using BAOs, the API here is somewhat messy
     $activity = CRM_Activity_BAO_Activity::create($data);
     if (empty($activity->id)) {
-      $this->logger->logError("Couldn't create activity.");
+      $this->logger->logError("Couldn't create activity.", "Create Activity Error");
       return NULL;
     }
 
@@ -227,7 +227,7 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logDebug("Email '{$data['email']}' created for contact [{$data['contact_id']}].");      
       return $email;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage());
+      $this->logger->logError($ex->getMessage(), "Create Email Error");
       return NULL;
     }
   }
@@ -242,7 +242,7 @@ abstract class CRM_Streetimport_RecordHandler {
     $required_address_attributes = array("city", "street_name", "country_id", "contact_id");
     foreach ($required_address_attributes as $attribute) {
       if (empty($data[$attribute])) {
-        $this->logger->logError("Address missing $attribute");
+        $this->logger->logError("Address missing $attribute", "Create Address Error");
         return NULL;
       }
     }
@@ -253,7 +253,7 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logDebug("Address [{$address['id']}] created for contact [{$data['contact_id']}].");
       return $address;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage());
+      $this->logger->logError($ex->getMessage(), "Create Address Error");
       return NULL;
     }
   }
@@ -275,7 +275,7 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logDebug("Phone '{$data['phone']}' created for contact [{$data['contact_id']}].");      
       return $phone;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage());
+      $this->logger->logError($ex->getMessage(), "Create Phone Error");
       return NULL;
     }
   }

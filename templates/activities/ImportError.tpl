@@ -1,0 +1,15 @@
+<h2>{$title}</h2>
+<table>
+  <tr>
+    <td>{ts}Message{/ts}</td>
+    <td>{$message}</td>
+  </tr>
+  <tr>
+    <td>{ts}Source{/ts}</td>
+    <td>{$source}</td>
+  </tr>
+  <tr>
+    <td>{ts}Line#{/ts}</td>
+    <td>{$line_id}</td>
+  </tr>
+</table>
