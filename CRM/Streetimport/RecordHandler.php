@@ -183,7 +183,7 @@ abstract class CRM_Streetimport_RecordHandler {
    *
    * @return array with activity entity
    */
-  protected function createActivity($data, $assigned_contact_ids=NULL) {
+  public function createActivity($data, $assigned_contact_ids=NULL) {
     
     // TODO: $data sanitation
 
