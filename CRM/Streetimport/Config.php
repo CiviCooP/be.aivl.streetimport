@@ -195,7 +195,7 @@ class CRM_Streetimport_Config {
    * @return mixed
    * @access public
    */
-  public function getRecruiterRelationshipType($key= 'id' ) {
+  public function getRecruiterRelationshipType($key= 'value' ) {
     return $this->recruiterRelationshipType[$key];
   }
 
