@@ -321,7 +321,12 @@ abstract class CRM_Streetimport_RecordHandler {
   }
 
   /**
-   * add contact to given group ID
+   * Method to add contact to given group ID
+   *
+   * @param int $contactId
+   * @param int $groupId
+   * @return mixed
+   * @access protected
    */
   protected function addContactToGroup($contactId, $groupId) {
     if (empty($contactId) || empty($groupId)) {
@@ -341,10 +346,27 @@ abstract class CRM_Streetimport_RecordHandler {
   }
 
   /**
-   * create membership with given data
+   * Method to create membership with given data
+   *
+   * @param array $membershipData
+   * @return mixed
+   * @access protected
    */
-  protected function createMembership($membership_data) {
-    $this->logger->logError("createMembership not implemented!");
+  protected function createMembership($membershipData) {
+    $mandatoryParams = array('contact_id', 'membership_type_id', 'membership_source');
+    foreach ($mandatoryParams as $mandatory) {
+      if (!in_array($mandatory, $membershipData)) {
+        $this->logger->logError('Membership not created, mandatory param missing: '.$mandatory);
+        return NULL;
+      }
+    }
+    try {
+      $result = civicrm_api3('Membership', 'Create', $membershipData);
+      return $result;
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError('Membership not created, error from API Membership Create: '.$ex->getMessage());
+      return NULL;
+    }
     return NULL;
   }
 
