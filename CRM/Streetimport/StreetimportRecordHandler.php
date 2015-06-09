@@ -170,7 +170,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         return $dao->entity_id;
       }
     }
-    $this->logger->logError('No contact found with donor ID '.$donorId, "Lookup Donor Error");
     return NULL;
   }
 
@@ -190,5 +189,78 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       return NULL;
     }
   }
- 
+
+  /**
+   * Method to get contact data with donor Id
+   *
+   * @param int $donorId
+   * @return array
+   * @access public
+   */
+  public function getDonorWithExternalId($donorId) {
+    if (empty($donorId)) {
+      return array();
+    }
+    $contactId = $this->getContactForDonorID($donorId);
+    if (empty($contactId)) {
+      return array();
+    }
+    return $this->getContact($contactId);
+
+  }
+  public function getRecruitmentType($sourceRecruitmentType) {
+    // TODO not in sample from Ilja, discuss (ErikH)
+    return '';
+  }
+
+  /**
+   * Method to set the areas of interest
+   *
+   * @param $sourceAreasInterest
+   * @return null|string
+   * @access public
+   */
+  public function getAreasOfInterest($sourceAreasInterest) {
+    $areasOfInterest = null;
+    if (!empty($sourceAreasInterest)) {
+      $config = CRM_Streetimport_Config::singleton();
+      $tempAreas = array();
+      $optionGroupId = $config->getAreasOfIntereestOptionGroup();
+      $parts = explode('/', $sourceAreasInterest);
+      foreach ($parts as $part) {
+        $params = array(
+          'option_group_id' => $optionGroupId,
+          'label' => trim($part),
+          'return' => 'value');
+        try {
+          $tempAreas[] = civicrm_api3('OptionValue', 'Getvalue', $params);
+        } catch (CiviCRM_API3_Exception $ex) {}
+      }
+    }
+    if (!empty($tempAreas)) {
+      $areasOfInterest = CRM_Core_DAO::VALUE_SEPARATOR.implode(CRM_Core_DAO::VALUE_SEPARATOR, $tempAreas).CRM_Core_DAO::VALUE_SEPARATOR;
+    }
+    return $areasOfInterest;
+  }
+
+  /**
+   * Method to retrieve the frequency unit value with a label
+   *
+   * @param $sourceFrequencyUnit
+   * @return array|null
+   */
+  public function getFrequencyUnit($sourceFrequencyUnit) {
+    $config = CRM_Streetimport_Config::singleton();
+    $optionGroupId = $config->getFrequencyUnitOptionGroup();
+    $params = array(
+      'option_group_id' => $optionGroupId,
+      'label' => strtolower($sourceFrequencyUnit),
+      'return' => 'value');
+    try {
+      $frequencyUnit = civicrm_api3('OptionValue', 'Getvalue', $params);
+    } catch (CiviCRM_API3_Exception $ex) {
+      $frequencyUnit = null;
+    }
+    return $frequencyUnit;
+  }
 }

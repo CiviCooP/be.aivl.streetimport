@@ -14,7 +14,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    * @return true or false
    */
   public function canProcessRecord($record) {
-    return isset($record['Loading type']) && $record['Loading type'] == 1;
+    $config = CRM_Streetimport_Config::singleton();
+    return isset($record['Loading type']) && $record['Loading type'] == $config->getStreetRecruitmentImportType();
   }
   
   /** 
@@ -37,11 +38,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     // STEP 3: look up / create donor
     $donor = $this->processDonor($record);
 
-    // STEP 4: copy all to custom fields
-    // TODO: implement
-
     // STEP 5: create activity "Straatwerving"
-    $createdActvity = $this->createActivity(array(
+    $createdActivity = $this->createActivity(array(
                             'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
                             'subject'            => $config->translate("Street Recruitment"),
                             'status_id'          => $config->getStreetRecruitmentActivityStatusId(),
@@ -52,7 +50,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                             'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
                               ));
     // add custom data to the created activity
-    // TODO: implement: $this->saveActivityCustomData('street_recruitment', $record, $createdActivity['id']);
+    $this->createActivityCustomData($createdActivity['id'], $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record));
 
     // STEP 6: create SEPA mandate
     $mandate = $this->processMandate($record, $donor['id']);
@@ -77,7 +75,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     if ($this->isTrue($record, "Follow Up Call")) {
       $this->createActivity(array(
                               'activity_type_id'   => $config->getFollowUpCallActivityType(),
-                              'subject'            => $config->translate("Follow Up Call"),
+                              'subject'            => $config->translate("Follow Up Call from ").$config->translate('Street Recruitment'),
                               'status_id'          => $config->getFollowUpCallActivityStatusId(),
                               'activity_date_time' => date('YmdHis', strtotime("+1 day")),
                               'target_contact_id'  => (int) $donor['id'],
@@ -91,18 +89,18 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $this->logger->logImport($record['__id'], true, 'StreetRecruitment');
   }
 
-
-
-
-
   /**
-   * will create/lookip the donor along with all relevant information
+   * will create/lookup the donor along with all relevant information
    *
+   * @param $record
    * @return array with entity data
    */
   protected function processDonor($record) {
     $config = CRM_Streetimport_Config::singleton();
-    // TODO: lookup by "DonorID" ErikH
+    $donor = $this->getDonorWithExternalId($record['DonorID']);
+    if ($donor) {
+      return $donor;
+    }
 
     // create base contact
     $householdPrefixes = $config->getHouseholdPrefixIds();
@@ -179,8 +177,6 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     
     return $donor;
   }
-
-
 
   /**
    * will extract the required information for a SEPA mandate 
@@ -264,5 +260,55 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     // don't set $mandate_data['creditor_id'], use default creditor
 
     return $this->createSDDMandate($mandate_data);
+  }
+
+  /**
+   * Method to build data for custom group street recruitment
+   *
+   * @param $record
+   * @return array $customData
+   * @access protected
+   */
+  protected function buildActivityCustomData($record) {
+    $config = CRM_Streetimport_Config::singleton();
+    $acceptedYesValues = $config->getAcceptedYesValues();
+    $customData = array();
+    $customData['new_date_import'] = date('YmdHis');
+    $customData['new_recruit_location'] = $record['Recruitment Location'];
+    $customData['new_recruit_type'] = $this->getRecruitmentType($record['Recruitment Type']);
+    if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
+      $customData['new_follow_up_call'] = 1;
+    } else {
+      $customData['new_follow_up_call'] = 0;
+    }
+    if (in_array($record['Newsletter'], $acceptedYesValues)) {
+      $customData['new_newsletter'] = 1;
+    } else {
+      $customData['new_newsletter'] = 0;
+    }
+    if (in_array($record['Member'], $acceptedYesValues)) {
+      $customData['new_member'] = 1;
+    } else {
+      $customData['new_member'] = 0;
+    }
+    if (in_array($record['Cancellation'], $acceptedYesValues)) {
+      $customData['new_sdd_cancel'] = 1;
+    } else {
+      $customData['new_sdd_cancel'] = 0;
+    }
+    $customData['new_areas_interest'] = $this->getAreasOfInterest($record['Interests']);
+    $customData['new_remarks'] = $record['Notes'];
+    $customData['new_sdd_mandate'] = $record['Mandate Reference'];
+    $customData['new_sdd_iban'] = $record['IBAN'];
+    $customData['new_sdd_bankname'] = $record['Bank Name'];
+    $customData['new_sdd_bic'] = $record['Bic'];
+    $customData['new_sdd_amount'] = CRM_Utils_Money::format($record['Amount']);
+    $customData['new_sdd_freq_interval'] = $record['Frequency Interval'];
+    $customData['new_sdd_freq_unit'] = $this->getFrequencyUnit($record['Frequency Unit']);
+    $customData['new_sdd_start_date'] = date('Ymd', strtotime($record['Start Date']));
+    if (!empty($record['End Date'])) {
+      $customData['new_sdd_end_date'] = date('Ymd', strtotime($record['End Date']));
+    }
+    return $customData;
   }
 }

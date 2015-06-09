@@ -53,7 +53,8 @@ class CRM_Streetimport_Utils {
    * @static
    */
   public static function getActivityTypeWithName($activityTypeName) {
-    $activityTypeOptionGroupId = self::getOptionGroupIdWithName('activity_type');
+    $optionGroup = self::getOptionGroupWithName('activity_type');
+    $activityTypeOptionGroupId = $optionGroup['id'];
     $params = array(
       'option_group_id' => $activityTypeOptionGroupId,
       'name' => $activityTypeName);
@@ -74,7 +75,8 @@ class CRM_Streetimport_Utils {
    * @static
    */
   public static function getActivityStatusIdWithName($activityStatusName) {
-    $activityStatusOptionGroupId = self::getOptionGroupIdWithName('activity_status');
+    $optionGroup = self::getOptionGroupWithName('activity_status');
+    $activityStatusOptionGroupId = $optionGroup['id'];
     $params = array(
       'option_group_id' => $activityStatusOptionGroupId,
       'name' => $activityStatusName);
@@ -142,21 +144,46 @@ class CRM_Streetimport_Utils {
    *
    * @param string $optionGroupName
    * @return int $optionGroupId
-   * @throws Exception when option group not found
    * @access public
    * @static
    */
-  public static function getOptionGroupIdWithName($optionGroupName) {
+  public static function getOptionGroupWithName($optionGroupName) {
     $params = array(
       'name' => $optionGroupName,
-      'return' => 'id');
+      'is_active' => 1);
     try {
-      $optionGroupId = civicrm_api3('OptionGroup', 'Getvalue', $params);
-      return $optionGroupId;
+      $optionGroup = civicrm_api3('OptionGroup', 'Getsingle', $params);
+      return $optionGroup;
     } catch (CiviCRM_API3_Exception $ex) {
-      throw new Exception('Could not find a valid option group for name '.$optionGroupName.', error from
-        API OptionGroup Getvalue: ' . $ex->getMessage());
+      return array();
     }
+  }
+
+  /**
+   * Method to create option group if not exists yet
+   *
+   * @param $params
+   * @return array
+   * @throws Exception when error from API
+   * @access public
+   */
+  public static function createOptionGroup($params) {
+    $optionGroupData = array();
+    if (self::getOptionGroupWithName($params['name']) == FALSE) {
+      $params['is_active'] = 1;
+      $params['is_reserved'] = 1;
+      if (!isset($params['title'])) {
+        $params['title'] = ucfirst($params['name']);
+      }
+      try {
+        $optionGroup = civicrm_api3('OptionGroup', 'Create', $params);
+        $optionGroupData = $optionGroup['values'];
+      } catch (CiviCRM_API3_Exception $ex) {
+        throw new Exception('Could not create option_group type with name ' . $params['name']
+          . ', error from API OptionGroup Create: ' . $ex->getMessage());
+      }
+    }
+    return $optionGroupData;
   }
 
   /**
@@ -215,7 +242,8 @@ class CRM_Streetimport_Utils {
    */
   public static function createActivityType($params) {
     $activityTypeData = array();
-    $params['option_group_id'] = self::getOptionGroupIdWithName('activity_type');
+    $optionGroup = self::getOptionGroupWithName('activity_type');
+    $params['option_group_id'] = $optionGroup['id'];
     if (!isset($params['name']) || empty($params['name'])) {
       throw new Exception('When trying to create an Activity Type name is a mandatory parameter and can not be empty');
     }

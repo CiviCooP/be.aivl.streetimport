@@ -209,6 +209,46 @@ abstract class CRM_Streetimport_RecordHandler {
     $this->logger->logDebug("Activity [{$activity->id}] created: '{$data['subject']}'");
     return $activity;
   }
+  /**
+   * Method to add custom data for activity
+   *
+   * @param int $activityId
+   * @param string $tableName
+   * @param array $data array holding key/value pairs (expecting column names in key and array with type and value in value)
+   * @return bool
+   */
+  public function createActivityCustomData($activityId, $tableName, $data) {
+    if (CRM_Core_DAO::checkTableExists($tableName) == FALSE) {
+      $this->logger->logError('No custom data for activity created could not find custom table '.$tableName);
+      return FALSE;
+    }
+    if (empty($activityId)) {
+      $this->logger->logError('No custom data for activity created');
+      return FALSE;
+    }
+    $setValues = array();
+    $setParams = array();
+    $setValues[1] = 'entity_id = %1';
+    $setParams[1] = array($activityId, 'Integer');
+    $index = 2;
+    foreach ($data as $key => $value) {
+      $setValues[] = $key.' = %'.$index;
+      $setParams[$index] = array($value['value'], $value['type']);
+      $index++;
+    }
+    if (empty($setValues)) {
+      $this->logger->logError('No custom data for activity created, no data');
+      return FALSE;
+    }
+    $query = 'INSERT INTO '.$tableName.' SET '.implode(', ', $setValues);
+    try {
+      CRM_Core_DAO::executeQuery($query, $setParams);
+      return TRUE;
+    } catch (Exception $ex) {
+      $this->logger->logError('No custom data for activity created');
+      return FALSE;
+    }
+  }
 
   /** 
    * Create an email entity with the given data

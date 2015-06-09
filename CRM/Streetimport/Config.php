@@ -32,6 +32,10 @@ class CRM_Streetimport_Config {
   protected $newsLetterGroupId = null;
   protected $membershipTypeId = null;
   protected $recruitingOrganizationsGroupId = null;
+  protected $frequenceUnitOptionGroup = null;
+  protected $recruitmentTypeOptionGroup = null;
+  protected $areasOfInterestOptionGroup = null;
+
 
   /**
    * Constructor method
@@ -42,14 +46,48 @@ class CRM_Streetimport_Config {
     $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
     $this->streetRecruitmentImportType = 1;
     $this->welcomeCallImportType = 2;
-    $this->acceptedYesValues = array('J', 'j', 'Ja', 'ja', 'true', 'waar', 'yes', 'Yes');
+    $this->acceptedYesValues = array('J', 'j', 'Ja', 'ja', 'true', 'waar', 'yes', 'Yes', 1);
 
     $this->setContactSubTypes();
     $this->setRelationshipTypes();
     $this->setActivityTypes();
+    $this->setOptionGroups();
     $this->setCustomData();
     $this->setImportSettings();
     $this->setGroups();
+  }
+
+  /**
+   * Method to get option group for recruitment type
+   *
+   * @param string $key
+   * @return mixed
+   * @access public
+   */
+  public function getRecruitmentTypeOptionGroup($key = 'id') {
+    return $this->recruitmentTypeOptionGroup[$key];
+  }
+
+  /**
+   * Method to get option group for areas of interest
+   *
+   * @param string $key
+   * @return mixed
+   * @access public
+   */
+  public function getAreasOfIntereestOptionGroup($key = 'id') {
+    return $this->areasOfInterestOptionGroup[$key];
+  }
+
+  /**
+   * Method to get option group for frequency unit
+   *
+   * @param string $key
+   * @return mixed
+   * @access public
+   */
+  public function getFrequencyUnitOptionGroup($key = 'id') {
+    return $this->frequenceUnitOptionGroup[$key];
   }
 
   /**
@@ -60,6 +98,28 @@ class CRM_Streetimport_Config {
    */
   public function getImportSettings() {
     return $this->importSettings;
+  }
+
+  /**
+   * Method to get the street recruitment custom group
+   *
+   * @param string $key
+   * @return mixed
+   * @access public
+   */
+  public function getStreetRecruitmentCustomGroup($key = 'id') {
+    return $this->streetRecruitmentCustomGroup[$key];
+  }
+
+  /**
+   * Method to get the welcome call group
+   *
+   * @param string $key
+   * @return mixed
+   * @access public
+   */
+  public function getWelcomeCallCustomGroup($key = 'id') {
+    return $this->welcomeCallCustomGroup[$key];
   }
 
   /**
@@ -550,6 +610,30 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to create option groups
+   *
+   * @throws Exception when resource file not found
+   * @access protected
+   */
+  protected function setOptiongroups() {
+    $jsonFile = $this->resourcesPath.'option_groups.json';
+    if (!file_exists($jsonFile)) {
+      throw new Exception('Could not load option_groups configuration file for extension,
+      contact your system administrator!');
+    }
+    $optionGroupsJson = file_get_contents($jsonFile);
+    $optionGroups = json_decode($optionGroupsJson, true);
+    foreach ($optionGroups as $name => $title) {
+      $propertyName = $name.'OptionGroup';
+      $optionGroup = CRM_Streetimport_Utils::getOptionGroupWithName($name);
+      if (empty($optionGroup)) {
+        $optionGroup = CRM_Streetimport_Utils::createOptionGroup(array('name' => $name, 'title' => $title));
+      }
+      $this->$propertyName = $optionGroup;
+    }
+  }
+
+  /**
    * Method to create or get groups
    *
    * @throws Exception when resource file could not be loaded
@@ -646,7 +730,11 @@ class CRM_Streetimport_Config {
     $customFieldParams = array();
     foreach ($customFieldData as $name => $value) {
       if ($name == "option_group") {
-        $customFieldParams['option_group_id'] = CRM_Streetimport_Utils::getOptionGroupIdWithName($value);
+        $optionGroup = CRM_Streetimport_Utils::getOptionGroupWithName($value);
+        if (empty($optionGroup)) {
+          $optionGroup = CRM_Streetimport_Utils::createOptionGroup(array('name' => $value));
+        }
+        $customFieldParams['option_group_id'] = $optionGroup['id'];
       } else {
         $customFieldParams[$name] = $value;
       }
