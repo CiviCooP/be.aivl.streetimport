@@ -170,7 +170,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         return $dao->entity_id;
       }
     }
-    $this->logger->logError('No contact found with donor ID '.$donorId);
+    $this->logger->logError('No contact found with donor ID '.$donorId, "Lookup Donor Error");
     return NULL;
   }
 
@@ -186,7 +186,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $this->logger->logDebug("SDD mandate [{$mandate['id']}] created, reference is '{$mandate['reference']}'");
       return $mandate;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError("Error while trying to create mandate. Error was: " . $ex->getMessage());
+      $this->logger->logError("Error while trying to create mandate. Error was: " . $ex->getMessage(), "Create SDD Mandate Error");
       return NULL;
     }
   }

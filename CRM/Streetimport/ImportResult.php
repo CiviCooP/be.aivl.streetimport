@@ -88,16 +88,18 @@ class CRM_Streetimport_ImportResult {
   /**
    * shortcut for logMessage($message, ERROR)
    */
-  public function logError($message) {
+  public function logError($message, $source = "Unknown", $line_id = "n/a", $title = "Import Error") {
     $this->logMessage($message, ERROR);
+    $this->createErrorActivity($message, $source, $line_id, $title);
   }
 
   /**
    * shortcut for logMessage($message, ERROR)
    * @param abort  if true, an exception will be raised, stopping the execution
    */
-  public function logFatal($message) {
+  public function logFatal($message, $source = "Unknown", $line_id = "n/a", $title = "Import Failure") {
     $this->logMessage($message, FATAL);
+    $this->createErrorActivity($message, $source, $line_id, $title);
   }
 
   /**
@@ -142,6 +144,39 @@ class CRM_Streetimport_ImportResult {
       return civicrm_api3_create_error($message);
     } else {
       return civicrm_api3_create_success($counts);
+    }
+  }
+
+  /**
+   * This will create an "Error" activity assigned to the admin
+   * @see https://github.com/CiviCooP/be.aivl.streetimport/issues/11
+   */
+  protected function createErrorActivity($message, $source = "Unknown", $line_id = "n/a", $title = "Import Error") {
+    try {  // AVOID raising anothe excption leading to this
+      $config = CRM_Streetimport_Config::singleton();
+
+      // TOOD: replace this ugly workaround:
+      $handler = new CRM_Streetimport_StreetRecruitmentRecordHandler($this);
+
+      // create the activity
+      $activity_info = array(
+        'message' => $config->translate($message),
+        'title'   => $config->translate($title),
+        'source'  => $source,
+        'line_id' => $line_id);
+      $handler->createActivity(array(
+                            'activity_type_id'   => $config->getImportErrorActivityType(),
+                            'subject'            => $config->translate($title),
+                            'status_id'          => $config->getImportErrorActivityStatusId(),
+                            'activity_date_time' => date('YmdHis'),
+                            // 'target_contact_id'  => (int) $config->getAdminContactID(),
+                            'source_contact_id'  => (int) $config->getAdminContactID(),
+                            'assignee_contact_id'=> (int) $config->getAdminContactID(),
+                            'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
+                            ));
+      
+    } catch (Exception $e) {
+      error_log("Error while creating an activity to report another error: " . $e->getMessage());
     }
   }
 }
