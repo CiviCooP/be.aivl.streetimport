@@ -7,6 +7,7 @@
   "Organisatie J/N":"Organization Yes/No",
   "CampagneID":"Campaign ID",
   "DonorID":"DonorID",
+  "Aanspreking":"Prefix",
   "Voornaam":"First Name",
   "Achternaam":"Last Name",
   "Straatnaam":"Street Name",

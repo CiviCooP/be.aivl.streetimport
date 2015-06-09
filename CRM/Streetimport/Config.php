@@ -321,6 +321,17 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get prefixes for household
+   *
+   * @return array
+   * @access public
+   */
+  public function getHouseholdPrefixIds() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['household_prefix_id']['value'];
+  }
+
+  /**
    * Method to get the phone type id of phone
    *
    * @return int

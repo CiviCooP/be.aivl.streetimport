@@ -105,11 +105,12 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     // TODO: lookup by "DonorID" ErikH
 
     // create base contact
+    $householdPrefixes = $config->getHouseholdPrefixIds();
     $contact_data = array();
     if ($this->isTrue($record, 'Organization Yes/No')) {
       $contact_data['contact_type']      = 'Organization';
       $contact_data['organization_name'] = CRM_Utils_Array::value('Last Name',  $record);
-    } elseif (empty($record['First Name'])) {
+    } elseif (in_array($record['Donor Prefix'], $householdPrefixes)) {
       $contact_data['contact_type']      = 'Household';
       $contact_data['household_name']    = CRM_Utils_Array::value('Last Name',  $record);
     } else {

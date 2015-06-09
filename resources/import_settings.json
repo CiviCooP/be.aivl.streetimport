@@ -63,5 +63,15 @@
         "name": "default_financial_type_id",
         "label": "Standaard financieel type voor SDD",
         "value": "4"
+    },
+    "household_prefix_id": {
+        "name": "household_prefix_id",
+        "label": "Prefix voor huishouden",
+        "value": [
+            "6",
+            "5",
+            "3",
+            "4"
+        ]
     }
 }

@@ -26,6 +26,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $locationTypeList = $this->getLocationTypeList();
     $countryList = $this->getCountryList();
     $financialTypeList = $this->getFinancialTypeList();
+    $prefixList = $this->getPrefixList();
 
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
@@ -58,6 +59,12 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           break;
         case 'default_financial_type_id':
           $this->add('select', $settingName, $settingValues['label'], $financialTypeList, TRUE);
+          break;
+        case 'household_prefix_id':
+          $prefixSelect = $this->addElement('advmultiselect', $settingName, $settingValues['label'], $prefixList,
+            array('size' => 5, 'style' => 'width:300px', 'class' => 'advmultselect'),TRUE);
+          $prefixSelect->setButtonAttributes('add', array('value' => ts('Household >>')));
+          $prefixSelect->setButtonAttributes('remove', array('value' => ts('<< Individual')));
           break;
         default:
           $this->add('text', $settingName, $settingValues['label'], array(), TRUE);
@@ -274,6 +281,37 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
       Error from API OptionGroup Getvalue: '.$ex->getMessage()));
     }
     return $phoneTypeList;
+  }
+
+  /**
+   * Method to get list of active prefix
+   *
+   * @return array
+   * @throws Exception when no option group individual_prefix found
+   * @access protected
+   */
+  protected function getPrefixList() {
+    $prefixList = array();
+    $optionGroupParams = array(
+      'name' => 'individual_prefix',
+      'return' => 'id');
+    try {
+      $optionGroupId = civicrm_api3('OptionGroup', 'Getvalue', $optionGroupParams);
+      $optionValueParams = array(
+        'option_group_id' => $optionGroupId,
+        'is_active' => 1,
+        'options' => array('limit' => 99999));
+      $optionValues = civicrm_api3('OptionValue', 'Get', $optionValueParams);
+      foreach ($optionValues['values'] as $optionValue) {
+        $prefixList[$optionValue['value']] = $optionValue['label'];
+      }
+      $prefixList[0] = ts('- select -');
+      asort($prefixList);
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception(ts('Could not find an option group with name individual_prefix, contact your system administrator.
+      Error from API OptionGroup Getvalue: '.$ex->getMessage()));
+    }
+    return $prefixList;
   }
 
   /**
