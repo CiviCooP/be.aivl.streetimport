@@ -58,5 +58,10 @@
         "name": "default_country_id",
         "label": "Standaard land",
         "value": "1020"
+    },
+    "default_financial_type_id": {
+        "name": "default_financial_type_id",
+        "label": "Standaard financieel type voor SDD",
+        "value": "4"
     }
 }

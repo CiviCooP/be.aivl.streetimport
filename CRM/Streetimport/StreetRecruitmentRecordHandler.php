@@ -258,8 +258,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $mandate_data['bic']           = CRM_Utils_Array::value('Bic', $record);
     $mandate_data['bank_name']     = CRM_Utils_Array::value('Bank Name', $record);
 
-    // TODO: check with AIVl:
-    $mandate_data['financial_type_id']  = 1;
+    $mandate_data['financial_type_id']  = $config->getDefaultFinancialTypeId();
 
     // don't set $mandate_data['creditor_id'], use default creditor
 

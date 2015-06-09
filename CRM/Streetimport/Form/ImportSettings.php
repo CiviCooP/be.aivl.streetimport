@@ -25,6 +25,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $phoneTypeList = $this->getPhoneTypeList();
     $locationTypeList = $this->getLocationTypeList();
     $countryList = $this->getCountryList();
+    $financialTypeList = $this->getFinancialTypeList();
 
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
@@ -54,6 +55,9 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           break;
         case 'default_country_id':
           $this->add('select', $settingName, $settingValues['label'], $countryList, TRUE);
+          break;
+        case 'default_financial_type_id':
+          $this->add('select', $settingName, $settingValues['label'], $financialTypeList, TRUE);
           break;
         default:
           $this->add('text', $settingName, $settingValues['label'], array(), TRUE);
@@ -308,6 +312,25 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
         .', error from API Contact Getsingle: '.$ex->getMessage());
     }
     return $employeeList;
+  }
+
+  /**
+   * Method to get the financial type list
+   *
+   * @return array $financialTypeList
+   * @access protected
+   */
+  protected function getFinancialTypeList() {
+    $financialTypeList = array();
+    $query = 'SELECT * FROM civicrm_financial_type WHERE is_active = %1';
+    $params = array(1 => array(1, 'Integer'));
+    $dao = CRM_Core_DAO::executeQuery($query, $params);
+    while ($dao->fetch()) {
+      $financialTypeList[$dao->id] = $dao->name;
+    }
+    $financialTypeList[0] = ts('- select -');
+    asort($financialTypeList);
+    return $financialTypeList;
   }
 
   /**

@@ -310,6 +310,17 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get the default financial_type id
+   *
+   * @return int
+   * @access public
+   */
+  public function getDefaultFinancialTypeId() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['default_financial_type_id']['value'];
+  }
+
+  /**
    * Method to get the phone type id of phone
    *
    * @return int
