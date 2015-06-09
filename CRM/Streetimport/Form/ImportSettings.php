@@ -24,6 +24,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $membershipTypeList = $this->getMembershipTypeList();
     $phoneTypeList = $this->getPhoneTypeList();
     $locationTypeList = $this->getLocationTypeList();
+    $countryList = $this->getCountryList();
 
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
@@ -50,6 +51,9 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           break;
         case 'other_location_type_id':
           $this->add('select', $settingName, $settingValues['label'], $locationTypeList, TRUE);
+          break;
+        case 'default_country_id':
+          $this->add('select', $settingName, $settingValues['label'], $countryList, TRUE);
           break;
         default:
           $this->add('text', $settingName, $settingValues['label'], array(), TRUE);
@@ -304,6 +308,24 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
         .', error from API Contact Getsingle: '.$ex->getMessage());
     }
     return $employeeList;
+  }
+
+  /**
+   * Method to get the country list
+   *
+   * @return array $countryList
+   * @access protected
+   */
+  protected function getCountryList() {
+    $countryList = array();
+    $query = 'SELECT * FROM civicrm_country';
+    $dao = CRM_Core_DAO::executeQuery($query);
+    while ($dao->fetch()) {
+      $countryList[$dao->id] = $dao->name;
+    }
+    $countryList[0] = ts('- select -');
+    asort($countryList);
+    return $countryList;
   }
 
   /**

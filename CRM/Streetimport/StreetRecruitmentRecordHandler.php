@@ -126,7 +126,12 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     }
 
     // create address
-    $address = $this->createAddress(array(
+    if (isset($record['Country']) && !empty($record['Country'])) {
+      $countryId = CRM_Streetimport_Utils::getCountryByIso($record['Country']);
+    } else {
+      $countryId = $config->getDefaultCountryId();
+    }
+    $this->createAddress(array(
         'contact_id'       => $donor['id'],
         'location_type_id' => $config->getLocationTypeId(),
         'street_name'      => CRM_Utils_Array::value('Street Name',         $record),
@@ -135,7 +140,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
         'postal_code'      => CRM_Utils_Array::value('Postal code',         $record),
         'street_address'   => trim(CRM_Utils_Array::value('Street Name',    $record) . ' ' . CRM_Utils_Array::value('Street Number', $record) . ' ' . CRM_Utils_Array::value('Street Unit',   $record)),
         'city'             => CRM_Utils_Array::value('City',                $record),
-        'country_id'       => 1020, // TODO: move to config ErikH (and default to Belgium - data contains ISO code)
+        'country_id'       => $countryId
       ));
 
     // create phones

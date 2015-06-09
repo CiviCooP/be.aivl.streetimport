@@ -48,10 +48,15 @@
         "name": "location_type_id",
         "label": "Locatietype voor adres en eerste telefoon",
         "value": "1"
-    }
+    },
     "other_location_type_id": {
         "name": "other_location_type_id",
         "label": "Locatietype voor eventuele extra telefoon",
-        "value": "1"
+        "value": "4"
+    },
+    "default_country_id": {
+        "name": "default_country_id",
+        "label": "Standaard land",
+        "value": "1020"
     }
 }

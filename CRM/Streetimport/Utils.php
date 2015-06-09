@@ -451,4 +451,26 @@ class CRM_Streetimport_Utils {
     }
     return $contactName;
   }
+
+  /**
+   * Function get country data with an iso code
+   *
+   * @param $isoCode
+   * @return array
+   */
+  public static function getCountryByIso($isoCode) {
+    $country = array();
+    if (empty($isoCode)) {
+      return $country;
+    }
+    $query = 'SELECT * FROM civicrm_country WHERE iso_code = %1';
+    $params = array(1 => array($isoCode, 'String'));
+    $dao = CRM_Core_DAO::executeQuery($query, $params);
+    if ($dao->fetch()) {
+      $country['country_id'] = $dao->id;
+      $country['name'] = $dao->name;
+      $country['iso_code'] = $dao->iso_code;
+    }
+    return $country;
+  }
 }

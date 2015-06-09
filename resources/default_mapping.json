@@ -14,6 +14,7 @@
   "Busnummer":"Street Unit",
   "Postcode":"Postal code",
   "Gemeente":"City",
+  "Land":"Country",
   "Geboortedatum":"Birth date (format jjjj-mm-dd)",
   "Vaste telefoon 1":"Telephone1",
   "Vaste telefoon 2":"Telephone2",

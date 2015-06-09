@@ -299,6 +299,17 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get the default country id
+   *
+   * @return int
+   * @access public
+   */
+  public function getDefaultCountryId() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['default_country_id']['value'];
+  }
+
+  /**
    * Method to get the phone type id of phone
    *
    * @return int
