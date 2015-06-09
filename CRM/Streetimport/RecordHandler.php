@@ -367,15 +367,29 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logError('Membership not created, error from API Membership Create: '.$ex->getMessage());
       return NULL;
     }
-    return NULL;
   }
 
   /**
    * create a relationship with given data
    */
-  protected function createRelationship($contactA_id, $contactB_id, $relationship_type_id) {
-    $this->logger->logError("createRelationship not implemented!");
-    return NULL;
+  protected function createRelationship($relationshipData) {
+    $mandatoryParams = array('contact_id_a', 'contact_id_b', 'relationship_type_id');
+    foreach ($mandatoryParams as $mandatory) {
+      if (!in_array($mandatory, $relationshipData)) {
+        $this->logger->logError('Relationship not created, mandatory param missing: '.$mandatory);
+        return NULL;
+      }
+    }
+    if (!isset($relationshipData['start_date'])) {
+      $relationshipData['start_date'] = date('YmdHis');
+    }
+    try {
+      $result = civicrm_api3('Relationship', 'Create', $relationshipData);
+      return $result;
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError('Relationship not created, error from API Relationship Create: '.$ex->getMessage());
+      return NULL;
+    }
   }
 
   /**
