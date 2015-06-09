@@ -323,9 +323,21 @@ abstract class CRM_Streetimport_RecordHandler {
   /**
    * add contact to given group ID
    */
-  protected function addContactToGroup($contact_id, $group_id) {
-    $this->logger->logError("addContactToGroup not implemented!");
-    return NULL;
+  protected function addContactToGroup($contactId, $groupId) {
+    if (empty($contactId) || empty($groupId)) {
+      $this->logger->logError('Empty contact_id or group_id, could not add contact to group');
+      return NULL;
+    }
+    $params = array(
+      'contact_id' => $contactId,
+      'group_id' => $groupId);
+    try {
+      $result = civicrm_api3('GroupContact', 'Create', $params);
+      return $result;
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError('Error from API GroupContact Create: '.$ex->getMessage());
+      return NULL;
+    }
   }
 
   /**
