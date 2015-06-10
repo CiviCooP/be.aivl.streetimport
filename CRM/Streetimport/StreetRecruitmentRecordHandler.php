@@ -53,7 +53,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $this->createActivityCustomData($createdActivity->id, $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record));
 
     // STEP 6: create SEPA mandate
-    $mandate = $this->processMandate($record, $donor['id']);
+    $mandate_data = $this->extractMandate($record, $donor['id']);
+    $mandate = $this->createSDDMandate($mandate_data);
 
     // STEP 7: add to newsletter group if requested
     if ($this->isTrue($record, "Newsletter")) {
@@ -89,90 +90,6 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $this->logger->logImport($record['__id'], true, 'StreetRecruitment');
   }
 
-
-  /**
-   * will extract the required information for a SEPA mandate 
-   *  and create it accordingly
-   *
-   * @return array with entity data
-   */
-  protected function processMandate($record, $donor_id) {
-    $config = CRM_Streetimport_Config::singleton();
-
-    // check values
-    $frequency_unit = CRM_Utils_Array::value('Frequency Unit', $record);
-    if (empty($frequency_unit)) {
-      $this->logger->logWarning("No SDD specified, no mandate created.");
-      return NULL;
-    }
-
-
-    // extract the mandate type from the 'Frequency Unit' field
-    $mandate_data = $config->extractSDDtype($frequency_unit);
-    if (!$mandate_data) {
-      $this->logger->logError("Bad mandate specification: " . CRM_Utils_Array::value('Frequency Unit', $record));
-      return NULL;
-    }
-
-    // multiply the frequency_interval, if a value > 1 is given
-    $frequency_interval = (int) CRM_Utils_Array::value('Frequency Unit', $record);
-    if ($frequency_interval > 1) {
-      $mandate_data['frequency_interval'] = $mandate_data['frequency_interval'] * $frequency_interval;
-    }
-
-    // get the start date
-    $start_date = CRM_Utils_Array::value('Start Date', $record);
-    $start_date_parsed = strtotime($start_date);
-    if (empty($start_date_parsed)) {
-      if (!empty($start_date)) {
-        $this->logger->logWarning("Couldn't parse start date '$start_date'. Set to start now.");
-      }
-      $start_date_parsed = strtotime("now");
-    }
-
-    // get the signature date
-    $signature_date = CRM_Utils_Array::value("Recruitment Date (format jjjj-mm-dd)", $record);
-    $signature_date_parsed = strtotime($signature_date);
-    if (empty($signature_date_parsed)) {
-      if (!empty($signature_date)) {
-        $this->logger->logWarning("Couldn't parse signature date '$signature_date'. Set to start now.");
-      }
-      $signature_date_parsed = strtotime("now");
-    }
-
-    // get the start date
-    $end_date = CRM_Utils_Array::value('End Date', $record);
-    $end_date_parsed = strtotime($end_date);
-    if (empty($end_date_parsed)) {
-      if (!empty($end_date)) {
-        $this->logger->logWarning("Couldn't parse start end date '$end_date'.");
-      }
-    } else {
-      $mandate_data['end_date'] = date('YmdHis', $end_date_parsed);
-    }
-
-    // get campaign
-    $campaign_id = (int) CRM_Utils_Array::value("Campaign ID", $record);
-    if ($campaign_id) {
-      $mandate_data['campaign_id'] = $campaign_id;
-    }
-
-    // fill the other required fields
-    $mandate_data['contact_id']    = $donor_id;
-    $mandate_data['reference']     = CRM_Utils_Array::value('Mandate Reference', $record);
-    $mandate_data['amount']        = (float) CRM_Utils_Array::value('Amount', $record);
-    $mandate_data['start_date']    = date('YmdHis', $start_date_parsed);
-    $mandate_data['creation_date'] = date('YmdHis', $signature_date_parsed);
-    $mandate_data['iban']          = CRM_Utils_Array::value('IBAN', $record);
-    $mandate_data['bic']           = CRM_Utils_Array::value('Bic', $record);
-    $mandate_data['bank_name']     = CRM_Utils_Array::value('Bank Name', $record);
-
-    $mandate_data['financial_type_id']  = $config->getDefaultFinancialTypeId();
-
-    // don't set $mandate_data['creditor_id'], use default creditor
-
-    return $this->createSDDMandate($mandate_data);
-  }
 
   /**
    * Method to build data for custom group street recruitment

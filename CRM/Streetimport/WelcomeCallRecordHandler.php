@@ -36,8 +36,11 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $recruiter = $this->processRecruiter($record, $recruiting_organisation);
 
     // STEP 3: look up / create donor
-    // TODO: FLAG as error if not exists
-    $donor = $this->processDonor($record);
+    $donor = $this->getDonorWithExternalId($record['DonorID']);
+    if (empty($donor)) {
+      $this->logger->logError("Donor [{$record['DonorID']}] should already exist. Created new contact in order to process record anyway.");
+      $donor = $this->processDonor($record, $recruiting_organisation);
+    }
 
     // STEP 5: create activity "WelcomeCall"
     $createdActivity = $this->createActivity(array(
@@ -54,7 +57,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $this->createActivityCustomData($createdActivity->id, $config->getWelcomeCallCustomGroup('table_name'), $this->buildActivityCustomData($record));
 
     // STEP 6: update SEPA mandate if required
-    // TODO: imlement Björn
+    $this->processMandate($record, $donor['id']);
 
     // STEP 7: add to newsletter group if requested
     if ($this->isTrue($record, "Newsletter")) {
@@ -89,18 +92,79 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $this->logger->logImport($record['__id'], true, 'WelcomeCall');
   }
 
+
   /**
-   * will create/lookup the donor along with all relevant information
-   *
-   * @param $record
-   * @return array with entity data
+   * process SDD mandate
    */
-  protected function processDonor($record) {
-    $donor = $this->getDonorWithExternalId($record['DonorID']);
-    if ($donor == FALSE) {
-      $this->logger->abort('Could not find donor with external ID '.$record['DonorID'].', no Welcome Call created');
+  protected function processMandate($record, $donor_id) {
+    // first, extract the new mandate information
+    $new_mandate_data = $this->extractMandate($record, $donor_id);
+
+    // then load the existing mandate
+    try {
+      $old_mandate_data = civicrm_api3('SepaMandate', 'getsingle', array('reference' => $new_mandate_data['reference']));    
+    } catch (Exception $e) {
+      $this->logger->logError("SDD mandate '{$new_mandate_data['reference']}' could not be found.");
+      return NULL;
+    }
+    
+    // ...and the attached contribution
+    try {
+      if ($old_mandate_data['entity_table']=='civicrm_contribution_recur') {
+        $old_contribution = civicrm_api3('ContributionRecur', 'getsingle', array('id' => $old_mandate_data['entity_id']));
+      } elseif ($old_mandate_data['type']=='civicrm_contribution') {
+        $old_contribution = civicrm_api3('Contribution', 'getsingle', array('id' => $old_mandate_data['entity_id']));
+        $old_contribution['amount'] = $old_contribution['total_amount'];
+      } else {
+        $this->logger->abort("Bad SDD mandate type found. Contact developer.");
+        return NULL;
+      }
+    } catch (Exception $e) {
+      $this->logger->logError("Couldn't load contribution entity for mandate [{$old_mandate_data['id']}].");
+      return NULL;      
+    }
+
+    // now, compare new data with old mandate/contribution
+    $mandate_diff = array();
+    foreach ($new_mandate_data as $key => $value) {
+      if (isset($old_mandate_data[$key])) {
+        if ($new_mandate_data[$key] != $old_mandate_data[$key]) {
+          $mandate_diff[$key] = $new_mandate_data[$key];
+        }
+      }
+      if (isset($old_contribution[$key])) {
+        if ($new_mandate_data[$key] != $old_contribution[$key]) {
+          $mandate_diff[$key] = $new_mandate_data[$key];
+        }
+      }
+    }
+
+    // if both dates are in the past, we can ignore the change 
+    //   (they're both probably just auto-generated)
+    if (!empty($mandate_diff['start_date'])) {
+      $now = strtotime("now");
+      if (  $old_contribution['start_date'] > $now 
+         || $new_mandate_data['start_date'] > $now ) {
+        unset($mandate_diff['start_date']);
+      }
+    }
+
+    // filter the changes, some can be safely ignored
+    $ignore_changes_for = array('creation_date', 'contact_id');
+    foreach ($ignore_changes_for as $field) unset($mandate_diff[$field]);
+    // TODO: can we really ignore changes for contact_id? 
+    //  => this should only happen if the donor ID failed...
+
+    // TODO: apply changes according to status:
+    // INIT: can be changed: frequency_unit/frequency_interval/amount/startdate/enddate/iban/bic/campaign_id
+    // BUSY: can be changed: amount/enddate
+
+    // BUT: for the time being, bail if anything had changed:
+    if (!empty($mandate_diff)) {
+      $field_list = implode(',', array_keys($mandate_diff));
+      $this->logger->logError("SDD mandate update requested ($field_list), but this has not been implemented yet.");
     } else {
-      return $donor;
+      $this->logger->logDebug("No SDD mandate update required.");
     }
   }
 
