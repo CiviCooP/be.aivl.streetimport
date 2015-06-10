@@ -144,16 +144,24 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * @param int $recruitingOrganizationId
    */
   protected function setDonorID($contactId, $donorId, $recruitingOrganizationId) {
-    $extensionConfig = CRM_Streetimport_Config::singleton();
-    $tableName = $extensionConfig->getExternalDonorIdCustomGroup('table_name');
-    $query = 'REPLACE INTO '.$tableName.' SET recruiting_organization_id = %1,
-      external_donor_id = %2, entity_id = %3';
-    $params = array(
-      1 => array($recruitingOrganizationId, 'Positive'),
-      2 => array($donorId, 'String'),
-      3 => array($contactId, 'Positive')
-    );
-    $this->logger->logError("setDonorID not implemented!");
+    if (empty($contactId)) {
+      $this->logger->logError("Cannot set Donor ID, 'contactId' missing.");
+    } elseif (empty($donorId)) {
+      $this->logger->logError("Cannot set Donor ID, 'donorId' missing.");
+    } elseif (empty($recruitingOrganizationId)) {
+      $this->logger->logError("Cannot set Donor ID, 'recruitingOrganizationId' missing.");
+    } else {
+      $extensionConfig = CRM_Streetimport_Config::singleton();
+      $tableName = $extensionConfig->getExternalDonorIdCustomGroup('table_name');
+      $query = 'REPLACE INTO '.$tableName.' SET recruiting_organization_id = %1,
+        external_donor_id = %2, entity_id = %3';
+      $params = array(
+        1 => array($recruitingOrganizationId, 'Positive'),
+        2 => array($donorId,                  'String'),
+        3 => array($contactId,                'Positive')
+      );
+      CRM_Core_DAO::executeQuery($query, $params);      
+    }
   }
 
   /**
@@ -165,6 +173,10 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $extensionConfig = CRM_Streetimport_Config::singleton();
     $tableName = $extensionConfig->getExternalDonorIdCustomGroup('table_name');
     $customField = $extensionConfig->getExternalDonorIdCustomFields('external_donor_id');
+    if (empty($customField)) {
+      $this->logger->logError("CustomField 'external_donor_id' not found. Please reinstall.");
+      return NULL;
+    }    
     $query = 'SELECT entity_id FROM '.$tableName.' WHERE '.$customField['column_name'].' = %1';
     $params = array(1 => array($donorId, 'Positive'));
     $dao = CRM_Core_DAO::executeQuery($query, $params);

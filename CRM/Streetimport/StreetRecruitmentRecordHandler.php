@@ -36,7 +36,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $recruiter = $this->processRecruiter($record, $recruiting_organisation);
 
     // STEP 3: look up / create donor
-    $donor = $this->processDonor($record);
+    $donor = $this->processDonor($record, $recruiting_organisation);
 
     // STEP 5: create activity "Straatwerving"
     $createdActivity = $this->createActivity(array(
@@ -95,7 +95,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    * @param $record
    * @return array with entity data
    */
-  protected function processDonor($record) {
+  protected function processDonor($record, $recruiting_organisation) {
     $config = CRM_Streetimport_Config::singleton();
     $donor = $this->getDonorWithExternalId($record['DonorID']);
     if ($donor) {
@@ -119,10 +119,10 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       $contact_data['birth_date']        = CRM_Utils_Array::value('Birth date (format jjjj-mm-dd)', $record);
     }
     $donor = $this->createContact($contact_data, true);
-    $this->setDonorID($donor['id'], $record['DonorID'], $record['Recruiting Organization ID']);
     if (empty($donor)) {
       $this->logger->abort("Cannot create new donor. Import failed.");
     }
+    $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id']);
 
     // create address
     if (isset($record['Country']) && !empty($record['Country'])) {
