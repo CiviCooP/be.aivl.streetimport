@@ -109,7 +109,7 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   protected function getContact($contact_id, $cached = true) {
     if (empty($contact_id) || ((int)  $contact_id)==0) {
-      $this->logger->logWarn("Invalid ID for contact lookup: '{$contact_id}'");
+      $this->logger->logWarning("Invalid ID for contact lookup: '{$contact_id}'");
       return NULL;
     }
 
@@ -128,7 +128,7 @@ abstract class CRM_Streetimport_RecordHandler {
       return $contact;
 
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logWarn("Contact lookup failed: '{$contact_id}'");
+      $this->logger->logWarning("Contact lookup failed: '{$contact_id}'");
     }
     
     return NULL;
@@ -375,7 +375,7 @@ abstract class CRM_Streetimport_RecordHandler {
   protected function createRelationship($relationshipData) {
     $mandatoryParams = array('contact_id_a', 'contact_id_b', 'relationship_type_id');
     foreach ($mandatoryParams as $mandatory) {
-      if (!in_array($mandatory, $relationshipData)) {
+      if (empty($relationshipData[$mandatory])) {
         $this->logger->logError('Relationship not created, mandatory param missing: '.$mandatory);
         return NULL;
       }
