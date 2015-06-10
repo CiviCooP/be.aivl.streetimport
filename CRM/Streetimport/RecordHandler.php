@@ -280,7 +280,7 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   protected function createAddress($data) {
     // verify data
-    $required_address_attributes = array("city", "street_name", "country_id", "contact_id");
+    $required_address_attributes = array("city", "street_name", "contact_id");
     foreach ($required_address_attributes as $attribute) {
       if (empty($data[$attribute])) {
         $this->logger->logError("Address missing $attribute", "Create Address Error");

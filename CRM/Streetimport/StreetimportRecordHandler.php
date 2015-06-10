@@ -173,8 +173,10 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id']);
 
     // create address
-    if (isset($record['Country']) && !empty($record['Country'])) {
+    if (!empty($record['Country'])) {
       $countryId = CRM_Streetimport_Utils::getCountryByIso($record['Country']);
+      $this->logger->logError("Couldn't identify country '{$record['Country']}'");
+      $countryId = $config->getDefaultCountryId();
     } else {
       $countryId = $config->getDefaultCountryId();
     }
