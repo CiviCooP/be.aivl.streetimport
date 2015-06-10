@@ -105,8 +105,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
       // ..."with a relationship 'Werver' to the recruiting organization."
       $relationshipData = array(
-        'contact_id_a' => $recruiter['id'],
-        'contact_id_b' => $recruiting_organisation['id'],
+        'contact_id_a' => $recruiting_organisation['id'],
+        'contact_id_b' => $recruiter['id'],
         'relationship_type_id' => $config->getRecruiterRelationshipType()
       );
       $this->createRelationship($relationshipData);
