@@ -285,7 +285,17 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * Create CiviSEPA mandate
    */
   protected function createSDDMandate($mandate_data) {
-    // TODO: sanity checks?
+    // verify campaign_id
+    if (!empty($mandate_data['campaign_id'])) {
+      $mandate_data['campaign_id'] = (int) $mandate_data['campaign_id'];
+      $result = civicrm_api3('Campaign', 'getcount', array('id' => $mandate_data['campaign_id']));
+      if ($result['count'] != 1) {
+        $this->logger->logError("Campaign with id '{$mandate_data['campaign_id']}' could not be uniquely identified.");
+        unset($mandate_data['campaign_id']);
+      }
+    }
+
+    // TODO: more sanity checks?
 
     try {
       $result = civicrm_api3('SepaMandate', 'createfull', $mandate_data);
