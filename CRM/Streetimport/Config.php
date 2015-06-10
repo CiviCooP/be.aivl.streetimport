@@ -500,7 +500,14 @@ class CRM_Streetimport_Config {
     if (empty($key)) {
       return $this->externalDonorIdCustomFields;
     } else {
-      return $this->externalDonorIdCustomFields[$key];
+      // find field by name or ID
+      foreach ($this->externalDonorIdCustomFields as $field_id => $customField) {
+        if ($customField['name'] == $key || $field_id==$key) {
+          return $customField;
+        } 
+      }
+      // no such field
+      return NULL;
     }
   }
 
