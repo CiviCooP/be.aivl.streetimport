@@ -169,7 +169,8 @@ abstract class CRM_Streetimport_RecordHandler {
 
     // create via API
     try {
-      $contact = civicrm_api3('Contact', 'create', $contact_data);
+      $result  = civicrm_api3('Contact', 'create', $contact_data);
+      $contact = $result['values'][$result['id']];
       $this->logger->logDebug("Contact [{$contact['id']}] created.");      
       return $contact;
     } catch (CiviCRM_API3_Exception $ex) {
