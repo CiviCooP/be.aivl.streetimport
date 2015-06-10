@@ -36,6 +36,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $recruiter = $this->processRecruiter($record, $recruiting_organisation);
 
     // STEP 3: look up / create donor
+    // TODO: FLAG as error if not exists
     $donor = $this->processDonor($record);
 
     // STEP 5: create activity "WelcomeCall"
@@ -50,7 +51,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       'details'            => $this->renderTemplate('activities/WelcomeCall.tpl', $record),
     ));
     // add custom data to the created activity
-    $this->createActivityCustomData($createdActivity['id'], $config->getWelcomeCallCustomGroup('table_name'), $this->buildActivityCustomData($record));
+    $this->createActivityCustomData($createdActivity->id, $config->getWelcomeCallCustomGroup('table_name'), $this->buildActivityCustomData($record));
 
     // STEP 6: update SEPA mandate if required
     // TODO: imlement Björn
@@ -66,7 +67,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $this->createMembership(array(
         'contact_id'         => $donor['id'],
         'membership_type_id' => $config->getMembershipTypeID(),
-        'membership_source' => $config->translate('Activity').' '.$config->translate('Street Recruitment').' '.$createdActivity['id']
+        'membership_source' => $config->translate('Activity').' '.$config->translate('Street Recruitment').' '.$createdActivity->id
       ));
     }
 

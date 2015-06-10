@@ -182,7 +182,7 @@ abstract class CRM_Streetimport_RecordHandler {
   /** 
    * Create an activity with the given data
    *
-   * @return array with activity entity
+   * @return actvity BAO object
    */
   public function createActivity($data, $assigned_contact_ids=NULL) {
     

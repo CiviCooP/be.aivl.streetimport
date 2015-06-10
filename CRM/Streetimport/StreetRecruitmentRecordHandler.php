@@ -50,7 +50,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                             'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
                               ));
     // add custom data to the created activity
-    $this->createActivityCustomData($createdActivity['id'], $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record));
+    $this->createActivityCustomData($createdActivity->id, $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record));
 
     // STEP 6: create SEPA mandate
     $mandate = $this->processMandate($record, $donor['id']);
