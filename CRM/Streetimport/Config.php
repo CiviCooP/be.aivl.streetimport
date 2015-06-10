@@ -255,7 +255,7 @@ class CRM_Streetimport_Config {
    * @return mixed
    * @access public
    */
-  public function getRecruiterRelationshipType($key= 'value' ) {
+  public function getRecruiterRelationshipType($key= 'id' ) {
     return $this->recruiterRelationshipType[$key];
   }
 
@@ -266,7 +266,7 @@ class CRM_Streetimport_Config {
    * @return mixed
    * @access public
    */
-  public function getSupplierContactSubType($key= 'id' ) {
+  public function getSupplierContactSubType($key= 'name' ) {
     return $this->supplierContactSubType[$key];
   }
 
@@ -277,7 +277,7 @@ class CRM_Streetimport_Config {
    * @return mixed
    * @access public
    */
-  public function getRecruiterContactSubType($key= 'id' ) {
+  public function getRecruiterContactSubType($key= 'name' ) {
     return $this->recruiterContactSubType[$key];
   }
 
