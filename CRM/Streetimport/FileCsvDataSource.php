@@ -7,7 +7,7 @@
  */
 class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
 
-  protected $default_delimiter = ',';
+  protected $default_delimiter = ';';
   protected $default_encoding  = 'UTF8';
   
   /** this will hold the open file */
