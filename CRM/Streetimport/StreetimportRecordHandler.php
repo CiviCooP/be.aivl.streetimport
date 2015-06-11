@@ -145,8 +145,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
   protected function processDonor($record, $recruiting_organisation) {
     $config = CRM_Streetimport_Config::singleton();
     $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['contact_id']);
-    CRM_Core_Error::debug('donor', $donor);
-    exit();
     if (!empty($donor)) {
       // TODO: update existing donor with latest contact information?
       return $donor;
@@ -256,8 +254,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       );
 
       $result = CRM_Core_DAO::executeQuery($query, $params);
-      CRM_Core_Error::debug('result', $result);
-      exit();
     }
   }
 
