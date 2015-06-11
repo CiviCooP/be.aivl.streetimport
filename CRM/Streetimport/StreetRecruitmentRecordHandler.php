@@ -15,6 +15,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    */
   public function canProcessRecord($record) {
     $config = CRM_Streetimport_Config::singleton();
+    foreach ($record as $key => $value) {
+    }
     return isset($record['Loading type']) && $record['Loading type'] == $config->getStreetRecruitmentImportType();
   }
   
@@ -31,6 +33,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
     // STEP 1: lookup recruiting organisation
     $recruiting_organisation = $this->getRecruitingOrganisation($record);
+
 
     // STEP 2: look up / create recruiter
     $recruiter = $this->processRecruiter($record, $recruiting_organisation);

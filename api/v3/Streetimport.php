@@ -23,20 +23,20 @@
 function civicrm_api3_streetimport_importcsvfile($params) {
   $config = CRM_Streetimport_Config::singleton();
   $result = new CRM_Streetimport_ImportResult();
-  
+
   // first, get the parameters sorted out
   if (isset($params['source_folder'])) {
     $source_folder = $params['source_folder'];
   } else {
     $source_folder = $config->getImportFileLocation();
   }
-  
+
   if (isset($params['archive_folder'])) {
     $archive_folder = $params['archive_folder'];
   } else {
     $archive_folder = $config->getProcessedFileLocation();
   }
-  
+
   $source_file = NULL;
   if (!empty($params['filepath'])) {
     // filepath is given, import that file
@@ -54,7 +54,6 @@ function civicrm_api3_streetimport_importcsvfile($params) {
       $source_file = $files[0];
     }
   }
-
   // now run the actual import
   try {
     if (!$source_file) {

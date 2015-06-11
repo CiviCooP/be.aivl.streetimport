@@ -42,7 +42,5 @@
   "Start_date":"Start Date",
   "End_date":"End Date",
   "Cancellation":"Cancellation",
-  "Followup_call":"Follow Up Call",
-  "MISSING":"Recruitment Type",
-  "MISSING":"Fiscal Note"
+  "Followup_call":"Follow Up Call"
 }

@@ -501,4 +501,27 @@ class CRM_Streetimport_Utils {
     }
     return $country;
   }
+
+  /**
+   * Method to determine gender with prefix
+   *
+   * @param $prefix
+   * @return int
+   */
+  public static function determineGenderWithPrefix($prefix) {
+    // TODO issue 22 (ErikH)
+    $prefix = strtolower($prefix);
+    switch ($prefix) {
+      case 'meneer':
+        return 2;
+      break;
+      case 'mevrouw':
+        return 1;
+      break;
+      default:
+        return 3;
+      break;
+    }
+
+  }
 }

@@ -144,8 +144,10 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   protected function processDonor($record, $recruiting_organisation) {
     $config = CRM_Streetimport_Config::singleton();
-    $donor = $this->getDonorWithExternalId($record['DonorID']);
-    if ($donor) {
+    $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['contact_id']);
+    CRM_Core_Error::debug('donor', $donor);
+    exit();
+    if (!empty($donor)) {
       // TODO: update existing donor with latest contact information?
       return $donor;
     }
@@ -156,7 +158,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     if ($this->isTrue($record, 'Organization Yes/No')) {
       $contact_data['contact_type']      = 'Organization';
       $contact_data['organization_name'] = CRM_Utils_Array::value('Last Name',  $record);
-    } elseif (in_array($record['Donor Prefix'], $householdPrefixes)) {
+    } elseif (in_array($record['Prefix'], $householdPrefixes)) {
       $contact_data['contact_type']      = 'Household';
       $contact_data['household_name']    = CRM_Utils_Array::value('Last Name',  $record);
     } else {
@@ -164,13 +166,14 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $contact_data['first_name']        = CRM_Utils_Array::value('First Name', $record);
       $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
       $contact_data['prefix']            = CRM_Utils_Array::value('Prefix',     $record);
+      $contact_data['gender_id']         = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
       $contact_data['birth_date']        = CRM_Utils_Array::value('Birth date (format jjjj-mm-dd)', $record);
     }
     $donor = $this->createContact($contact_data, true);
     if (empty($donor)) {
       $this->logger->abort("Cannot create new donor. Import failed.");
     }
-    $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id']);
+    $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['contact_id']);
 
     // create address
     if (!empty($record['Country'])) {
@@ -251,30 +254,44 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         2 => array($donorId,                  'String'),
         3 => array($contactId,                'Positive')
       );
-      CRM_Core_DAO::executeQuery($query, $params);      
+
+      $result = CRM_Core_DAO::executeQuery($query, $params);
+      CRM_Core_Error::debug('result', $result);
+      exit();
     }
   }
 
   /**
    * Manages the contact_id <-> donor_id (external) mapping
+   *
+   * @param int $donorId
+   * @param int $recruitingOrganizationId
    * 
    * @return mixed contact_id or NULL if not found
    */
-  protected function getContactForDonorID($donorId) {
+  protected function getContactForDonorID($donorId, $recruitingOrganizationId) {
     $extensionConfig = CRM_Streetimport_Config::singleton();
     $tableName = $extensionConfig->getExternalDonorIdCustomGroup('table_name');
-    $customField = $extensionConfig->getExternalDonorIdCustomFields('external_donor_id');
-    if (empty($customField)) {
+    $donorCustomField = $extensionConfig->getExternalDonorIdCustomFields('external_donor_id');
+    $orgCustomField = $extensionConfig->getExternalDonorIdCustomFields('recruiting_organization_id');
+    if (empty($donorCustomField)) {
       $this->logger->logError("CustomField 'external_donor_id' not found. Please reinstall.");
       return NULL;
-    }    
-    $query = 'SELECT entity_id FROM '.$tableName.' WHERE '.$customField['column_name'].' = %1';
-    $params = array(1 => array($donorId, 'Positive'));
+    }
+    if (empty($orgCustomField)) {
+      $this->logger->logError("CustomField 'recruiting_organization_id' not found. Please reinstall.");
+      return NULL;
+    }
+    $query = 'SELECT entity_id FROM '.$tableName.' WHERE '.$donorCustomField['column_name'].' = %1 AND '.$orgCustomField['column_name'].' = %2';
+    $params = array(
+      1 => array($donorId, 'Positive'),
+      2 => array($recruitingOrganizationId, 'Positive'));
+
     $dao = CRM_Core_DAO::executeQuery($query, $params);
     if ($dao->N > 1) {
       $this->logger->logError('More than one contact found for donor ID '.$donorId);
     } else {
-      if ($dao->fetch) {
+      if ($dao->fetch()) {
         return $dao->entity_id;
       }
     }
@@ -396,14 +413,15 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * Method to get contact data with donor Id
    *
    * @param int $donorId
+   * @param int $recruitingOrganizationId
    * @return array
    * @access public
    */
-  public function getDonorWithExternalId($donorId) {
+  public function getDonorWithExternalId($donorId, $recruitingOrganizationId) {
     if (empty($donorId)) {
       return array();
     }
-    $contactId = $this->getContactForDonorID($donorId);
+    $contactId = $this->getContactForDonorID($donorId, $recruitingOrganizationId);
     if (empty($contactId)) {
       return array();
     }
