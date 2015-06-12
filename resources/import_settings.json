@@ -22,7 +22,7 @@
     "newsletter_group_id": {
         "name": "newsletter_group_id",
         "label": "Groep voor nieuwsbrief",
-        "value": "4"
+        "value": "27"
     },
     "membership_type_id": {
         "name": "membership_type_id",

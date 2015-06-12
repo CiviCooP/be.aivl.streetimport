@@ -144,7 +144,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   protected function processDonor($record, $recruiting_organisation) {
     $config = CRM_Streetimport_Config::singleton();
-    $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['contact_id']);
+    $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['id']);
     if (!empty($donor)) {
       // TODO: update existing donor with latest contact information?
       return $donor;
@@ -171,7 +171,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     if (empty($donor)) {
       $this->logger->abort("Cannot create new donor. Import failed.");
     }
-    $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['contact_id']);
+    $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id']);
 
     // create address
     if (!empty($record['Country'])) {

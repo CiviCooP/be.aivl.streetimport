@@ -104,9 +104,11 @@ abstract class CRM_Streetimport_RecordHandler {
   /**
    * look up contact
    *
-   * @param $cached  if true, the contact will be kept on cache
-   * @return array with contact entity
+   * @param int $contact_id
+   * @param bool $cached  if true, the contact will be kept on cache
+   * @return mixed
    */
+
   protected function getContact($contact_id, $cached = true) {
     if (empty($contact_id) || ((int)  $contact_id)==0) {
       $this->logger->logWarning("Invalid ID for contact lookup: '{$contact_id}'");
@@ -124,7 +126,6 @@ abstract class CRM_Streetimport_RecordHandler {
       if ($cached) {
         self::$contact_cache[$contact_id] = $contact;
       }
-
       return $contact;
 
     } catch (CiviCRM_API3_Exception $ex) {
@@ -164,14 +165,14 @@ abstract class CRM_Streetimport_RecordHandler {
     }
 
 
-    // TOOD: look up contact
+    // TODO: look up contact
 
 
     // create via API
     try {
       $result  = civicrm_api3('Contact', 'create', $contact_data);
       $contact = $result['values'][$result['id']];
-      $this->logger->logDebug("Contact [{$contact['id']}] created.");      
+      $this->logger->logDebug("Contact [{$contact['id']}] created.");
       return $contact;
     } catch (CiviCRM_API3_Exception $ex) {
       $this->logger->logError($ex->getMessage(), "Create Contact Error");
@@ -219,6 +220,7 @@ abstract class CRM_Streetimport_RecordHandler {
    * @return bool
    */
   public function createActivityCustomData($activityId, $tableName, $data) {
+
     if (CRM_Core_DAO::checkTableExists($tableName) == FALSE) {
       $this->logger->logError('No custom data for activity created could not find custom table '.$tableName);
       return FALSE;
@@ -232,10 +234,13 @@ abstract class CRM_Streetimport_RecordHandler {
     $setValues[1] = 'entity_id = %1';
     $setParams[1] = array($activityId, 'Integer');
     $index = 2;
-    foreach ($data as $key => $value) {
-      $setValues[] = $key.' = %'.$index;
-      $setParams[$index] = array($value['value'], $value['type']);
-      $index++;
+
+    foreach ($data as $key => $valueArray) {
+      if (!empty($valueArray['value'])) {
+        $setValues[] = $key . ' = %' . $index;
+        $setParams[$index] = array($valueArray['value'], $valueArray['type']);
+        $index++;
+      }
     }
     if (empty($setValues)) {
       $this->logger->logError('No custom data for activity created, no data');

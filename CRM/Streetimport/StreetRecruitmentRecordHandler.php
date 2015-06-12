@@ -105,41 +105,44 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $config = CRM_Streetimport_Config::singleton();
     $acceptedYesValues = $config->getAcceptedYesValues();
     $customData = array();
-    $customData['new_date_import'] = date('YmdHis');
-    $customData['new_recruit_location'] = $record['Recruitment Location'];
-    $customData['new_recruit_type'] = $this->getRecruitmentType($record['Recruitment Type']);
+    $customData['new_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
+    $customData['new_recruit_location'] = array('value' => $record['Recruitment Location'], 'type' => 'String');
+    // TODO re-activate if recruiment type required after all
+    //$customData['new_recruit_type'] = $this->getRecruitmentType($record['Recruitment Type']);
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
-      $customData['new_follow_up_call'] = 1;
+      $customData['new_follow_up_call'] = array('value' => 1, 'type' => 'Integer');
     } else {
-      $customData['new_follow_up_call'] = 0;
+      $customData['new_follow_up_call'] = array('value' => 0, 'type' => 'Integer');
     }
     if (in_array($record['Newsletter'], $acceptedYesValues)) {
-      $customData['new_newsletter'] = 1;
+      $customData['new_newsletter'] = array('value' => 1, 'type' => 'Integer');
     } else {
-      $customData['new_newsletter'] = 0;
+      $customData['new_newsletter'] = array('value' => 0, 'type' => 'Integer');
     }
     if (in_array($record['Member'], $acceptedYesValues)) {
-      $customData['new_member'] = 1;
+      $customData['new_member'] = array('value' => 1, 'type' => 'Integer');
     } else {
-      $customData['new_member'] = 0;
+      $customData['new_member'] = array('value' => 0, 'type' => 'Integer');
     }
     if (in_array($record['Cancellation'], $acceptedYesValues)) {
-      $customData['new_sdd_cancel'] = 1;
+      $customData['new_sdd_cancel'] = array('value' => 1, 'type' => 'Integer');
     } else {
-      $customData['new_sdd_cancel'] = 0;
+      $customData['new_sdd_cancel'] = array('value' => 0, 'type' => 'Integer');
     }
-    $customData['new_areas_interest'] = $this->getAreasOfInterest($record['Interests']);
-    $customData['new_remarks'] = $record['Notes'];
-    $customData['new_sdd_mandate'] = $record['Mandate Reference'];
-    $customData['new_sdd_iban'] = $record['IBAN'];
-    $customData['new_sdd_bankname'] = $record['Bank Name'];
-    $customData['new_sdd_bic'] = $record['Bic'];
-    $customData['new_sdd_amount'] = CRM_Utils_Money::format($record['Amount']);
-    $customData['new_sdd_freq_interval'] = $record['Frequency Interval'];
-    $customData['new_sdd_freq_unit'] = $this->getFrequencyUnit($record['Frequency Unit']);
-    $customData['new_sdd_start_date'] = date('Ymd', strtotime($record['Start Date']));
+    $customData['new_areas_interest'] = array('value' => $this->getAreasOfInterest($record['Interests']), 'type' => 'String');
+    $customData['new_remarks'] = array('value' => $record['Notes'], 'type' => 'String');
+    $customData['new_sdd_mandate'] = array('value' => $record['Mandate Reference'], 'type' => 'String');
+    $customData['new_sdd_iban'] = array('value' => $record['IBAN'], 'type' => 'String');
+    $customData['new_sdd_bank_name'] = array('value' => $record['Bank Name'], 'type' => 'String');
+    $customData['new_sdd_bic'] = array('value' => $record['Bic'], 'type' => 'String');
+    $customData['new_sdd_amount'] = array('value' => $record['Amount'], 'type' => 'Money');
+    $customData['new_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
+    $customData['new_sdd_freq_unit'] = array('value' => $this->getFrequencyUnit($record['Frequency Unit']), 'type' => 'Integer');
+    if (!empty($record['Start Date'])) {
+      $customData['new_sdd_start_date'] = array('value' => date('Ymd', strtotime($record['Start Date'])), 'type' => 'Date');
+    }
     if (!empty($record['End Date'])) {
-      $customData['new_sdd_end_date'] = date('Ymd', strtotime($record['End Date']));
+      $customData['new_sdd_end_date'] = array('value' => date('Ymd', strtotime($record['End Date'])), 'type' => 'Date');
     }
     return $customData;
   }

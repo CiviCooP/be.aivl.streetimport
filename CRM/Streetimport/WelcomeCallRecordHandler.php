@@ -206,7 +206,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $customData['wc_remarks'] = $record['Notes'];
     $customData['wc_sdd_mandate'] = $record['Mandate Reference'];
     $customData['wc_sdd_iban'] = $record['IBAN'];
-    $customData['wc_sdd_bankname'] = $record['Bank Name'];
+    $customData['wc_sdd_bank_name'] = $record['Bank Name'];
     $customData['wc_sdd_bic'] = $record['Bic'];
     $customData['wc_sdd_amount'] = CRM_Utils_Money::format($record['Amount']);
     $customData['wc_sdd_freq_interval'] = $record['Frequency Interval'];
