@@ -361,7 +361,7 @@ abstract class CRM_Streetimport_RecordHandler {
   protected function createMembership($membershipData) {
     $mandatoryParams = array('contact_id', 'membership_type_id', 'membership_source');
     foreach ($mandatoryParams as $mandatory) {
-      if (!in_array($mandatory, $membershipData)) {
+      if (!isset($membershipData[$mandatory])) {
         $this->logger->logError('Membership not created, mandatory param missing: '.$mandatory);
         return NULL;
       }
