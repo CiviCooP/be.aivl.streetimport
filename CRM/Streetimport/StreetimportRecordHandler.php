@@ -389,7 +389,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     if (!empty($mandate_data['campaign_id'])) {
       $mandate_data['campaign_id'] = (int) $mandate_data['campaign_id'];
       $result = civicrm_api3('Campaign', 'getcount', array('id' => $mandate_data['campaign_id']));
-      if ($result['count'] != 1) {
+      if ($result != 1) {
         $this->logger->logError("Campaign with id '{$mandate_data['campaign_id']}' could not be uniquely identified.");
         unset($mandate_data['campaign_id']);
       }
