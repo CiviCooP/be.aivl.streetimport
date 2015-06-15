@@ -36,7 +36,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $recruiter = $this->processRecruiter($record, $recruiting_organisation);
 
     // STEP 3: look up / create donor
-    $donor = $this->getDonorWithExternalId($record['DonorID']);
+    $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['id']);
     if (empty($donor)) {
       $this->logger->logError("Donor [{$record['DonorID']}] should already exist. Created new contact in order to process record anyway.");
       $donor = $this->processDonor($record, $recruiting_organisation);
