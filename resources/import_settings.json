@@ -93,7 +93,8 @@
         "name": "employee_type_id",
         "label": "Relaties die als personeel beschouwd worden",
         "value": [
-            "5"
+            "5",
+            "4"
         ]
     }
 }
