@@ -24,6 +24,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
    * Will reset the status of the data source
    */
   public function reset() {
+    $config = CRM_Streetimport_Config::singleton();
     // try loading the given file
     $this->reader  = fopen($this->uri, 'r');
     $this->header  = NULL;
@@ -32,7 +33,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
 
     if (empty($this->reader)) {
       // TODO: error handling
-      $this->logger->abort("Unable to read file '{$this->uri}'.");
+      $this->logger->abort($config->translate("Unable to read file")." ".$this->uri);
       $this->reader = NULL;
       return;
     }
@@ -41,7 +42,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     $this->header = fgetcsv($this->reader, 0, $this->default_delimiter);
     if ($this->header == NULL) {
       // TODO: error handling
-      $this->logger->abort("File '{$this->uri}' does not contain headers.");
+      $this->logger->abort($config->translate("File")." ".$this->uri." ".$config->translate("does not contain headers"));
       $this->reader = NULL;
       return;
     }
@@ -55,7 +56,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
    *
    * @return true if there is more records available via next()
    */
-  public function hasNext() {
+  public function asNext() {
     return ($this->next != NULL);
   }
 

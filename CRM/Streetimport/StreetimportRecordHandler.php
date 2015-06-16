@@ -37,16 +37,17 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * relevant error message in subject and details. No further processing of file possible."
    */
   protected function getRecruitingOrganisation($record) {
+    $config = CRM_Streetimport_Config::singleton();
     if (empty($record['Recruiting organization ID'])) {
-      $this->logger->abort("Recruiting organization ID not given.");
+      $this->logger->abort($config->translate("Recruiting organization ID not given"));
       return NULL;
     }
     $recruiting_organisation = $this->getContact((int) $record['Recruiting organization ID'], true);
     if ($recruiting_organisation==NULL) {
-      $this->logger->abort("Recruiting organization [{$record['Recruiting organization ID']}] not found.", true);
+      $this->logger->abort($config->translate("Recruiting organization")." ".$record['Recruiting organization ID']." ".$config->translate("not found"), true);
       return NULL;
     }
-    $this->logger->logDebug("Recruiting organization identified as contact [{$recruiting_organisation['id']}]");
+    $this->logger->logDebug($config->translate("Recruiting organization identified as contact")." ".$recruiting_organisation['id']);
     return $recruiting_organisation;
   }
 
@@ -58,7 +59,9 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * and create activity of type ‘Foutieve data import’ 
    * with relevant error message in subject and details"
    *
-   * @return $recruiter array with contact entity
+   * @param array $record
+   * @param array $recruiting_organisation
+   * @return mixed $recruiter
    */
   protected function processRecruiter($record, $recruiting_organisation) {
     $config = CRM_Streetimport_Config::singleton();
@@ -68,7 +71,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
 
     if ($recruiter==NULL) {
-      $this->logger->logDebug("Recruiter not found, creting new one...");      
+      $this->logger->logDebug($config->translate("Recruiter not found, creting new one..."));
       // "If the contact is not known, a contact of the contact subtype 'Werver' is to be created"
       $recruiter_data = array(
         'contact_type'     => 'Individual',
@@ -93,14 +96,14 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       if (!empty($this->created_recruiters[$recruiter_key])) {
         // ...and indeed we have
         $recruiter = $this->created_recruiters[$recruiter_key];
-        $this->logger->logDebug("Recruiter [{$recruiter['id']}] already created.");
+        $this->logger->logDebug($config->translate("Recruiter")." ".$recruiter['id']." ".$config->translate("already created."));
         return $recruiter;
       }
 
       // else, we have to create the recruiter...
       $recruiter = $this->createContact($recruiter_data, true);
       if (!$recruiter) {
-        $this->logger->abort("Recruiter could not be created.");
+        $this->logger->abort($config->translate("Recruiter could not be created"));
       }
 
       // ..."with a relationship 'Werver' to the recruiting organization."
@@ -128,9 +131,9 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
       // finally, store the result so we don't create the same recruiter over and over
       $this->created_recruiters[$recruiter_key] = $recruiter;
-      $this->logger->logDebug("Recruiter [{$recruiter['id']}] created.");
+      $this->logger->logDebug($config->translate("Recruiter")." ".$recruiter['id']." ".$config->translate("created"));
     } else {
-      $this->logger->logDebug("Recruiter [{$record['Recruiter ID']}] found.");
+      $this->logger->logDebug($config->translate("Recruiter")." ".$record['Recruiter ID']." ".$config->translate("found"));
     }
 
     return $recruiter;
@@ -169,7 +172,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
     $donor = $this->createContact($contact_data, true);
     if (empty($donor)) {
-      $this->logger->abort("Cannot create new donor. Import failed.");
+      $this->logger->abort($config->translate("Cannot create new donor. Import failed."));
     }
     $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id']);
 
@@ -239,15 +242,15 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * @param int $recruitingOrganizationId
    */
   protected function setDonorID($contactId, $donorId, $recruitingOrganizationId) {
+    $config = CRM_Streetimport_Config::singleton();
     if (empty($contactId)) {
-      $this->logger->logError("Cannot set Donor ID, 'contactId' missing.");
+      $this->logger->logError($config->translate("Cannot set Donor ID").', '.$config->translate("contactId missing"));
     } elseif (empty($donorId)) {
-      $this->logger->logError("Cannot set Donor ID, 'donorId' missing.");
+      $this->logger->logError($config->translate("Cannot set Donor ID").', '.$config->translate("donorId missing"));
     } elseif (empty($recruitingOrganizationId)) {
-      $this->logger->logError("Cannot set Donor ID, 'recruitingOrganizationId' missing.");
+      $this->logger->logError($config->translate("Cannot set Donor ID").', '.$config->translate("recruitingOrganizationId missing"));
     } else {
-      $extensionConfig = CRM_Streetimport_Config::singleton();
-      $tableName = $extensionConfig->getExternalDonorIdCustomGroup('table_name');
+      $tableName = $config->getExternalDonorIdCustomGroup('table_name');
       $query = 'REPLACE INTO '.$tableName.' SET recruiting_organization_id = %1,
         external_donor_id = %2, entity_id = %3';
       $params = array(
@@ -269,16 +272,16 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * @return mixed contact_id or NULL if not found
    */
   protected function getContactForDonorID($donorId, $recruitingOrganizationId) {
-    $extensionConfig = CRM_Streetimport_Config::singleton();
-    $tableName = $extensionConfig->getExternalDonorIdCustomGroup('table_name');
-    $donorCustomField = $extensionConfig->getExternalDonorIdCustomFields('external_donor_id');
-    $orgCustomField = $extensionConfig->getExternalDonorIdCustomFields('recruiting_organization_id');
+    $config = CRM_Streetimport_Config::singleton();
+    $tableName = $config->getExternalDonorIdCustomGroup('table_name');
+    $donorCustomField = $config->getExternalDonorIdCustomFields('external_donor_id');
+    $orgCustomField = $config->getExternalDonorIdCustomFields('recruiting_organization_id');
     if (empty($donorCustomField)) {
-      $this->logger->logError("CustomField 'external_donor_id' not found. Please reinstall.");
+      $this->logger->logError($config->translate("CustomField external_donor_id not found. Please reinstall."));
       return NULL;
     }
     if (empty($orgCustomField)) {
-      $this->logger->logError("CustomField 'recruiting_organization_id' not found. Please reinstall.");
+      $this->logger->logError($config->translate("CustomField recruiting_organization_id not found. Please reinstall."));
       return NULL;
     }
     $query = 'SELECT entity_id FROM '.$tableName.' WHERE '.$donorCustomField['column_name'].' = %1 AND '.$orgCustomField['column_name'].' = %2';
@@ -288,7 +291,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
     $dao = CRM_Core_DAO::executeQuery($query, $params);
     if ($dao->N > 1) {
-      $this->logger->logError('More than one contact found for donor ID '.$donorId);
+      $this->logger->logError($config->translate('More than one contact found for donor ID').': '.$donorId);
     } else {
       if ($dao->fetch()) {
         return $dao->entity_id;
@@ -308,7 +311,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // check values
     $frequency_unit = CRM_Utils_Array::value('Frequency Unit', $record);
     if (empty($frequency_unit)) {
-      $this->logger->logWarning("No SDD specified, no mandate created.");
+      $this->logger->logWarning($config->translate("No SDD specified, no mandate created."));
       return NULL;
     }
 
@@ -316,7 +319,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // extract the mandate type from the 'Frequency Unit' field
     $mandate_data = $config->extractSDDtype($frequency_unit);
     if (!$mandate_data) {
-      $this->logger->logError("Bad mandate specification: " . CRM_Utils_Array::value('Frequency Unit', $record));
+      $this->logger->logError($config->translate("Bad mandate specification").": " . CRM_Utils_Array::value('Frequency Unit', $record));
       return NULL;
     }
 
@@ -390,7 +393,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $mandate_data['campaign_id'] = (int) $mandate_data['campaign_id'];
       $result = civicrm_api3('Campaign', 'getcount', array('id' => $mandate_data['campaign_id']));
       if ($result != 1) {
-        $this->logger->logError("Campaign with id '{$mandate_data['campaign_id']}' could not be uniquely identified.");
+        $config = CRM_Streetimport_Config::singleton();
+        $this->logger->logError($config->translate("Campaign with id").' '.$mandate_data['campaign_id'].' '.$config->translate("could not be uniquely identified"));
         unset($mandate_data['campaign_id']);
       }
     }
@@ -400,10 +404,12 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     try {
       $result = civicrm_api3('SepaMandate', 'createfull', $mandate_data);
       $mandate = $result['values'][$result['id']];
-      $this->logger->logDebug("SDD mandate [{$mandate['id']}] created, reference is '{$mandate['reference']}'");
+      $config = CRM_Streetimport_Config::singleton();
+      $this->logger->logDebug($config->translate("SDD mandate")." ".$mandate['id']." ".$config->translate("created, reference is")." ".$mandate['reference']);
       return $mandate;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError("Error while trying to create mandate. Error was: " . $ex->getMessage(), "Create SDD Mandate Error");
+      $config = CRM_Streetimport_Config::singleton();
+      $this->logger->logError($config->translate("Error while trying to create mandate. Error was").": " . $ex->getMessage(), $config->translate("Create SDD Mandate Error"));
       return NULL;
     }
   }

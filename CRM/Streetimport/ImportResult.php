@@ -39,11 +39,12 @@ class CRM_Streetimport_ImportResult {
    * @param $message  optional additional message
    */
   public function logImport($id, $success, $type = '', $message = '') {
+    $config = CRM_Streetimport_Config::singleton();
     if ($success) {
-      $this->logMessage("Successfully imported record '$id': $message.", DEBUG, $type);
+      $this->logMessage($config->translate("Successfully imported record")." ".$id." :".$message.", ".DEBUG.", ".$type);
       if (!isset($this->import_success[$id])) $this->import_success[$id] = NULL;
     } else {
-      $this->logMessage("Failed to import record '$id': $message.", WARN, $type);
+      $this->logMessage($config->translate("Failed to import record")." ".$id." :".$message.", ".WARN.", ".$type);
       if (!isset($this->import_fail[$id])) $this->import_fail[$id] = NULL;
       if (isset($this->import_success[$id])) unset($this->import_success[$id]);
     }
@@ -98,6 +99,10 @@ class CRM_Streetimport_ImportResult {
    * @param abort  if true, an exception will be raised, stopping the execution
    */
   public function logFatal($message, $source = "Unknown", $line_id = "n/a", $title = "Import Failure") {
+    $config = CRM_Streetimport_Config::singleton();
+    $source = $config->translate($source);
+    $line_id = $config->translate($line_id);
+    $title = $config->translate($title);
     $this->logMessage($message, FATAL);
     $this->createErrorActivity($message, $source, $line_id, $title);
   }
@@ -139,8 +144,9 @@ class CRM_Streetimport_ImportResult {
   public function toAPIResult() {
     $counts = count($this->import_success) . " of " . (count($this->import_success)+count($this->import_fail)) . " records imported.";
     if ($this->max_error_level >= FATAL) {
+      $config = CRM_Streetimport_Config::singleton();
       $fatal_messages = $this->getEntriesWithLevel(FATAL, true);
-      $message = "FATAL ERROR(S): " . implode(', ', $fatal_messages) . ". $counts";
+      $message = $config->translate("FATAL ERROR(S)").": ". implode(', ', $fatal_messages) . ". $counts";
       return civicrm_api3_create_error($message);
     } else {
       return civicrm_api3_create_success($counts);
@@ -152,8 +158,8 @@ class CRM_Streetimport_ImportResult {
    * @see https://github.com/CiviCooP/be.aivl.streetimport/issues/11
    */
   protected function createErrorActivity($message, $source = "Unknown", $line_id = "n/a", $title = "Import Error") {
+    $config = CRM_Streetimport_Config::singleton();
     try {  // AVOID raising anothe excption leading to this
-      $config = CRM_Streetimport_Config::singleton();
 
       // TOOD: replace this ugly workaround:
       $handler = new CRM_Streetimport_StreetRecruitmentRecordHandler($this);
@@ -162,8 +168,8 @@ class CRM_Streetimport_ImportResult {
       $activity_info = array(
         'message' => $config->translate($message),
         'title'   => $config->translate($title),
-        'source'  => $source,
-        'line_id' => $line_id);
+        'source'  => $config->translate($source),
+        'line_id' => $config->translate($line_id));
       $handler->createActivity(array(
                             'activity_type_id'   => $config->getImportErrorActivityType(),
                             'subject'            => $config->translate($title),
@@ -176,7 +182,7 @@ class CRM_Streetimport_ImportResult {
                             ));
       
     } catch (Exception $e) {
-      error_log("Error while creating an activity to report another error: " . $e->getMessage());
+      error_log($config->translate("Error while creating an activity to report another error").": " . $e->getMessage());
     }
   }
 }
