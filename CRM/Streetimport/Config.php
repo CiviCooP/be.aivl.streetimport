@@ -35,7 +35,7 @@ class CRM_Streetimport_Config {
   protected $frequenceUnitOptionGroup = null;
   protected $recruitmentTypeOptionGroup = null;
   protected $areasOfInterestOptionGroup = null;
-
+  protected $translatedStrings = array();
 
   /**
    * Constructor method
@@ -55,6 +55,8 @@ class CRM_Streetimport_Config {
     $this->setCustomData();
     $this->setImportSettings();
     $this->setGroups();
+    $this->setTranslationFile();
+
   }
 
   /**
@@ -157,12 +159,16 @@ class CRM_Streetimport_Config {
    *  - activity subjects
    *  - ...
    *
+   * @param string $string
    * @return string
    * @access public
    */
   public function translate($string) {
-    // TODO: @Erik how should this happen?
-    return ts($string);
+    if (isset($this->translatedStrings[$string])) {
+      return $this->translatedStrings[$string];
+    } else {
+      return ts($string);
+    }
   }
 
   /**
@@ -815,5 +821,21 @@ class CRM_Streetimport_Config {
     }
     $importSettingsJson = file_get_contents($jsonFile);
     $this->importSettings = json_decode($importSettingsJson, true);
+  }
+
+  /**
+   * Protected function to load translation json based on local language
+   *
+   * @access protected
+   */
+  protected function setTranslationFile() {
+    $config = CRM_Core_Config::singleton();
+    $jsonFile = $this->resourcesPath.$config->lcMessages.'_translate.json';
+    if (file_exists($jsonFile)) {
+      $translateJson = file_get_contents($jsonFile);
+      $this->translatedStrings = json_decode($translateJson, true);
+    } else {
+      $this->translatedStrings = array();
+    }
   }
 }

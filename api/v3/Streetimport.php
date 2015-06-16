@@ -57,7 +57,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
   // now run the actual import
   try {
     if (!$source_file) {
-      $result->logMessage("No source files found.");
+      $result->logMessage($config->translate("No source files found"));
     } else {
       $dataSource = new CRM_Streetimport_FileCsvDataSource($source_file, $result);
       CRM_Streetimport_RecordHandler::processDataSource($dataSource);
@@ -67,9 +67,9 @@ function civicrm_api3_streetimport_importcsvfile($params) {
         $archive_file = $archive_folder . DIRECTORY_SEPARATOR . basename($source_file);
         $success = rename($source_file, $archive_file);
         if ($success) {
-          $result->logMessage("Moved file '$source_file' to '$archive_file'.");
+          $result->logMessage($config->translate("Moved file")." ".$source_file." ".$config->translate("to")." ".$archive_file);
         } else {
-          $result->abort("FAILED to move file '$source_file' to '$archive_file'!");
+          $result->abort($config->translate("FAILED to move file")." ".$source_file.$config->translate("to")." ".$archive_file);
         }
       }
     }

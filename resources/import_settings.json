@@ -1,72 +1,72 @@
 {
     "admin_id": {
         "name": "admin_id",
-        "label": "Foutenafhandeling door",
+        "label": "Employee handling errors",
         "value": "0"
     },
     "fundraiser_id": {
         "name": "fundraiser_id",
-        "label": "Opvolgcontact door",
+        "label": "Employee doing follow up call",
         "value": "0"
     },
     "import_location": {
         "name": "import_location",
-        "label": "Folder waar csv bestand opgehaald wordt",
+        "label": "Folder to get CSV files from",
         "value": "\/var\/www\/aivllokaal\/sites\/default\/files\/civicrm\/"
     },
     "processed_location": {
         "name": "processed_location",
-        "label": "Folder voor csv bestand na verwerking",
+        "label": "Folder to move processed CSV files to",
         "value": "\/var\/www\/aivllokaal\/sites\/default\/files\/processed\/"
     },
     "newsletter_group_id": {
         "name": "newsletter_group_id",
-        "label": "Groep voor nieuwsbrief",
+        "label": "Newsletter group",
         "value": "0"
     },
     "membership_type_id": {
         "name": "membership_type_id",
-        "label": "Lidmaatschap",
+        "label": "Membership type",
         "value": "0"
     },
     "offset_days": {
         "name": "offset_days",
-        "label": "Dagen tussen import en 1e SDD",
+        "label": "Offset days for SDD",
         "value": "14"
     },
     "phone_phone_type_id": {
         "name": "phone_phone_type_id",
-        "label": "Telefoontype voor vaste nummers",
+        "label": "Phone type for landlines",
         "value": "1"
     },
     "mobile_phone_type_id": {
         "name": "mobile_phone_type_id",
-        "label": "Telefoontype voor mobiele nummers",
+        "label": "Phone type for mobiles",
         "value": "2"
     },
     "location_type_id": {
         "name": "location_type_id",
-        "label": "Locatietype voor adres en eerste telefoon",
+        "label": "Location type for address and 1st phone",
         "value": "1"
     },
     "other_location_type_id": {
         "name": "other_location_type_id",
-        "label": "Locatietype voor eventuele extra telefoon",
+        "label": "Location type for additional phones",
         "value": "4"
     },
     "default_country_id": {
         "name": "default_country_id",
-        "label": "Standaard land",
+        "label": "Default country",
         "value": "1020"
     },
     "default_financial_type_id": {
         "name": "default_financial_type_id",
-        "label": "Standaard financieel type voor SDD",
+        "label": "Default financial type for SDD",
         "value": "4"
     },
     "household_prefix_id": {
         "name": "household_prefix_id",
-        "label": "Prefix voor huishouden",
+        "label": "Prefix for individual/household",
         "value": [
             "6",
             "5",
@@ -76,22 +76,22 @@
     },
     "female_gender_id": {
         "name": "female_gender_id",
-        "label": "CiviCRM geslacht voor mevrouw",
+        "label": "Gender for female import",
         "value": "1"
     },
     "male_gender_id": {
         "name": "male_gender_id",
-        "label": "CiviCRM geslacht voor meneer",
+        "label": "Gender for male import",
         "value": "2"
     },
     "unknown_gender_id": {
         "name": "unknown_gender_id",
-        "label": "CiviCRM geslacht voor onbekend",
+        "label": "Gender for all other import",
         "value": "3"
     },
     "employee_type_id": {
         "name": "employee_type_id",
-        "label": "Relaties die als personeel beschouwd worden",
+        "label": "Relationship types for other/employee",
         "value": [
             "4"
         ]

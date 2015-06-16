@@ -18,6 +18,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @access public
    */
   public function buildQuickForm() {
+    $config = CRM_Streetimport_Config::singleton();
     $this->getImportSettings();
     $employeeList = $this->getEmployeeList();
     $groupList = $this->getGroupList();
@@ -33,58 +34,58 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
         case 'admin_id':
-          $this->add('select', $settingName, $settingValues['label'], $employeeList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $employeeList, TRUE);
           break;
         case 'fundraiser_id':
-          $this->add('select', $settingName, $settingValues['label'], $employeeList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $employeeList, TRUE);
           break;
         case 'newsletter_group_id':
-          $this->add('select', $settingName, $settingValues['label'], $groupList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $groupList, TRUE);
           break;
         case 'membership_type_id':
-          $this->add('select', $settingName, $settingValues['label'], $membershipTypeList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $membershipTypeList, TRUE);
           break;
         case 'phone_phone_type_id':
-          $this->add('select', $settingName, $settingValues['label'], $phoneTypeList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $phoneTypeList, TRUE);
           break;
         case 'mobile_phone_type_id':
-          $this->add('select', $settingName, $settingValues['label'], $phoneTypeList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $phoneTypeList, TRUE);
           break;
         case 'location_type_id':
-          $this->add('select', $settingName, $settingValues['label'], $locationTypeList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $locationTypeList, TRUE);
           break;
         case 'other_location_type_id':
-          $this->add('select', $settingName, $settingValues['label'], $locationTypeList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $locationTypeList, TRUE);
           break;
         case 'default_country_id':
-          $this->add('select', $settingName, $settingValues['label'], $countryList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $countryList, TRUE);
           break;
         case 'default_financial_type_id':
-          $this->add('select', $settingName, $settingValues['label'], $financialTypeList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $financialTypeList, TRUE);
           break;
         case 'female_gender_id':
-          $this->add('select', $settingName, $settingValues['label'], $genderList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $genderList, TRUE);
           break;
         case 'male_gender_id':
-          $this->add('select', $settingName, $settingValues['label'], $genderList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $genderList, TRUE);
           break;
         case 'unknown_gender_id':
-          $this->add('select', $settingName, $settingValues['label'], $genderList, TRUE);
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $genderList, TRUE);
           break;
         case 'household_prefix_id':
-          $prefixSelect = $this->addElement('advmultiselect', $settingName, $settingValues['label'], $prefixList,
+          $prefixSelect = $this->addElement('advmultiselect', $settingName, $config->translate($settingValues['label']), $prefixList,
             array('size' => 5, 'style' => 'width:300px', 'class' => 'advmultselect'),TRUE);
-          $prefixSelect->setButtonAttributes('add', array('value' => ts('Household >>')));
-          $prefixSelect->setButtonAttributes('remove', array('value' => ts('<< Individual')));
+          $prefixSelect->setButtonAttributes('add', array('value' => $config->translate('Household')." >>"));
+          $prefixSelect->setButtonAttributes('remove', array('value' => '<< '.$config->translate('Individual')));
           break;
         case 'employee_type_id':
-          $employeeTypeSelect = $this->addElement('advmultiselect', $settingName, $settingValues['label'], $relationshipTypeList,
+          $employeeTypeSelect = $this->addElement('advmultiselect', $settingName, $config->translate($settingValues['label']), $relationshipTypeList,
             array('size' => 5, 'style' => 'width:300px', 'class' => 'advmultselect'),TRUE);
-          $employeeTypeSelect->setButtonAttributes('add', array('value' => ts('Employee >>')));
-          $employeeTypeSelect->setButtonAttributes('remove', array('value' => ts('<< Other')));
+          $employeeTypeSelect->setButtonAttributes('add', array('value' => $config->translate('Employee')." >>"));
+          $employeeTypeSelect->setButtonAttributes('remove', array('value' => "<< ".$config->translate('Other')));
           break;
         default:
-          $this->add('text', $settingName, $settingValues['label'], array('size' => 50), TRUE);
+          $this->add('text', $settingName, $config->translate($settingValues['label']), array('size' => 50), TRUE);
           break;
       }
     }
@@ -124,12 +125,13 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    */
   public function postProcess() {
     $this->saveImportSettings($this->_submitValues);
+    $config = CRM_Streetimport_Config::singleton();
     $userContext = CRM_Core_Session::USER_CONTEXT;
     if (empty($userContext) || $userContext == 'userContext') {
       $session = CRM_Core_Session::singleton();
       $session->pushUserContext(CRM_Utils_System::url('civicrm', '', true));
     }
-    CRM_Core_Session::setStatus(ts('AIVL Import Settings saved'), 'Saved', 'success');
+    CRM_Core_Session::setStatus($config->translate('AIVL Import Settings saved'), 'Saved', 'success');
   }
 
   /**
@@ -148,45 +150,46 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @static
    */
   public static function validateImportSettings($fields) {
+    $config = CRM_Streetimport_Config::singleton();
     if (!isset($fields['admin_id']) || empty($fields['admin_id'])) {
-      $errors['admin_id'] = 'This field can not be empty, you have to select a contact!';
+      $errors['admin_id'] = $config->translate('This field can not be empty, you have to select a contact!');
     }
     if (!isset($fields['fundraiser_id']) || empty($fields['fundraiser_id'])) {
-      $errors['fundraiser_id'] = 'This field can not be empty, you have to select a contact!';
+      $errors['fundraiser_id'] = $config->translate('This field can not be empty, you have to select a contact!');
     }
     if (!isset($fields['newsletter_group_id']) || empty($fields['newsletter_group_id'])) {
-      $errors['newsletter_group_id'] = 'This field can not be empty, you have to select a group!';
+      $errors['newsletter_group_id'] = $config->translate('This field can not be empty, you have to select a group!');
     }
     if (!isset($fields['membership_type_id']) || empty($fields['membership_type_id'])) {
-      $errors['membership_type_id'] = 'This field can not be empty, you have to select a membership type!';
+      $errors['membership_type_id'] = $config->translate('This field can not be empty, you have to select a membership type!');
     }
     if (!isset($fields['phone_phone_type_id']) || empty($fields['phone_phone_type_id'])) {
-      $errors['phone_phone_type_id'] = 'This field can not be empty, you have to select a phone type!';
+      $errors['phone_phone_type_id'] = $config->translate('This field can not be empty, you have to select a phone type!');
     }
     if (!isset($fields['mobile_phone_type_id']) || empty($fields['mobile_phone_type_id'])) {
-      $errors['mobile_phone_type_id'] = 'This field can not be empty, you have to select a phone type!';
+      $errors['mobile_phone_type_id'] = $config->translate('This field can not be empty, you have to select a phone type!');
     }
     if (!isset($fields['location_type_id']) || empty($fields['location_type_id'])) {
-      $errors['location_type_id'] = 'This field can not be empty, you have to select a location type!';
+      $errors['location_type_id'] = $config->translate('This field can not be empty, you have to select a location type!');
     }
     if (!isset($fields['female_gender_id']) || empty($fields['female_gender_id'])) {
-      $errors['female_gender_id'] = 'This field can not be empty, you have to select a gender!';
+      $errors['female_gender_id'] = $config->translate('This field can not be empty, you have to select a gender!');
     }
     if (!isset($fields['male_gender_id']) || empty($fields['male_gender_id'])) {
-      $errors['male_gender_id'] = 'This field can not be empty, you have to select a gender!';
+      $errors['male_gender_id'] = $config->translate('This field can not be empty, you have to select a gender!');
     }
     if (!isset($fields['unknown_gender_id']) || empty($fields['unknown_gender_id'])) {
-      $errors['unknown_gender_id'] = 'This field can not be empty, you have to select a gender!';
+      $errors['unknown_gender_id'] = $config->translate('This field can not be empty, you have to select a gender!');
     }
     if (!isset($fields['other_location_type_id']) || empty($fields['other_location_type_id'])) {
-      $errors['other_location_type_id'] = 'This field can not be empty, you have to select a location type!';
+      $errors['other_location_type_id'] = $config->translate('This field can not be empty, you have to select a location type!');
     } else {
       if ($fields['other_location_type_id'] == $fields['location_type_id']) {
-        $errors['other_location_type_id'] = 'Other location type can not be the same as the main one';
+        $errors['other_location_type_id'] = $config->translate('Other location type can not be the same as the main one');
       }
     }
     if (!ctype_digit($fields['offset_days'])) {
-      $errors['offset_days'] = 'This field can only contain numbers!';
+      $errors['offset_days'] = $config->translate('This field can only contain numbers!');
     }
     if (empty($errors)) {
       return TRUE;
