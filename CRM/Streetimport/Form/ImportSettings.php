@@ -28,6 +28,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $financialTypeList = $this->getFinancialTypeList();
     $prefixList = CRM_Streetimport_Utils::getOptionGroupList('individual_prefix');
     $genderList = CRM_Streetimport_Utils::getOptionGroupList('gender');
+    $relationshipTypeList = $this->getRelationshipTypeList();
 
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
@@ -75,6 +76,12 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
             array('size' => 5, 'style' => 'width:300px', 'class' => 'advmultselect'),TRUE);
           $prefixSelect->setButtonAttributes('add', array('value' => ts('Household >>')));
           $prefixSelect->setButtonAttributes('remove', array('value' => ts('<< Individual')));
+          break;
+        case 'employee_type_id':
+          $employeeTypeSelect = $this->addElement('advmultiselect', $settingName, $settingValues['label'], $relationshipTypeList,
+            array('size' => 5, 'style' => 'width:300px', 'class' => 'advmultselect'),TRUE);
+          $employeeTypeSelect->setButtonAttributes('add', array('value' => ts('Employee >>')));
+          $employeeTypeSelect->setButtonAttributes('remove', array('value' => ts('<< Other')));
           break;
         default:
           $this->add('text', $settingName, $settingValues['label'], array('size' => 50), TRUE);
@@ -280,18 +287,18 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $employeeList = array();
     $extensionConfig = CRM_Streetimport_Config::singleton();
     $legalName = $extensionConfig->getAivlLegalName();
-    $relationshipTypes = array('Personeelslid', 'Employee of', 'Vrijwilliger');
+    $relationshipTypes = $extensionConfig->getEmployeeRelationshipTypeIds();
     $aivlParams = array(
       'legal_name' => $legalName,
       'return' => 'id');
     try {
       $aivlContactId = civicrm_api3('Contact', 'Getvalue', $aivlParams);
-      foreach ($relationshipTypes as $relationshipTypeName) {
+      foreach ($relationshipTypes as $relationshipTypeId) {
         $relationshipParams = array(
           'is_active' => 1,
           'contact_id_b' => $aivlContactId,
-          'name_a_b' => $relationshipTypeName,
-          'options' => array('limit' => 999));
+          'relationship_type_id' => $relationshipTypeId,
+          'options' => array('limit' => 9999));
         try {
           $foundRelationships = civicrm_api3('Relationship', 'Get', $relationshipParams);
           foreach ($foundRelationships['values'] as $foundRelation) {
@@ -307,6 +314,28 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
         .', error from API Contact Getsingle: '.$ex->getMessage());
     }
     return $employeeList;
+  }
+
+  /**
+   * Method to get active relationship types for select list
+   *
+   * @return array
+   * @access protected
+   */
+  protected function getRelationshipTypeList() {
+    $relationshipTypeList = array();
+    $params = array(
+      'is_active' => 1,
+      'options' => array('limit' => 9999));
+    try {
+      $types = civicrm_api3('RelationshipType', 'Get', $params);
+      foreach ($types['values'] as $type) {
+        $relationshipTypeList[$type['id']] = $type['label_a_b'];
+      }
+      $relationshipTypeList[0] = ts('- select -');
+      asort($relationshipTypeList);
+    } catch (CiviCRM_API3_Exception $ex) {}
+    return $relationshipTypeList;
   }
 
   /**

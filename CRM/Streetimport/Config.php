@@ -425,6 +425,17 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get relationship types for employee
+   *
+   * @return array
+   * @access public
+   */
+  public function getEmployeeRelationshipTypeIds() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['employee_type_id']['value'];
+  }
+
+  /**
    * Method to get the phone type id of phone
    *
    * @return int

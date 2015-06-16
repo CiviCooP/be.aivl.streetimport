@@ -2,7 +2,7 @@
     "admin_id": {
         "name": "admin_id",
         "label": "Foutenafhandeling door",
-        "value": "1809"
+        "value": "1878"
     },
     "fundraiser_id": {
         "name": "fundraiser_id",
@@ -88,5 +88,14 @@
         "name": "unknown_gender_id",
         "label": "CiviCRM geslacht voor onbekend",
         "value": "3"
+    },
+    "employee_type_id": {
+        "name": "employee_type_id",
+        "label": "Relaties die als personeel beschouwd worden",
+        "value": [
+            "5",
+            "12",
+            "6"
+        ]
     }
 }
