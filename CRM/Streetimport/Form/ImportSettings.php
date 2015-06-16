@@ -22,11 +22,12 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $employeeList = $this->getEmployeeList();
     $groupList = $this->getGroupList();
     $membershipTypeList = $this->getMembershipTypeList();
-    $phoneTypeList = $this->getPhoneTypeList();
+    $phoneTypeList = CRM_Streetimport_Utils::getOptionGroupList('phone_type');
     $locationTypeList = $this->getLocationTypeList();
     $countryList = $this->getCountryList();
     $financialTypeList = $this->getFinancialTypeList();
-    $prefixList = $this->getPrefixList();
+    $prefixList = CRM_Streetimport_Utils::getOptionGroupList('individual_prefix');
+    $genderList = CRM_Streetimport_Utils::getOptionGroupList('gender');
 
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
@@ -59,6 +60,15 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           break;
         case 'default_financial_type_id':
           $this->add('select', $settingName, $settingValues['label'], $financialTypeList, TRUE);
+          break;
+        case 'female_gender_id':
+          $this->add('select', $settingName, $settingValues['label'], $genderList, TRUE);
+          break;
+        case 'male_gender_id':
+          $this->add('select', $settingName, $settingValues['label'], $genderList, TRUE);
+          break;
+        case 'unknown_gender_id':
+          $this->add('select', $settingName, $settingValues['label'], $genderList, TRUE);
           break;
         case 'household_prefix_id':
           $prefixSelect = $this->addElement('advmultiselect', $settingName, $settingValues['label'], $prefixList,
@@ -151,6 +161,15 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     }
     if (!isset($fields['location_type_id']) || empty($fields['location_type_id'])) {
       $errors['location_type_id'] = 'This field can not be empty, you have to select a location type!';
+    }
+    if (!isset($fields['female_gender_id']) || empty($fields['female_gender_id'])) {
+      $errors['female_gender_id'] = 'This field can not be empty, you have to select a gender!';
+    }
+    if (!isset($fields['male_gender_id']) || empty($fields['male_gender_id'])) {
+      $errors['male_gender_id'] = 'This field can not be empty, you have to select a gender!';
+    }
+    if (!isset($fields['unknown_gender_id']) || empty($fields['unknown_gender_id'])) {
+      $errors['unknown_gender_id'] = 'This field can not be empty, you have to select a gender!';
     }
     if (!isset($fields['other_location_type_id']) || empty($fields['other_location_type_id'])) {
       $errors['other_location_type_id'] = 'This field can not be empty, you have to select a location type!';
@@ -250,68 +269,6 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $locationTypeList[0] = ts('- select -');
     asort($locationTypeList);
     return $locationTypeList;
-  }
-
-  /**
-   * Method to get list of active phone types
-   *
-   * @return array
-   * @throws Exception when no option group phone_type found
-   * @access protected
-   */
-  protected function getPhoneTypeList() {
-    $phoneTypeList = array();
-    $optionGroupParams = array(
-      'name' => 'phone_type',
-      'return' => 'id');
-    try {
-      $optionGroupId = civicrm_api3('OptionGroup', 'Getvalue', $optionGroupParams);
-      $optionValueParams = array(
-        'option_group_id' => $optionGroupId,
-        'is_active' => 1,
-        'options' => array('limit' => 99999));
-      $optionValues = civicrm_api3('OptionValue', 'Get', $optionValueParams);
-      foreach ($optionValues['values'] as $optionValue) {
-        $phoneTypeList[$optionValue['value']] = $optionValue['label'];
-      }
-      $phoneTypeList[0] = ts('- select -');
-      asort($phoneTypeList);
-    } catch (CiviCRM_API3_Exception $ex) {
-      throw new Exception(ts('Could not find an option group with name phone_type, contact your system administrator.
-      Error from API OptionGroup Getvalue: '.$ex->getMessage()));
-    }
-    return $phoneTypeList;
-  }
-
-  /**
-   * Method to get list of active prefix
-   *
-   * @return array
-   * @throws Exception when no option group individual_prefix found
-   * @access protected
-   */
-  protected function getPrefixList() {
-    $prefixList = array();
-    $optionGroupParams = array(
-      'name' => 'individual_prefix',
-      'return' => 'id');
-    try {
-      $optionGroupId = civicrm_api3('OptionGroup', 'Getvalue', $optionGroupParams);
-      $optionValueParams = array(
-        'option_group_id' => $optionGroupId,
-        'is_active' => 1,
-        'options' => array('limit' => 99999));
-      $optionValues = civicrm_api3('OptionValue', 'Get', $optionValueParams);
-      foreach ($optionValues['values'] as $optionValue) {
-        $prefixList[$optionValue['value']] = $optionValue['label'];
-      }
-      $prefixList[0] = ts('- select -');
-      asort($prefixList);
-    } catch (CiviCRM_API3_Exception $ex) {
-      throw new Exception(ts('Could not find an option group with name individual_prefix, contact your system administrator.
-      Error from API OptionGroup Getvalue: '.$ex->getMessage()));
-    }
-    return $prefixList;
   }
 
   /**

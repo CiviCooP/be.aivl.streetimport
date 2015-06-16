@@ -381,6 +381,39 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get the gender id for males
+   *
+   * @return mixed
+   * @access public
+   */
+  public function getMaleGenderId() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['male_gender_id']['value'];
+  }
+
+  /**
+   * Method to get the gender id for females
+   *
+   * @return mixed
+   * @access public
+   */
+  public function getFemaleGenderId() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['female_gender_id']['value'];
+  }
+
+  /**
+   * Method to get the gender id for unknown
+   *
+   * @return mixed
+   * @access public
+   */
+  public function getUnknownGenderId() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['unknown_gender_id']['value'];
+  }
+
+  /**
    * Method to get prefixes for household
    *
    * @return array
@@ -534,11 +567,11 @@ class CRM_Streetimport_Config {
     $fileName = $this->resourcesPath.'import_settings.json';
     try {
       $fh = fopen($fileName, 'w');
+      fwrite($fh, json_encode($this->importSettings,JSON_PRETTY_PRINT));
+      fclose($fh);
     } catch (Exception $ex) {
       throw new Exception('Could not open import_settings.json, contact your system administrator. Error reported: '.$ex->getMessage());
     }
-    fwrite($fh, json_encode($this->importSettings,JSON_PRETTY_PRINT));
-    fclose($fh);
   }
 
   /**

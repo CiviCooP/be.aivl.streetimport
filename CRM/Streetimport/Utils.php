@@ -509,19 +509,51 @@ class CRM_Streetimport_Utils {
    * @return int
    */
   public static function determineGenderWithPrefix($prefix) {
-    // TODO issue 22 (ErikH)
+    $config = CRM_Streetimport_Config::singleton();
     $prefix = strtolower($prefix);
     switch ($prefix) {
       case 'meneer':
-        return 2;
+        return $config->getMaleGenderId();
       break;
       case 'mevrouw':
-        return 1;
+        return $config->getFemaleGenderId();
       break;
       default:
-        return 3;
+        return $config->getUnknownGenderId();
       break;
     }
+  }
 
+  /**
+   * Method to get list of active option values for select lists
+   *
+   * @param string $optionGroupName
+   * @return array
+   * @throws Exception when no option group found
+   * @access public
+   * @static
+   */
+  public static function getOptionGroupList($optionGroupName) {
+    $valueList = array();
+    $optionGroupParams = array(
+      'name' => $optionGroupName,
+      'return' => 'id');
+    try {
+      $optionGroupId = civicrm_api3('OptionGroup', 'Getvalue', $optionGroupParams);
+      $optionValueParams = array(
+        'option_group_id' => $optionGroupId,
+        'is_active' => 1,
+        'options' => array('limit' => 99999));
+      $optionValues = civicrm_api3('OptionValue', 'Get', $optionValueParams);
+      foreach ($optionValues['values'] as $optionValue) {
+        $valueList[$optionValue['value']] = $optionValue['label'];
+      }
+      $valueList[0] = ts('- select -');
+      asort($valueList);
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception(ts('Could not find an option group with name '.$optionGroupName.' , contact your system administrator.
+      Error from API OptionGroup Getvalue: '.$ex->getMessage()));
+    }
+    return $valueList;
   }
 }

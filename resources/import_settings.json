@@ -73,5 +73,20 @@
             "3",
             "4"
         ]
+    },
+    "female_gender_id": {
+        "name": "female_gender_id",
+        "label": "CiviCRM geslacht voor mevrouw",
+        "value": "1"
+    },
+    "male_gender_id": {
+        "name": "male_gender_id",
+        "label": "CiviCRM geslacht voor meneer",
+        "value": "2"
+    },
+    "unknown_gender_id": {
+        "name": "unknown_gender_id",
+        "label": "CiviCRM geslacht voor onbekend",
+        "value": "3"
     }
 }
