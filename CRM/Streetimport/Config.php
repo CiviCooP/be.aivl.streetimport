@@ -569,19 +569,28 @@ class CRM_Streetimport_Config {
     return self::$_singleton;
   }
 
+  /**
+   * Method to save the import settings
+   *
+   * @param array $params
+   * @throws Exception when json file could not be opened
+   * @access public
+   */
   public function saveImportSettings($params) {
-    foreach ($params as $key => $value) {
-      if (isset($this->importSettings[$key])) {
-        $this->importSettings[$key]['value'] = $value;
+    if (!empty($params)) {
+      foreach ($params as $key => $value) {
+        if (isset($this->importSettings[$key])) {
+          $this->importSettings[$key]['value'] = $value;
+        }
       }
-    }
-    $fileName = $this->resourcesPath.'import_settings.json';
-    try {
-      $fh = fopen($fileName, 'w');
-      fwrite($fh, json_encode($this->importSettings,JSON_PRETTY_PRINT));
-      fclose($fh);
-    } catch (Exception $ex) {
-      throw new Exception('Could not open import_settings.json, contact your system administrator. Error reported: '.$ex->getMessage());
+      $fileName = $this->resourcesPath . 'import_settings.json';
+      try {
+        $fh = fopen($fileName, 'w');
+        fwrite($fh, json_encode($this->importSettings));
+        fclose($fh);
+      } catch (Exception $ex) {
+        throw new Exception('Could not open import_settings.json, contact your system administrator. Error reported: ' . $ex->getMessage());
+      }
     }
   }
 

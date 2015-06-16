@@ -2,12 +2,12 @@
     "admin_id": {
         "name": "admin_id",
         "label": "Foutenafhandeling door",
-        "value": "1878"
+        "value": "0"
     },
     "fundraiser_id": {
         "name": "fundraiser_id",
         "label": "Opvolgcontact door",
-        "value": "1809"
+        "value": "0"
     },
     "import_location": {
         "name": "import_location",
@@ -22,12 +22,12 @@
     "newsletter_group_id": {
         "name": "newsletter_group_id",
         "label": "Groep voor nieuwsbrief",
-        "value": "27"
+        "value": "0"
     },
     "membership_type_id": {
         "name": "membership_type_id",
         "label": "Lidmaatschap",
-        "value": "1"
+        "value": "0"
     },
     "offset_days": {
         "name": "offset_days",
@@ -93,7 +93,6 @@
         "name": "employee_type_id",
         "label": "Relaties die als personeel beschouwd worden",
         "value": [
-            "5",
             "4"
         ]
     }

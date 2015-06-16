@@ -392,6 +392,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    */
   protected function saveImportSettings($formValues) {
     $saveValues = array();
+
     foreach ($formValues as $key => $value) {
       if ($key != 'qfKey' && $key != 'entryURL' && substr($key,0,3) != '_qf') {
         $saveValues[$key] = $value;
