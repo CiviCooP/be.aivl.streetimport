@@ -77,7 +77,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           $prefixSelect->setButtonAttributes('remove', array('value' => ts('<< Individual')));
           break;
         default:
-          $this->add('text', $settingName, $settingValues['label'], array(), TRUE);
+          $this->add('text', $settingName, $settingValues['label'], array('size' => 50), TRUE);
           break;
       }
     }
