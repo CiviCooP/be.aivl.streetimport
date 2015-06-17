@@ -834,6 +834,7 @@ class CRM_Streetimport_Config {
     if (file_exists($jsonFile)) {
       $translateJson = file_get_contents($jsonFile);
       $this->translatedStrings = json_decode($translateJson, true);
+
     } else {
       $this->translatedStrings = array();
     }

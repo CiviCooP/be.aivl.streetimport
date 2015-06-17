@@ -90,7 +90,7 @@
   "donorId missing":"donorId ontbreekt",
   "recruitingOrganizationId' missing":"recruitingOrganizationId ontbreekt",
   "CustomField external_donor_id not found. Please reinstall.":"Eigen veld external_donor_id niet gevonden, herinstalleren svp",
-  "CustomField recruiting_organization_id not found. Please reinstall.":"Eigen veld recruiting_organization_id niet gevonden, herinstalleren svp";
+  "CustomField recruiting_organization_id not found. Please reinstall.":"Eigen veld recruiting_organization_id niet gevonden, herinstalleren svp",
   "More than one contact found for donor ID ":"Meer dan 1 contact gevonden voor donor ID",
   "No SDD specified, no mandate created":"Geen SDD gespecificeerd, geen mandaat aangemaakt",
   "Bad mandate specification":"Foutieve mandaat specificatie",
