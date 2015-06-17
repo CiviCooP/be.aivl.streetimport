@@ -29,7 +29,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    */
   public function processRecord($record) {
     $config = CRM_Streetimport_Config::singleton();
-    $this->logger->logDebug("Processing 'StreetRecruitment' record #{$record['__id']}...");
+    $this->logger->logDebug($config->translate("Processing StreetRecruitment record")." #".$record['__id']."...");
 
     // STEP 1: lookup recruiting organisation
     $recruiting_organisation = $this->getRecruitingOrganisation($record);
@@ -79,7 +79,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     if ($this->isTrue($record, "Follow Up Call")) {
       $this->createActivity(array(
                               'activity_type_id'   => $config->getFollowUpCallActivityType(),
-                              'subject'            => $config->translate("Follow Up Call from ").$config->translate('Street Recruitment'),
+                              'subject'            => $config->translate("Follow Up Call from")." ".$config->translate('Street Recruitment'),
                               'status_id'          => $config->getFollowUpCallActivityStatusId(),
                               'activity_date_time' => date('YmdHis', strtotime("+1 day")),
                               'target_contact_id'  => (int) $donor['id'],
@@ -90,7 +90,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     }
 
     // DONE
-    $this->logger->logImport($record['__id'], true, 'StreetRecruitment');
+    $this->logger->logImport($record['__id'], true, $config->translate('StreetRecruitment'));
   }
 
 

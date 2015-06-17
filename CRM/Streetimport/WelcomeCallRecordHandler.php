@@ -27,7 +27,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
    */
   public function processRecord($record) {
     $config = CRM_Streetimport_Config::singleton();
-    $this->logger->logDebug("Processing 'WelcomeCall' record #{$record['__id']}...");
+    $this->logger->logDebug($config->translate("Processing WelcomeCall record")." #".$record['__id']."...");
 
     // STEP 1: lookup recruiting organisation
     $recruiting_organisation = $this->getRecruitingOrganisation($record);
@@ -38,7 +38,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // STEP 3: look up / create donor
     $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['id']);
     if (empty($donor)) {
-      $this->logger->logError("Donor [{$record['DonorID']}] should already exist. Created new contact in order to process record anyway.");
+      $this->logger->logError("Donor ".$record['DonorID']." ".$config->translate("should already exist. Created new contact in order to process record anyway."));
       $donor = $this->processDonor($record, $recruiting_organisation);
     }
 
@@ -70,7 +70,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $this->createMembership(array(
         'contact_id'         => $donor['id'],
         'membership_type_id' => $config->getMembershipTypeID(),
-        'membership_source' => $config->translate('Activity').' '.$config->translate('Street Recruitment').' '.$createdActivity->id
+        'membership_source' => $config->translate('Activity').' '.$config->translate('Welcome Call').' '.$createdActivity->id
       ));
     }
 
@@ -78,7 +78,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     if ($this->isTrue($record, "Follow Up Call")) {
       $this->createActivity(array(
         'activity_type_id'   => $config->getFollowUpCallActivityType(),
-        'subject'            => $config->translate("Follow Up Call from ").$config->translate('Welcome Call'),
+        'subject'            => $config->translate("Follow Up Call from")." ".$config->translate('Welcome Call'),
         'status_id'          => $config->getFollowUpCallActivityStatusId(),
         'activity_date_time' => date('YmdHis', strtotime("+1 day")),
         'target_contact_id'  => (int) $donor['id'],
@@ -89,7 +89,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     }
 
     // DONE
-    $this->logger->logImport($record['__id'], true, 'WelcomeCall');
+    $this->logger->logImport($record['__id'], true, $config->translate('WelcomeCall'));
   }
 
 
@@ -97,6 +97,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
    * process SDD mandate
    */
   protected function processMandate($record, $donor_id) {
+    $config = CRM_Streetimport_Config::singleton();
     // first, extract the new mandate information
     $new_mandate_data = $this->extractMandate($record, $donor_id);
 
@@ -104,7 +105,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     try {
       $old_mandate_data = civicrm_api3('SepaMandate', 'getsingle', array('reference' => $new_mandate_data['reference']));    
     } catch (Exception $e) {
-      $this->logger->logError("SDD mandate '{$new_mandate_data['reference']}' could not be found.");
+      $this->logger->logError($config->translate("SDD mandate").' '.$new_mandate_data['reference'].$config->translate('could not be found'));
       return NULL;
     }
     
@@ -116,11 +117,12 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $old_contribution = civicrm_api3('Contribution', 'getsingle', array('id' => $old_mandate_data['entity_id']));
         $old_contribution['amount'] = $old_contribution['total_amount'];
       } else {
-        $this->logger->abort("Bad SDD mandate type found. Contact developer.");
+        $config= CRM_Streetimport_Config::singleton();
+        $this->logger->abort($config->translate("Bad SDD mandate type found. Contact developer"));
         return NULL;
       }
     } catch (Exception $e) {
-      $this->logger->logError("Couldn't load contribution entity for mandate [{$old_mandate_data['id']}].");
+      $this->logger->logError($config->translate("Couldn't load contribution entity for mandate").' '.$old_mandate_data['id']);
       return NULL;      
     }
 
@@ -162,9 +164,10 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // BUT: for the time being, bail if anything had changed:
     if (!empty($mandate_diff)) {
       $field_list = implode(',', array_keys($mandate_diff));
-      $this->logger->logError("SDD mandate update requested ($field_list), but this has not been implemented yet.");
+      $this->logger->logError($config->translate("SDD mandate update requested").' ('.$field_list.'), '
+        .$config->translate('but this has not been implemented yet'));
     } else {
-      $this->logger->logDebug("No SDD mandate update required.");
+      $this->logger->logDebug($config->translate("No SDD mandate update required"));
     }
   }
 

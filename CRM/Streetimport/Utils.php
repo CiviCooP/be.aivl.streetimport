@@ -179,8 +179,9 @@ class CRM_Streetimport_Utils {
         $optionGroup = civicrm_api3('OptionGroup', 'Create', $params);
         $optionGroupData = $optionGroup['values'];
       } catch (CiviCRM_API3_Exception $ex) {
-        throw new Exception('Could not create option_group type with name ' . $params['name']
-          . ', error from API OptionGroup Create: ' . $ex->getMessage());
+        $config = CRM_Streetimport_Config::singleton();
+        throw new Exception($config->translate('Could not create option_group type with name').' '
+          .$params['name'].', '.$config->translate('error from API OptionGroup Create').': ' . $ex->getMessage());
       }
     }
     return $optionGroupData;
@@ -223,8 +224,9 @@ class CRM_Streetimport_Utils {
 
         $groupData = $group['values'];
       } catch (CiviCRM_API3_Exception $ex) {
-        throw new Exception('Could not create group type with name ' . $params['name']
-          . ', error from API Group Create: ' . $ex->getMessage());
+        $config = CRM_Streetimport_Config::singleton();
+        throw new Exception($config->translate('Could not create group with name').' '.$params['name']
+          .', '.$config->translate('error from API Group Create').': ' . $ex->getMessage());
       }
     }
     return $groupData;
@@ -245,7 +247,8 @@ class CRM_Streetimport_Utils {
     $optionGroup = self::getOptionGroupWithName('activity_type');
     $params['option_group_id'] = $optionGroup['id'];
     if (!isset($params['name']) || empty($params['name'])) {
-      throw new Exception('When trying to create an Activity Type name is a mandatory parameter and can not be empty');
+      $config = CRM_Streetimport_Config::singleton();
+      throw new Exception($config->translate('When trying to create an Activity Type name is a mandatory parameter and can not be empty'));
     }
 
     if (empty($params['label']) || !isset($params['label'])) {
@@ -259,8 +262,9 @@ class CRM_Streetimport_Utils {
         $activityType = civicrm_api3('OptionValue', 'Create', $params);
         $activityTypeData = $activityType['values'][$activityType['id']];
       } catch (CiviCRM_API3_Exception $ex) {
-        throw new Exception('Could not create activity type with name ' . $params['name']
-          . ', error from API OptionValue Create: ' . $ex->getMessage());
+        $config = CRM_Streetimport_Config::singleton();
+        throw new Exception($config->translate('Could not create activity type with name').' '.$params['name']
+          .', '.$config->translate('error from API OptionValue Create').': '.$ex->getMessage());
       }
     }
     return $activityTypeData;
@@ -279,7 +283,8 @@ class CRM_Streetimport_Utils {
   public static function createContactSubType($params) {
     $contactSubType = array();
     if (!isset($params['name']) || empty($params['name'])) {
-      throw new Exception('When trying to create a Contact Sub Type name is a mandatory parameter and can not be empty');
+      $config = CRM_Streetimport_Config::singleton();
+      throw new Exception($config->translate('When trying to create a Contact Sub Type name is a mandatory parameter and can not be empty'));
     }
     if (!isset($params['label']) || empty($params['label'])) {
       $params['label'] = self::buildLabelFromName($params['name']);
@@ -288,8 +293,9 @@ class CRM_Streetimport_Utils {
       try {
         $contactSubType = civicrm_api3('ContactType', 'Create', $params);
       } catch (CiviCRM_API3_Exception $ex) {
-        throw new Exception('Could not create contact sub type with name '.$params['name']
-          .', error from API ContactType Create: '.$ex->getMessage());
+        $config = CRM_Streetimport_Config::singleton();
+        throw new Exception($config->translate('Could not create contact sub type with name').' '.$params['name']
+          .', '.$config->translate('error from API ContactType Create').': '.$ex->getMessage());
       }
     }
     return $contactSubType['values'][$contactSubType['id']];
@@ -308,7 +314,8 @@ class CRM_Streetimport_Utils {
   public static function createRelationshipType($params) {
     $relationshipType = array();
     if (!isset($params['name_a_b']) || empty($params['name_a_b']) || !isset($params['name_b_a']) || empty($params['name_b_a'])) {
-      throw new Exception('When trying to create a Relationship Type name_a_b and name_b_a are mandatory parameter and can not be empty');
+      $config = CRM_Streetimport_Config::singleton();
+      throw new Exception($config->translate('When trying to create a Relationship Type name_a_b and name_b_a are mandatory parameter and can not be empty'));
     }
     if (!isset($params['label_a_b']) || empty($params['label_a_b'])) {
       $params['label_a_b'] = self::buildLabelFromName($params['name_a_b']);
@@ -320,8 +327,9 @@ class CRM_Streetimport_Utils {
       try {
         $relationshipType = civicrm_api3('RelationshipType', 'Create', $params);
       } catch (CiviCRM_API3_Exception $ex) {
-        throw new Exception('Could not create relationship type with name '.$params['name_a_b']
-          .', error from API RelationshipType Create: '.$ex->getMessage());
+        $config = CRM_Streetimport_Config::singleton();
+        throw new Exception($config->translate('Could not create relationship type with name').' '.$params['name_a_b']
+          .', '.$config->translate('error from API RelationshipType Create').': '.$ex->getMessage());
       }
     }
     return $relationshipType['values'][$relationshipType['id']];
@@ -340,7 +348,8 @@ class CRM_Streetimport_Utils {
   public static function createCustomGroup($params) {
     $customGroup = array();
     if (!isset($params['name']) || empty($params['name']) || !isset($params['extends']) || empty($params['extends'])) {
-      throw new Exception('When trying to create a Custom Group name and extends are mandatory parameters and can not be empty');
+      $config = CRM_Streetimport_Config::singleton();
+      throw new Exception($config->translate('When trying to create a Custom Group name and extends are mandatory parameters and can not be empty'));
     }
     if (!isset($params['title']) || empty($params['title'])) {
       $params['title'] = self::buildLabelFromName($params['name']);
@@ -349,8 +358,10 @@ class CRM_Streetimport_Utils {
       try {
         $customGroup = civicrm_api3('CustomGroup', 'Create', $params);
       } catch (CiviCRM_API3_Exception $ex) {
-        throw new Exception('Could not create custom group with name '.$params['name']
-          .' to extends '.$params['extends'].', error from API CustomGroup Create: '.$ex->getMessage());
+        $config = CRM_Streetimport_Config::singleton();
+        throw new Exception($config->translate('Could not create custom group with name').' '.$params['name']
+          .' '.$config->translate('to extend').' '.$params['extends'].', '.$config->translate('error from API CustomGroup Create')
+          .': '.$ex->getMessage());
       }
     }
     return $customGroup['values'][$customGroup['id']];
@@ -369,7 +380,8 @@ class CRM_Streetimport_Utils {
   public static function createCustomField($params) {
     $customField = array();
     if (!isset($params['name']) || empty($params['name']) || !isset($params['custom_group_id']) || empty($params['custom_group_id'])) {
-      throw new Exception('When trying to create a Custom Field name and custom_group_id are mandatory parameters and can not be empty');
+      $config = CRM_Streetimport_Config::singleton();
+      throw new Exception($config->translate('When trying to create a Custom Field name and custom_group_id are mandatory parameters and can not be empty'));
     }
     if (!isset($params['label']) || empty($params['label'])) {
       $params['label'] = self::buildLabelFromName($params['name'], $params['custom_group_id']);
@@ -378,8 +390,10 @@ class CRM_Streetimport_Utils {
       try {
         $customField = civicrm_api3('CustomField', 'Create', $params);
       } catch (CiviCRM_API3_Exception $ex) {
-        throw new Exception('Could not create custom field with name '.$params['name']
-          .' in custom group '.$params['custom_group_id'].', error from API CustomField Create: '.$ex->getMessage());
+        $config = CRM_Streetimport_Config::singleton();
+        throw new Exception($config->translate('Could not create custom field with name').' '.$params['name']
+          .' '.$config->translate('in custom group').' '.$params['custom_group_id']
+          .', '.$config->translate('error from API CustomField Create').': '.$ex->getMessage());
       }
     }
     return $customField['values'][$customField['id']];
@@ -551,8 +565,10 @@ class CRM_Streetimport_Utils {
       $valueList[0] = ts('- select -');
       asort($valueList);
     } catch (CiviCRM_API3_Exception $ex) {
-      throw new Exception(ts('Could not find an option group with name '.$optionGroupName.' , contact your system administrator.
-      Error from API OptionGroup Getvalue: '.$ex->getMessage()));
+      $config = CRM_Streetimport_Config::singleton();
+      throw new Exception($config->translate('Could not find an option group with name').' '.$optionGroupName
+        .' ,'.$config->translate('contact your system administrator').' .'
+        .$config->translate('Error from API OptionGroup Getvalue').': '.$ex->getMessage());
     }
     return $valueList;
   }

@@ -56,7 +56,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
    *
    * @return true if there is more records available via next()
    */
-  public function asNext() {
+  public function hasNext() {
     return ($this->next != NULL);
   }
 
