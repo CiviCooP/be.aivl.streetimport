@@ -6,8 +6,9 @@ The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres 
 [Basic functionality] (#basic-functionality)
 [Installation] (#installation)
 [Import settings] (#import-settings)
-* [Employee handling errors] (#employee-handling-errors)
-* [Employee doing Follow Up call] (#employee-doing-follow-up-call)
+[Employee handling errors] (#employee-handling-errors)
+[Employee doing folluw up calls] (#employee-doing-follow-up-calls)
+
 ===============================================
 
 ## Basic functionality ##
