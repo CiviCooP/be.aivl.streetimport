@@ -3,15 +3,15 @@ Native CiviCRM extension for Amnesty International Flanders (AIVL) to import str
 The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres (Systopia) for AIVL.
 
 ## Table of Contents ##
-[Basic functionality] (#basic-functionality)
+[1 Basic functionality] (#basic-functionality)
 
-[Installation] (#installation)
+[2 Installation] (#installation)
 
-[Import settings] (#import-settings)
+[3 Import settings] (#import-settings)
 
-[Employee handling errors] (#employee-handling-errors)
+[3.1 Employee handling errors] (#employee-handling-errors)
 
-[Employee doing folluw up calls] (#employee-doing-follow-up-calls)
+[3.2 Employee doing folluw up calls] (#employee-doing-follow-up-calls)
 
 
 
