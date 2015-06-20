@@ -5,9 +5,9 @@ The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres 
 ## Table of Contents ##
 [1 BASIC FUNCTIONALITY] (#basic-functionality)
 
-[2 Installation] (#installation)
+[2 INSTALLATION] (#installation)
 
-[3 Import settings] (#import-settings)
+[3 IMPORT SETTINGS] (#import-settings)
 
 [3.1 Employee handling errors] (#employee-handling-errors)
 
@@ -47,7 +47,7 @@ Depending on the configuration the **welcome call** record import will automatic
 
 Once the complete file is processed, the file will be moved to a folder specified in the settings.
 
-## Installation ##
+## INSTALLATION ##
 You can install the extension by downloading a zip file from GitHub or by pulling, fetching or cloning the repository. You can then use the CiviCRM manage extensions menu option to install the extension.
 
 In the resources folder are a couple of CiviCRM entities that will be created upon installation of the extension (or whenever the extension is referenced in CiviCRM). This is done in the *CRM_Streetimport_Config* class constructor. The Config object is instantiated in the install hook of the *streetimport.php* file. The entities are in JSON-files:
@@ -60,7 +60,7 @@ In the resources folder are a couple of CiviCRM entities that will be created up
  
  You can adapt these files to suit your needs, but please check the *CRM_Streetimport_Config* to understand what the impact is. This extension is created specifically for AIVL in their context. You are quite welcome to use and change this extension for your own needs but you will have to ensure you understand the structure before you do :-)
  
-## Import Settings ##
+## IMPORT SETTINGS ##
 The settings used in the import process are stored in a JSON file *import_settings.json* in the *resources* folder of the extension. You can manipulate the JSON file to update the settings, but there is also an option in the CiviCRM menu Administer/CiviContribute with the name *AIVL Import Settings*.
 If you click on this option you will see all the import settings. When you hit the save button, the results will be stored in the JSON file *import_settings.json* in the *resources* folder.
 All settings will be discussed below (you might get Dutch headings if you have a Dutch CiviCRM installation but we think you will understand anyway).
