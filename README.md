@@ -4,10 +4,15 @@ The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres 
 
 ## Table of Contents ##
 [Basic functionality] (#basic-functionality)
+
 [Installation] (#installation)
+
 [Import settings] (#import-settings)
+
 [Employee handling errors] (#employee-handling-errors)
+
 [Employee doing folluw up calls] (#employee-doing-follow-up-calls)
+
 
 
 ## Basic functionality ##
