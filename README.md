@@ -3,7 +3,7 @@ Native CiviCRM extension for Amnesty International Flanders (AIVL) to import str
 The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres (Systopia) for AIVL.
 
 ## Table of Contents ##
-[1 Basic functionality] (#basic-functionality)
+[1 BASIC FUNCTIONALITY] (#basic-functionality)
 
 [2 Installation] (#installation)
 
@@ -15,7 +15,7 @@ The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres 
 
 
 
-## Basic functionality ##
+## BASIC FUNCTIONALITY ##
 AIVL use street recruitment to get new donors and SEPA Direct Debits (SDD). The actual street recruitment is done by a supplier, who follows up the recruitment with a welcoming call to the new donor within a week of recruitment.
 Daily they will put a csv file with either street recruitment data or welcome call data on the server, which will be imported by this extension. The records will contain:
 * data identifying the recruiting organization and the recruiter
