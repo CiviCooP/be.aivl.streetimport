@@ -3,9 +3,12 @@ Native CiviCRM extension for Amnesty International Flanders (AIVL) to import str
 The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres (Systopia) for AIVL.
 
 ## Table of Contents ##
+[Basic functionality] (#basic-functionality)
+[Installation] (#installation)
+[Import settings] (#import-settings)
+* [Employee handling errors] (#employee-handling-errors)
+* [Employee doing Follow Up call] (#employee-doing-follow-up-call)
 ===============================================
-1. [Basic functionality] (#basic-functionality)
-2. [Installation] (#installation)
 
 ## Basic functionality ##
 AIVL use street recruitment to get new donors and SEPA Direct Debits (SDD). The actual street recruitment is done by a supplier, who follows up the recruitment with a welcoming call to the new donor within a week of recruitment.
@@ -39,7 +42,7 @@ Depending on the configuration the **welcome call** record import will automatic
 
 Once the complete file is processed, the file will be moved to a folder specified in the settings.
 
-## 2 Installation ##
+## Installation ##
 You can install the extension by downloading a zip file from GitHub or by pulling, fetching or cloning the repository. You can then use the CiviCRM manage extensions menu option to install the extension.
 
 In the resources folder are a couple of CiviCRM entities that will be created upon installation of the extension (or whenever the extension is referenced in CiviCRM). This is done in the *CRM_Streetimport_Config* class constructor. The Config object is instantiated in the install hook of the *streetimport.php* file. The entities are in JSON-files:
@@ -52,12 +55,12 @@ In the resources folder are a couple of CiviCRM entities that will be created up
  
  You can adapt these files to suit your needs, but please check the *CRM_Streetimport_Config* to understand what the impact is. This extension is created specifically for AIVL in their context. You are quite welcome to use and change this extension for your own needs but you will have to ensure you understand the structure before you do :-)
  
-## 3 Import Settings ##
+## Import Settings ##
 The settings used in the import process are stored in a JSON file *import_settings.json* in the *resources* folder of the extension. You can manipulate the JSON file to update the settings, but there is also an option in the CiviCRM menu Administer/CiviContribute with the name *AIVL Import Settings*.
 If you click on this option you will see all the import settings. When you hit the save button, the results will be stored in the JSON file *import_settings.json* in the *resources* folder.
 All settings will be discussed below (you might get Dutch headings if you have a Dutch CiviCRM installation but we think you will understand anyway).
 
-### 3.1 Employee handling errors ###
+### Employee handling errors ###
 During the import whenever an error is logged, an activity of the type Import Error will be created. In this setting you select the contact that will be set as one the activity will be assigned to. In the select list you will get a list of all contacts in your database that are considered as an employee (based on the setting *Relationship types for other/employee* as AIVL has more than one relationship type that can signify an employee in the sense for this setting. By default it will show those contacts that have the 'employee' relationship. It is possible that you have to change the *Relationship types for other/employee* first, save the settings and then select the contacts.
 
 ### Employee doing follow up call ###
