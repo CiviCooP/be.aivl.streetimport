@@ -329,6 +329,26 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $mandate_data['frequency_interval'] = $mandate_data['frequency_interval'] * $frequency_interval;
     }
 
+    // check if IBAN is given
+    $iban = CRM_Utils_Array::value('IBAN', $record);
+    if (empty($iban)) {
+      $this->logger->logError("Record has no IBAN.");
+      return;
+    }
+
+    // look up BIC if it doesn't exist   // BE62510007547061
+    $bic  = CRM_Utils_Array::value('Bic',  $record);
+    if (empty($bic)) {
+      try {
+        $result = civicrm_api3('Bic', 'getfromiban', array('iban' => $iban));
+        $bic = $result['bic'];
+        $this->logger->logMessage("Successfully looked up BIC '$bic' with IBAN '$iban'.");
+      } catch (CiviCRM_API3_Exception $ex) {
+        $this->logger->logError("Record has no BIC, and a lookup with IBAN '$iban' failed.");
+        return;
+      }
+    }
+
     // get the start date
     $start_date = CRM_Utils_Array::value('Start Date', $record);
     $start_date_parsed = strtotime($start_date);
@@ -372,8 +392,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $mandate_data['amount']        = (float) CRM_Utils_Array::value('Amount', $record);
     $mandate_data['start_date']    = date('YmdHis', $start_date_parsed);
     $mandate_data['creation_date'] = date('YmdHis', $signature_date_parsed);
-    $mandate_data['iban']          = CRM_Utils_Array::value('IBAN', $record);
-    $mandate_data['bic']           = CRM_Utils_Array::value('Bic', $record);
+    $mandate_data['iban']          = $iban;
+    $mandate_data['bic']           = $bic;
     $mandate_data['bank_name']     = CRM_Utils_Array::value('Bank Name', $record);
 
     $mandate_data['financial_type_id']  = $config->getDefaultFinancialTypeId();
