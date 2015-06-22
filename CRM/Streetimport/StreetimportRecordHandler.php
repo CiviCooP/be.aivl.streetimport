@@ -352,11 +352,15 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // get the start date
     $start_date = CRM_Utils_Array::value('Start Date', $record);
     $start_date_parsed = strtotime($start_date);
+    $now = strtotime("now");
     if (empty($start_date_parsed)) {
       if (!empty($start_date)) {
         $this->logger->logWarning("Couldn't parse start date '$start_date'. Set to start now.");
       }
-      $start_date_parsed = strtotime("now");
+      $start_date_parsed = $now;
+    } elseif ($start_date_parsed < $now) {
+      $this->logger->logWarning("Given start date is in the past. Set to start now.");
+      $start_date_parsed = $now;
     }
 
     // get the signature date
@@ -366,8 +370,9 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       if (!empty($signature_date)) {
         $this->logger->logWarning("Couldn't parse signature date '$signature_date'. Set to start now.");
       }
-      $signature_date_parsed = strtotime("now");
+      $signature_date_parsed = $now;
     }
+    $signature_date_parsed = max($now, $signature_date_parsed);
 
     // get the start date
     $end_date = CRM_Utils_Array::value('End Date', $record);
@@ -377,6 +382,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         $this->logger->logWarning("Couldn't parse start end date '$end_date'.");
       }
     } else {
+      $end_date_parsed = max($start_date_parsed, $end_date_parsed);
       $mandate_data['end_date'] = date('YmdHis', $end_date_parsed);
     }
 
