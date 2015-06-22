@@ -337,11 +337,16 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
 
     // look up BIC if it doesn't exist   // BE62510007547061
+    $mandate_data['bank_name'] = CRM_Utils_Array::value('Bank Name', $record);
     $bic  = CRM_Utils_Array::value('Bic',  $record);
     if (empty($bic)) {
       try {
         $result = civicrm_api3('Bic', 'getfromiban', array('iban' => $iban));
         $bic = $result['bic'];
+        if (empty($mandate_data['bank_name'])) {
+          // set bank name, if not given by file
+          $mandate_data['bank_name'] = $bic['title'];
+        }
         $this->logger->logMessage("Successfully looked up BIC '$bic' with IBAN '$iban'.");
       } catch (CiviCRM_API3_Exception $ex) {
         $this->logger->logError("Record has no BIC, and a lookup with IBAN '$iban' failed.");
@@ -400,6 +405,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $mandate_data['creation_date'] = date('YmdHis', $signature_date_parsed);
     $mandate_data['iban']          = $iban;
     $mandate_data['bic']           = $bic;
+    $mandate_data['source']        = $config->translate('Street Recruitment');
     $mandate_data['bank_name']     = CRM_Utils_Array::value('Bank Name', $record);
 
     $mandate_data['financial_type_id']  = $config->getDefaultFinancialTypeId();
@@ -439,6 +445,73 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       return NULL;
     }
   }
+
+
+
+  /**
+   * This function will make sure, that the donor will
+   * have a (CiviBanking) bank account entry
+   *
+   * @param $mandate_data   mandate entity data
+   */
+  public function saveBankAccount($mandate_data) {
+    $config = CRM_Streetimport_Config::singleton();
+    $type_id_IBAN = (int) CRM_Core_OptionGroup::getValue('civicrm_banking.reference_types', 'IBAN', 'name', 'String', 'id'); 
+    if (empty($type_id_IBAN)) {
+      $this->logger->abort("Could't find 'IBAN' reference type. Maybe CiviBanking is not installed?");
+      return;
+    }
+
+    $account_exists = FALSE;
+    try {
+      // check the user's bank accounts
+      $ba_list = civicrm_api3('BankingAccount', 'get', array('contact_id' => $mandate_data['contact_id']));
+      foreach ($ba_list['values'] as $ba_id => $ba) {
+        $ref_query = array('ba_id' => $ba['id'], 'reference_type_id' => $type_id_IBAN);
+        $ba_ref_list = civicrm_api3('BankingAccountReference', 'get', $ref_query);
+        foreach ($ba_ref_list['values'] as $ba_ref_id => $ba_ref) {
+          if ($ba_ref['reference'] == $mandate_data['iban']) {
+            $account_exists = TRUE;
+            break 2;
+          }
+        }
+      }
+
+      if ($account_exists) {
+        $this->logger->logDebug("Bank account '{$mandate_data['iban']}' already exists with contact [{$mandate_data['contact_id']}].");
+      } else {
+        // create bank account (using BAOs)
+        $ba_extra = array(
+          'BIC'     => $mandate_data['bic'],
+          'country' => substr($mandate_data['iban'], 0, 2),
+          'source'  => $config->translate('Street Recruitment'),
+        );
+        if (!empty($mandate_data['bank_name'])) {
+          $ba_extra['bank_name'] = $mandate_data['bank_name'];
+        }
+
+        $ba = civicrm_api3('BankingAccount', 'create', array(
+          'contact_id'   => $mandate_data['contact_id'],
+          'description'  => $config->translate('Private Account'),
+          'created_date' => date('YmdHis'),
+          'data_raw'     => '{}',
+          'data_parsed'  => json_encode($ba_extra),
+          ));
+
+        // add a reference
+        civicrm_api3('BankingAccountReference', 'create', array(
+          'reference'         => $mandate_data['iban'],
+          'reference_type_id' => $type_id_IBAN,
+          'ba_id'             => $ba['id'],
+          ));
+
+        $this->logger->logDebug("Bank account '{$mandate_data['iban']}' created for contact [{$mandate_data['contact_id']}].");
+      }
+    } catch (Exception $ex) {
+      
+    }
+  }
+
 
   /**
    * Method to get contact data with donor Id

@@ -58,6 +58,9 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     // STEP 6: create SEPA mandate
     $mandate_data = $this->extractMandate($record, $donor['id']);
     $mandate = $this->createSDDMandate($mandate_data);
+    if ($mandate) {
+      $this->saveBankAccount($mandate_data);
+    }
 
     // STEP 7: add to newsletter group if requested
     if ($this->isTrue($record, "Newsletter")) {

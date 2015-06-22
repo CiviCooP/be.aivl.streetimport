@@ -161,6 +161,8 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // INIT: can be changed: frequency_unit/frequency_interval/amount/startdate/enddate/iban/bic/campaign_id
     // BUSY: can be changed: amount/enddate
 
+    // TODO: if ($mandate) $this->saveBankAccount($mandate_data);
+
     // BUT: for the time being, bail if anything had changed:
     if (!empty($mandate_diff)) {
       $field_list = implode(',', array_keys($mandate_diff));
