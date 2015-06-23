@@ -59,6 +59,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $mandate_data = $this->extractMandate($record, $donor['id']);
     $mandate = $this->createSDDMandate($mandate_data);
     if ($mandate) {
+      // if successful, store the bank account data
       $this->saveBankAccount($mandate_data);
     }
 

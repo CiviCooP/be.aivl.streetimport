@@ -98,14 +98,19 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
    */
   protected function processMandate($record, $donor_id) {
     $config = CRM_Streetimport_Config::singleton();
+    $now = strtotime("now");
+
     // first, extract the new mandate information
     $new_mandate_data = $this->extractMandate($record, $donor_id);
 
     // then load the existing mandate
     try {
       $old_mandate_data = civicrm_api3('SepaMandate', 'getsingle', array('reference' => $new_mandate_data['reference']));    
+      if (!isset($old_mandate_data['end_date'])) {
+        $old_mandate_data['end_date'] = '';
+      }
     } catch (Exception $e) {
-      $this->logger->logError($config->translate("SDD mandate").' '.$new_mandate_data['reference'].$config->translate('could not be found'));
+      $this->logger->logError(sprintf($config->translate("SDD mandate '%s' count not be found."), $new_mandate_data['reference']));
       return NULL;
     }
     
@@ -144,7 +149,6 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // if both dates are in the past, we can ignore the change 
     //   (they're both probably just auto-generated)
     if (!empty($mandate_diff['start_date'])) {
-      $now = strtotime("now");
       if (  $old_contribution['start_date'] > $now 
          || $new_mandate_data['start_date'] > $now ) {
         unset($mandate_diff['start_date']);
@@ -155,21 +159,69 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $ignore_changes_for = array('creation_date', 'contact_id');
     foreach ($ignore_changes_for as $field) unset($mandate_diff[$field]);
     // TODO: can we really ignore changes for contact_id? 
-    //  => this should only happen if the donor ID failed...
+    //  => this should only happen if the donor ID lookup failed...
 
-    // TODO: apply changes according to status:
-    // INIT: can be changed: frequency_unit/frequency_interval/amount/startdate/enddate/iban/bic/campaign_id
-    // BUSY: can be changed: amount/enddate
-
-    // TODO: if ($mandate) $this->saveBankAccount($mandate_data);
-
-    // BUT: for the time being, bail if anything had changed:
-    if (!empty($mandate_diff)) {
-      $field_list = implode(',', array_keys($mandate_diff));
-      $this->logger->logError($config->translate("SDD mandate update requested").' ('.$field_list.'), '
-        .$config->translate('but this has not been implemented yet'));
-    } else {
+    if (empty($mandate_diff)) {
       $this->logger->logDebug($config->translate("No SDD mandate update required"));
+      return;
+    }
+
+    // if only the attributes amount and/or end_date have changed
+    $require_new_mandate = $mandate_diff;
+    unset($require_new_mandate['amount']);
+    unset($require_new_mandate['end_date']);
+
+    if (empty($require_new_mandate)) {
+      // CHANGES ONLY TO end_date and/or amount
+      if (!empty($mandate_diff['amount'])) {
+        CRM_Sepa_BAO_SEPAMandate::adjustAmount(     $old_mandate_data['id'], 
+                                                    $new_mandate_data['amount']);
+      }
+
+      if (!empty($mandate_diff['end_date'])) {
+        CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], 
+                                                    $new_mandate_data['end_date'], 
+                                                    $cancel_reason=$config->translate("Update via welcome call."));
+      }
+
+    } else {
+      // MORE/OTHER CHANGES -> create new mandte
+      // step 1: find new reference (append letters)
+      for ($suffix=ord('a'); $suffix < ord('z'); $suffix++) {
+        $new_reference_number = $new_mandate_data['reference'] . chr($suffix);
+        $count_query = civicrm_api3('SepaMandate', 'getcount', array('reference' => $new_reference_number));
+        if ($count_query['result'] == 0) {
+          break;
+        } else {
+          $new_reference_number = NULL; // this number is in use
+        }
+      }
+      if (empty($new_reference_number)) {
+        $this->logger->logError(sprintf($config->translate("Couldn't create reference for amended mandate '%s'."), $new_mandate_data['reference']));
+        return;
+      }
+
+      // step 2: create new mandate
+      $new_mandate_data['reference'] = $new_reference_number;
+      $new_mandate = $this->createSDDMandate($new_mandate_data);
+      
+      // step 3: stop old mandate
+      $cancel_date = $now;
+      if (!empty($new_mandate_data['end_date'])) {
+        $cancel_date = strtotime($new_mandate_data['end_date']);
+        $cancel_date = max($now, $cancel_date);
+      }
+      $cancel_date_str = date('Y-m-d');
+      CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], 
+                                                  $cancel_date_str, 
+                                                  $cancel_reason=sprintf($config->translate("Replaced with '%s' due to welcome call."), $new_reference_number));
+
+      // step 4: save bank account if it has changed:
+      if (!empty($mandate_diff['iban']) || !empty($mandate_diff['bic'])) {
+        $this->saveBankAccount($new_mandate_data);
+      }
+
+      return $new_mandate;
     }
   }
 

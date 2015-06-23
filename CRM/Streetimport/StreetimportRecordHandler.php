@@ -324,7 +324,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
 
     // multiply the frequency_interval, if a value > 1 is given
-    $frequency_interval = (int) CRM_Utils_Array::value('Frequency Unit', $record);
+    $frequency_interval = (int) CRM_Utils_Array::value('Frequency Interval', $record);
     if ($frequency_interval > 1) {
       $mandate_data['frequency_interval'] = $mandate_data['frequency_interval'] * $frequency_interval;
     }
@@ -380,6 +380,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $signature_date_parsed = max($now, $signature_date_parsed);
 
     // get the start date
+    $mandate_data['end_date'] = '';
     $end_date = CRM_Utils_Array::value('End Date', $record);
     $end_date_parsed = strtotime($end_date);
     if (empty($end_date_parsed)) {
@@ -401,6 +402,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $mandate_data['contact_id']    = $donor_id;
     $mandate_data['reference']     = CRM_Utils_Array::value('Mandate Reference', $record);
     $mandate_data['amount']        = (float) CRM_Utils_Array::value('Amount', $record);
+    $mandate_data['currency']      = 'EUR';
     $mandate_data['start_date']    = date('YmdHis', $start_date_parsed);
     $mandate_data['creation_date'] = date('YmdHis', $signature_date_parsed);
     $mandate_data['iban']          = $iban;
@@ -449,8 +451,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
 
   /**
-   * This function will make sure, that the donor will
-   * have a (CiviBanking) bank account entry
+   * This function will make sure, that the donor
+   * has a (CiviBanking) bank account entry with the given data
    *
    * @param $mandate_data   mandate entity data
    */
@@ -508,7 +510,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         $this->logger->logDebug("Bank account '{$mandate_data['iban']}' created for contact [{$mandate_data['contact_id']}].");
       }
     } catch (Exception $ex) {
-      
+      $this->logger->logError("An error occurred while saving the bank account: " . $ex->getMessage());
     }
   }
 
