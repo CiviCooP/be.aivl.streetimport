@@ -226,7 +226,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
   }
 
   /**
-   * Method to build data for custom group street recruitment
+   * Method to build data for custom group welcome call
    *
    * @param $record
    * @return array $customData
@@ -238,7 +238,6 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $customData = array();
     $customData['wc_date_import'] = date('YmdHis');
     $customData['wc_recruit_location'] = $record['Recruitment Location'];
-    $customData['wc_recruit_type'] = $this->getRecruitmentType($record['Recruitment Type']);
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
       $customData['wc_follow_up_call'] = 1;
     } else {

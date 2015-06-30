@@ -33,7 +33,6 @@ class CRM_Streetimport_Config {
   protected $membershipTypeId = null;
   protected $recruitingOrganizationsGroupId = null;
   protected $frequenceUnitOptionGroup = null;
-  protected $recruitmentTypeOptionGroup = null;
   protected $areasOfInterestOptionGroup = null;
   protected $translatedStrings = array();
 
@@ -57,17 +56,6 @@ class CRM_Streetimport_Config {
     $this->setGroups();
     $this->setTranslationFile();
 
-  }
-
-  /**
-   * Method to get option group for recruitment type
-   *
-   * @param string $key
-   * @return mixed
-   * @access public
-   */
-  public function getRecruitmentTypeOptionGroup($key = 'id') {
-    return $this->recruitmentTypeOptionGroup[$key];
   }
 
   /**
@@ -111,6 +99,26 @@ class CRM_Streetimport_Config {
    */
   public function getStreetRecruitmentCustomGroup($key = 'id') {
     return $this->streetRecruitmentCustomGroup[$key];
+  }
+
+  /**
+   * Method to get the street recruitment custom fields
+   *
+   * @return mixed
+   * @access public
+   */
+  public function getStreetRecruitmentCustomFields() {
+    return $this->streetRecruitmentCustomFields;
+  }
+
+  /**
+   * Method to get the welcome call custom fields
+   *
+   * @return mixed
+   * @access public
+   */
+  public function getWelcomeCallCustomFields() {
+    return $this->welcomeCallCustomFields;
   }
 
   /**

@@ -68,18 +68,6 @@
         "weight":-170,
         "is_active":1
       },
-      "new_recruit_type":{
-        "name":"new_recruit_type",
-        "label":"Wervingstype",
-        "data_type":"String",
-        "html_type":"Select",
-        "option_group":"recruitmentType",
-        "is_searchable":1,
-        "is_view":1,
-        "column_name":"new_recruit_type",
-        "weight":-160,
-        "is_active":1
-      },
       "new_follow_up_call":{
         "name":"new_follow_up_call",
         "label":"Opvolgingsgesprek?",
@@ -286,18 +274,6 @@
         "is_view":1,
         "column_name":"wc_recruit_location",
         "weight":-170,
-        "is_active":1
-      },
-      "wc_recruit_type":{
-        "name":"wc_recruit_type",
-        "label":"Wervingstype",
-        "data_type":"String",
-        "html_type":"Select",
-        "option_group":"recruitmentType",
-        "is_searchable":1,
-        "is_view":1,
-        "column_name":"wc_recruit_type",
-        "weight":-160,
         "is_active":1
       },
       "wc_follow_up_call":{

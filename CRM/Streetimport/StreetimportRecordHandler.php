@@ -534,10 +534,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     return $this->getContact($contactId);
 
   }
-  public function getRecruitmentType($sourceRecruitmentType) {
-    // TODO not in sample from Ilja, discuss (ErikH)
-    return '';
-  }
 
   /**
    * Method to set the areas of interest

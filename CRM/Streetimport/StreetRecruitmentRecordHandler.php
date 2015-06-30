@@ -111,8 +111,6 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $customData = array();
     $customData['new_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
     $customData['new_recruit_location'] = array('value' => $record['Recruitment Location'], 'type' => 'String');
-    // TODO re-activate if recruiment type required after all
-    //$customData['new_recruit_type'] = $this->getRecruitmentType($record['Recruitment Type']);
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
       $customData['new_follow_up_call'] = array('value' => 1, 'type' => 'Integer');
     } else {
