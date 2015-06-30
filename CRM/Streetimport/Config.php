@@ -55,9 +55,9 @@ class CRM_Streetimport_Config {
     $this->setOptionGroups();
     $this->setCustomData();
     $this->setImportSettings();
-    //if ($context == 'install') {
-    $this->setDefaultEmployeeTypes();
-    //}
+    if ($context == 'install') {
+      $this->setDefaultEmployeeTypes();
+    }
     $this->setGroups();
     $this->setTranslationFile();
   }
@@ -870,6 +870,10 @@ class CRM_Streetimport_Config {
       $relationshipTypes[] = $apiType['id'];
     }
     $this->importSettings['employee_type_id']['value'] = $relationshipTypes;
-    $this->saveImportSettings($this->importSettings);
+    $params = array();
+    foreach ($this->importSettings as $settingName => $settingValue) {
+      $params[$settingValue['name']] = $settingValue['value'];
+    }
+    $this->saveImportSettings($params);
   }
 }
