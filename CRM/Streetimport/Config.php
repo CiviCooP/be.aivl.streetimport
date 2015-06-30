@@ -38,8 +38,10 @@ class CRM_Streetimport_Config {
 
   /**
    * Constructor method
+   *
+   * @param string $context
    */
-  function __construct() {
+  function __construct($context) {
     $settings = civicrm_api3('Setting', 'Getsingle', array());
     $this->resourcesPath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
     $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
@@ -53,9 +55,11 @@ class CRM_Streetimport_Config {
     $this->setOptionGroups();
     $this->setCustomData();
     $this->setImportSettings();
+    //if ($context == 'install') {
+    $this->setDefaultEmployeeTypes();
+    //}
     $this->setGroups();
     $this->setTranslationFile();
-
   }
 
   /**
@@ -572,13 +576,14 @@ class CRM_Streetimport_Config {
   /**
    * Singleton method
    *
+   * @param string $context to determine if triggered from install hook
    * @return CRM_Streetimport_Config
    * @access public
    * @static
    */
-  public static function singleton() {
+  public static function singleton($context = null) {
     if (!self::$_singleton) {
-      self::$_singleton = new CRM_Streetimport_Config();
+      self::$_singleton = new CRM_Streetimport_Config($context);
     }
     return self::$_singleton;
   }
@@ -846,5 +851,25 @@ class CRM_Streetimport_Config {
     } else {
       $this->translatedStrings = array();
     }
+  }
+
+  /**
+   * Method to set all relationship types as employee types at start up to
+   * avoid not being able to set the admin and fundraiser id
+   *
+   * @link https://github.com/CiviCooP/be.aivl.streetimport/issues/36
+   */
+  protected function setDefaultEmployeeTypes() {
+    $relationshipTypes = array();
+    $relationshipTypeParams = array(
+      'is_active' => 1,
+      'return' => 'id',
+      'options' => array('limit' => 999));
+    $apiTypes = civicrm_api3('RelationshipType', 'Get', $relationshipTypeParams);
+    foreach ($apiTypes['values'] as $apiType) {
+      $relationshipTypes[] = $apiType['id'];
+    }
+    $this->importSettings['employee_type_id']['value'] = $relationshipTypes;
+    $this->saveImportSettings($this->importSettings);
   }
 }

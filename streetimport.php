@@ -29,7 +29,7 @@ function streetimport_civicrm_xmlMenu(&$files) {
  */
 function streetimport_civicrm_install() {
   _streetimport_civix_civicrm_install();
-  $extensionConfig = CRM_Streetimport_Config::singleton();
+  $extensionConfig = CRM_Streetimport_Config::singleton('install');
 }
 
 /**
