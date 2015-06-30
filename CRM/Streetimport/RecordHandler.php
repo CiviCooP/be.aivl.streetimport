@@ -172,7 +172,6 @@ abstract class CRM_Streetimport_RecordHandler {
       $contact_data['birth_date'] = date('d-m-Y', strtotime($contact_data['birth_date']));
     }
     // create via API
-    $result = civicrm_api3('Contact', 'Create', $contact_data);
     try {
       $result  = civicrm_api3('Contact', 'create', $contact_data);
       $contact = $result['values'][$result['id']];
@@ -215,50 +214,6 @@ abstract class CRM_Streetimport_RecordHandler {
 
     $this->logger->logDebug($config->translate("Activity created").": ".$activity->id.": ".$data['subject']);
     return $activity;
-  }
-  /**
-   * Method to add custom data for activity
-   *
-   * @param int $activityId
-   * @param string $tableName
-   * @param array $data array holding key/value pairs (expecting column names in key and array with type and value in value)
-   * @return bool
-   */
-  public function createActivityCustomData($activityId, $tableName, $data) {
-    $config = CRM_Streetimport_Config::singleton();
-    if (CRM_Core_DAO::checkTableExists($tableName) == FALSE) {
-      $this->logger->logError($config->translate('No custom data for activity created, could not find custom table').' '.$tableName);
-      return FALSE;
-    }
-    if (empty($activityId)) {
-      $this->logger->logError('No custom data for activity created');
-      return FALSE;
-    }
-    $setValues = array();
-    $setParams = array();
-    $setValues[1] = 'entity_id = %1';
-    $setParams[1] = array($activityId, 'Integer');
-    $index = 2;
-
-    foreach ($data as $key => $valueArray) {
-      if (!empty($valueArray['value'])) {
-        $setValues[] = $key . ' = %' . $index;
-        $setParams[$index] = array($valueArray['value'], $valueArray['type']);
-        $index++;
-      }
-    }
-    if (empty($setValues)) {
-      $this->logger->logError('No custom data for activity created, no data');
-      return FALSE;
-    }
-    $query = 'INSERT INTO '.$tableName.' SET '.implode(', ', $setValues);
-    try {
-      CRM_Core_DAO::executeQuery($query, $setParams);
-      return TRUE;
-    } catch (Exception $ex) {
-      $this->logger->logError($config->translate('No custom data for activity created'));
-      return FALSE;
-    }
   }
 
   /** 

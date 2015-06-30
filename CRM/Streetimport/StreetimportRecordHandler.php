@@ -556,7 +556,15 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
           'return' => 'value');
         try {
           $tempAreas[] = civicrm_api3('OptionValue', 'Getvalue', $params);
-        } catch (CiviCRM_API3_Exception $ex) {}
+        } catch (CiviCRM_API3_Exception $ex) {
+          $createParams = array(
+            'option_group_id' => $optionGroupId,
+            'label' => trim($part));
+          try {
+            $optionValue = civicrm_api3('OptionValue', 'Create', $createParams);
+            $tempAreas[] = $optionValue['values']['value'];
+          } catch (CiviCRM_API3_Exception $ex) {}
+        }
       }
     }
     if (!empty($tempAreas)) {
@@ -584,5 +592,50 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $frequencyUnit = null;
     }
     return $frequencyUnit;
+  }
+
+  /**
+   * Method to add custom data for activity
+   *
+   * @param int $activityId
+   * @param string $tableName
+   * @param array $data array holding key/value pairs (expecting column names in key and array with type and value in value)
+   * @return bool
+   */
+  public function createActivityCustomData($activityId, $tableName, $data) {
+    $config = CRM_Streetimport_Config::singleton();
+    if (CRM_Core_DAO::checkTableExists($tableName) == FALSE) {
+      $this->logger->logError($config->translate('No custom data for activity created, could not find custom table').' '.$tableName);
+      return FALSE;
+    }
+    if (empty($activityId)) {
+      $this->logger->logError('No custom data for activity created');
+      return FALSE;
+    }
+    $setValues = array();
+    $setParams = array();
+    $setValues[1] = 'entity_id = %1';
+    $setParams[1] = array($activityId, 'Integer');
+    $index = 2;
+
+    foreach ($data as $key => $valueArray) {
+      if (!empty($valueArray['value'])) {
+        $setValues[] = $key . ' = %' . $index;
+        $setParams[$index] = array($valueArray['value'], $valueArray['type']);
+        $index++;
+      }
+    }
+    if (empty($setValues)) {
+      $this->logger->logError('No custom data for activity created, no data');
+      return FALSE;
+    }
+    $query = 'INSERT INTO '.$tableName.' SET '.implode(', ', $setValues);
+    try {
+      CRM_Core_DAO::executeQuery($query, $setParams);
+      return TRUE;
+    } catch (Exception $ex) {
+      $this->logger->logError($config->translate('No custom data for activity created'));
+      return FALSE;
+    }
   }
 }
