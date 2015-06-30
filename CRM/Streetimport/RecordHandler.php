@@ -166,6 +166,7 @@ abstract class CRM_Streetimport_RecordHandler {
         $this->logger->logError($config->translate("Contact missing first/last_name"), $config->translate("Create Contact Error"));
         return NULL;
       }
+    }
     // make sure date of birth format is ok
     if (!empty($contact_data['birth_date'])) {
       $contact_data['birth_date'] = date('d-m-Y', strtotime($contact_data['birth_date']));
