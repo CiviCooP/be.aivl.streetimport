@@ -166,8 +166,12 @@ abstract class CRM_Streetimport_RecordHandler {
         $this->logger->logError($config->translate("Contact missing first/last_name"), $config->translate("Create Contact Error"));
         return NULL;
       }
+    // make sure date of birth format is ok
+    if (!empty($contact_data['birth_date'])) {
+      $contact_data['birth_date'] = date('d-m-Y', strtotime($contact_data['birth_date']));
     }
     // create via API
+    $result = civicrm_api3('Contact', 'Create', $contact_data);
     try {
       $result  = civicrm_api3('Contact', 'create', $contact_data);
       $contact = $result['values'][$result['id']];
