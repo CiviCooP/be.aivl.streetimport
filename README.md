@@ -108,10 +108,10 @@ The financial type that will be used when generating the SDD.
 In the CSV record for the donor there will be column 'organization yes/no'. If this is set to yes, a contact of the type 'Organization' will be generated for the donor. If this column is set to no, the prefix of the CSV record will determine if a contact of the type 'Individual' or of the type 'Household' will be generated.
 
 ### Gender for female import ###
-In the CSV record the prefix will determine the gender. The value 'meneer' signifies a male, and this is the gender id that will be used when creating the contact in CiviCRM.
+In the CSV record the prefix will determine the gender. The value 'mevrouw' signifies a male, and this is the gender id that will be used when creating the contact in CiviCRM.
 
 ### Gender for male import ###
-In the CSV record the prefix will determine the gender. The value 'mevrouw' signifies a female, and this is the gender id that will be used when creating the contact in CiviCRM.
+In the CSV record the prefix will determine the gender. The value 'meneer' signifies a female, and this is the gender id that will be used when creating the contact in CiviCRM.
 
 ### Gender for unknown import ###
 In the CSV record the prefix will determine the gender. If the value is not 'meneer' or 'mevrouw', this is the gender id that will be used when creating the contact in CiviCRM.
