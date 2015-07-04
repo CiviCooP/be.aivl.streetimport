@@ -167,10 +167,10 @@ abstract class CRM_Streetimport_RecordHandler {
         return NULL;
       }
     }
-    // make sure date of birth format is ok
-    if (!empty($contact_data['birth_date'])) {
-      $contact_data['birth_date'] = date('d-m-Y', strtotime($contact_data['birth_date']));
-    }
+
+    // format birth date (issue #39)
+    $contact_data['birth_date'] = $this->formatBirthDate($contact_data['birth_date']);
+
     // create via API
     try {
       $result  = civicrm_api3('Contact', 'create', $contact_data);
@@ -399,5 +399,17 @@ abstract class CRM_Streetimport_RecordHandler {
     }
 
     return $result;
+  }
+
+  /**
+   * Method to format the birth date
+   *
+   * @param mixed $birthDate
+   * @return string
+   * $access protected
+   */
+  protected function formatBirthDate($birthDate) {
+    $correctDate = new DateTime(CRM_Streetimport_Utils::formatCsvDate($birthDate));
+    return $correctDate->format('d-m-Y');
   }
 }

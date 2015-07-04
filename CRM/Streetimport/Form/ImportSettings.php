@@ -30,6 +30,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $prefixList = CRM_Streetimport_Utils::getOptionGroupList('individual_prefix');
     $genderList = CRM_Streetimport_Utils::getOptionGroupList('gender');
     $relationshipTypeList = $this->getRelationshipTypeList();
+    $dateFormatList = CRM_Streetimport_Utils::getDateFormatList();
 
     foreach ($this->importSettings as $settingName => $settingValues) {
       switch($settingName) {
@@ -71,6 +72,9 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           break;
         case 'unknown_gender_id':
           $this->add('select', $settingName, $config->translate($settingValues['label']), $genderList, TRUE);
+          break;
+        case 'date_format':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $dateFormatList, TRUE);
           break;
         case 'household_prefix_id':
           $prefixSelect = $this->addElement('advmultiselect', $settingName, $config->translate($settingValues['label']), $prefixList,

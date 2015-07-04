@@ -135,5 +135,6 @@
   "Couldn't load contribution entity for mandate":"Kon geen bijdrage laden voor mandaat",
   "SDD mandate update requested":"SDD mandaat update aangevraagd",
   "but this has not been implemented yet":"maar dit is nog niet geïmplementeerd",
-  "No SDD mandate update required":"Geen SDD mandaat update nodig"
+  "No SDD mandate update required":"Geen SDD mandaat update nodig",
+  "Date Format of CSV":"Datum formaat in CSV"
 }

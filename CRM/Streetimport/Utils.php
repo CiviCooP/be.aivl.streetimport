@@ -572,4 +572,107 @@ class CRM_Streetimport_Utils {
     }
     return $valueList;
   }
+
+  /**
+   * Method to set list of date formats for import files
+   *
+   * @access public
+   * @static
+   * @return array
+   */
+  public static function getDateFormatList() {
+    return array('dd-mm-jjjj', 'dd/mm/jjjj', 'dd-mm-jj', 'dd/mm/jj', 'jjjj-mm-dd', 'jjjj/mm/dd', 'jj-mm-dd','jj/mm/dd',
+      'mm-dd-jjjj', 'mm/dd/jjjj', 'mm-dd-jj', 'mm/dd/jj');
+  }
+
+  /**
+   * Method to format the CSV import date if new DateTime has thrown error
+   *
+   * @param $inDate
+   * @return string
+   */
+  public static function formatCsvDate($inDate) {
+    $config = CRM_Streetimport_Config::singleton();
+    $inDay = null;
+    $inMonth = null;
+    $inYear = null;
+    switch ($config->getCsvDateFormat()) {
+      case 0:
+        $dateParts = explode("-", $inDate);
+        $inDay = $dateParts[0];
+        $inMonth = $dateParts[1];
+        $inYear = $dateParts[2];
+        break;
+      case 1:
+        $dateParts = explode("/", $inDate);
+        $inDay = $dateParts[0];
+        $inMonth = $dateParts[1];
+        $inYear = $dateParts[2];
+        break;
+      case 2:
+        $dateParts = explode("-", $inDate);
+        $inDay = $dateParts[0];
+        $inMonth = $dateParts[1];
+        $inYear = $dateParts[2];
+        break;
+      case 3:
+        $dateParts = explode("/", $inDate);
+        $inDay = $dateParts[0];
+        $inMonth = $dateParts[1];
+        $inYear = $dateParts[2];
+        break;
+      case 4:
+        $dateParts = explode("-", $inDate);
+        $inDay = $dateParts[2];
+        $inMonth = $dateParts[1];
+        $inYear = $dateParts[0];
+        break;
+      case 5:
+        $dateParts = explode("/", $inDate);
+        $inDay = $dateParts[2];
+        $inMonth = $dateParts[1];
+        $inYear = $dateParts[0];
+        break;
+      case 6:
+        $dateParts = explode("-", $inDate);
+        $inDay = $dateParts[2];
+        $inMonth = $dateParts[1];
+        $inYear = $dateParts[0];
+        break;
+      case 7:
+        $dateParts = explode("/", $inDate);
+        $inDay = $dateParts[2];
+        $inMonth = $dateParts[1];
+        $inYear = $dateParts[0];
+        break;
+      case 8:
+        $dateParts = explode("-", $inDate);
+        $inDay = $dateParts[1];
+        $inMonth = $dateParts[0];
+        $inYear = $dateParts[2];
+        break;
+      case 9:
+        $dateParts = explode("/", $inDate);
+        $inDay = $dateParts[1];
+        $inMonth = $dateParts[0];
+        $inYear = $dateParts[2];
+        break;
+      case 10:
+        $dateParts = explode("-", $inDate);
+        $inDay = $dateParts[1];
+        $inMonth = $dateParts[0];
+        $inYear = $dateParts[2];
+        break;
+      case 11:
+        $dateParts = explode("/", $inDate);
+        $inDay = $dateParts[1];
+        $inMonth = $dateParts[0];
+        $inYear = $dateParts[2];
+        break;
+      default:
+        return $inDate;
+      break;
+    }
+    return $inDay.'-'.$inMonth.'-'.$inYear;
+  }
 }

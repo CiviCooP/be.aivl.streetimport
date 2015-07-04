@@ -311,6 +311,17 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to retrieve the csv date format
+   *
+   * @return int
+   * @access public
+   */
+  public function getCsvDateFormat() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['date_format']['value'];
+  }
+
+  /**
    * Method to retrieve the membership type ID
    *
    * @return integer
