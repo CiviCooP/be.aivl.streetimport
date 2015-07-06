@@ -355,6 +355,18 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to retrieve location for files where processing has failed
+   *
+   * @return string
+   * @access public
+   */
+  public function getFailFileLocation() {
+    // TODO: @Erik: Implement
+    return $this->getProcessedFileLocation();
+  }
+
+
+  /**
    * Method to get the offset days
    *
    * @return int
