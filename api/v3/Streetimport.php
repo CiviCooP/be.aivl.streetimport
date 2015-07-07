@@ -42,7 +42,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
   if (isset($params['failed_folder'])) {
     $failed_folder = $params['failed_folder'];
   } else {
-    $failed_folder = $config->getProcessedFileLocation();
+    $failed_folder = $config->getFailFileLocation();
   }
 
   $source_file = NULL;
