@@ -355,6 +355,17 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to retrieve location for failed file
+   *
+   * @return string
+   * @access public
+   */
+  public function getFailFileLocation() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['failed_location']['value'];
+  }
+
+  /**
    * Method to get the offset days
    *
    * @return int
