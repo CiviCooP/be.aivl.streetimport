@@ -44,7 +44,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                             'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
                             'subject'            => $config->translate("Street Recruitment"),
                             'status_id'          => $config->getStreetRecruitmentActivityStatusId(),
-                            'activity_date_time' => date('YmdHis'),
+                            'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
                             'target_contact_id'  => (int) $donor['id'],
                             'source_contact_id'  => $recruiter['id'],
                             //'assignee_contact_id'=> $recruiter['id'],
