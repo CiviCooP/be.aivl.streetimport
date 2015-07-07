@@ -361,10 +361,9 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getFailFileLocation() {
-    // TODO: @Erik: Implement
-    return $this->getProcessedFileLocation();
+    $importSettings = $this->getImportSettings();
+    return $importSettings['failed_location']['value'];
   }
-
 
   /**
    * Method to get the offset days
