@@ -50,6 +50,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       'activity_date_time' => date('YmdHis'),
       'target_contact_id'  => (int) $donor['id'],
       'source_contact_id'  => $recruiter['id'],
+      'campaign_id'        => $this->getCampaignParameter($record),
       //'assignee_contact_id'=> $recruiter['id'],
       'details'            => $this->renderTemplate('activities/WelcomeCall.tpl', $record),
     ));
@@ -84,6 +85,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         'target_contact_id'  => (int) $donor['id'],
         'source_contact_id'  => $recruiter['id'],
         'assignee_contact_id'=> $config->getFundraiserContactID(),
+        'campaign_id'        => $this->getCampaignParameter($record),
         'details'            => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
       ));
     }

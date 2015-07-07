@@ -125,6 +125,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
                               'target_contact_id'  => (int) $recruiter['id'],
                               'source_contact_id'  => (int) $recruiter['id'],
                               'assignee_contact_id'=> $config->getAdminContactID(),
+                              'campaign_id'        => $this->getCampaignParameter($record),
                               'details'            => $this->renderTemplate('activities/IncompleteRecruiterContact.tpl', $record),
                               ));        
       }
@@ -392,12 +393,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $mandate_data['end_date'] = date('YmdHis', $end_date_parsed);
     }
 
-    // get campaign
-    $campaign_id = (int) CRM_Utils_Array::value("Campaign ID", $record);
-    if ($campaign_id) {
-      $mandate_data['campaign_id'] = $campaign_id;
-    }
-
     // fill the other required fields
     $mandate_data['contact_id']    = $donor_id;
     $mandate_data['reference']     = CRM_Utils_Array::value('Mandate Reference', $record);
@@ -409,7 +404,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $mandate_data['bic']           = $bic;
     $mandate_data['source']        = $config->translate('Street Recruitment');
     $mandate_data['bank_name']     = CRM_Utils_Array::value('Bank Name', $record);
-
+    $mandate_data['campaign_id']   = $this->getCampaignParameter($record);
     $mandate_data['financial_type_id']  = $config->getDefaultFinancialTypeId();
 
     // don't set $mandate_data['creditor_id'], use default creditor
@@ -592,6 +587,24 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $frequencyUnit = null;
     }
     return $frequencyUnit;
+  }
+
+  /**
+   * extract the campaign ID from the record and returns
+   * it as a parameter suitable for the API.
+   * That means in particular, that it is an integer, however,
+   * the API expects '' instead of '0'.
+   */
+  public function getCampaignParameter($record) {
+
+    // TODO: verify if campaign exists?
+
+    $campaign_id = (int) CRM_Utils_Array::value("Campaign ID", $record);
+    if ($campaign_id) {
+      return $campaign_id;
+    } else {
+      return '';
+    }
   }
 
   /**

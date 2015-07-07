@@ -48,6 +48,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                             'target_contact_id'  => (int) $donor['id'],
                             'source_contact_id'  => $recruiter['id'],
                             //'assignee_contact_id'=> $recruiter['id'],
+                            'campaign_id'        => $this->getCampaignParameter($record),
                             'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
                               ));
     // add custom data to the created activity
@@ -87,6 +88,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                               'target_contact_id'  => (int) $donor['id'],
                               'source_contact_id'  => $recruiter['id'],
                               'assignee_contact_id'=> $config->getFundraiserContactID(),
+                              'campaign_id'        => $this->getCampaignParameter($record),
                               'details'            => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
                               ));
     }
