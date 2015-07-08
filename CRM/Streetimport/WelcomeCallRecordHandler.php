@@ -40,6 +40,8 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     if (empty($donor)) {
       $this->logger->logError("Donor ".$record['DonorID']." ".$config->translate("should already exist. Created new contact in order to process record anyway."));
       $donor = $this->processDonor($record, $recruiting_organisation);
+    } else {
+      $this->logger->logDebug($config->translate("Donor [{$donor['id']}] identified."));
     }
 
     // STEP 5: create activity "WelcomeCall"
@@ -66,16 +68,22 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $this->addContactToGroup($donor['id'], $newsletter_group_id);
     }
 
-    // STEP 8: create membership if requested
+    // STEP 8: CHECK membership 
     if ($this->isTrue($record, "Member")) {
-      $this->createMembership(array(
+      // check if membership exists
+      $membership_data = array(
         'contact_id'         => $donor['id'],
         'membership_type_id' => $config->getMembershipTypeID(),
-        'membership_source' => $config->translate('Activity').' '.$config->translate('Welcome Call').' '.$createdActivity->id
-      ));
+      );
+      $existing_memberships = civicrm_api3('Membership', 'get', $membership_data);
+      if ($existing_memberships['count'] == 0) {
+        // the contact has no membership yet, create (see https://github.com/CiviCooP/be.aivl.streetimport/issues/49)
+        $membership_data['membership_source'] = $config->translate('Activity').' '.$config->translate('Welcome Call').' '.$createdActivity->id;
+        $this->createMembership($membership_data);
+      }
     }
 
-    // STEP 8: create activity 'Opvolgingsgesprek' if requested
+    // STEP 9: create activity 'Opvolgingsgesprek' if requested
     if ($this->isTrue($record, "Follow Up Call")) {
       $this->createActivity(array(
         'activity_type_id'   => $config->getFollowUpCallActivityType(),

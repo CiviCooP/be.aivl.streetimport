@@ -332,7 +332,7 @@ abstract class CRM_Streetimport_RecordHandler {
       }
     }
     try {
-      $result = civicrm_api3('Membership', 'Create', $membershipData);
+      $result = civicrm_api3('Membership', 'create', $membershipData);
       return $result;
     } catch (CiviCRM_API3_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
