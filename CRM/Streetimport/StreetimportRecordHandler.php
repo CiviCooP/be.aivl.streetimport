@@ -169,7 +169,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
       $contact_data['prefix']            = CRM_Utils_Array::value('Prefix',     $record);
       $contact_data['gender_id']         = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
-      $contact_data['birth_date']        = CRM_Utils_Array::value('Birth date (format jjjj-mm-dd)', $record);
+      $contact_data['birth_date']        = CRM_Utils_Array::value('Birth date', $record);
     }
     $donor = $this->createContact($contact_data, true);
     if (empty($donor)) {
@@ -370,7 +370,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
 
     // get the signature date
-    $signature_date = CRM_Utils_Array::value("Recruitment Date (format jjjj-mm-dd)", $record);
+    $signature_date = CRM_Utils_Array::value("Recruitment Date", $record);
     $signature_date_parsed = strtotime($signature_date);
     if (empty($signature_date_parsed)) {
       if (!empty($signature_date)) {
