@@ -123,6 +123,15 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $this->logger->logError(sprintf($config->translate("SDD mandate '%s' count not be found."), $new_mandate_data['reference']));
       return NULL;
     }
+
+    // if this is a cancellation, nothing else matters:
+    $acceptedYesValues = $config->getAcceptedYesValues();
+    if (in_array($record['Cancellation'], $acceptedYesValues)) {
+        CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'],
+                                                    date('YmdHis', strtotime("today")),
+                                                    $cancel_reason=$config->translate("Cancelled after welcome call."));
+      return;
+    }
     
     // ...and the attached contribution
     try {
