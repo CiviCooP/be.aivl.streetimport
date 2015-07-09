@@ -324,11 +324,15 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       return NULL;
     }
 
-    // multiply the frequency_interval, if a value > 1 is given
-    $frequency_interval = (int) CRM_Utils_Array::value('Frequency Interval', $record);
-    if ($frequency_interval > 1) {
-      $mandate_data['frequency_interval'] = $mandate_data['frequency_interval'] * $frequency_interval;
+    // REMARK 'Frequency Interval' is NOT frequency_interval (see https://github.com/CiviCooP/be.aivl.streetimport/issues/56#issuecomment-119829739)
+    $cycle_day_option = (int) CRM_Utils_Array::value('Frequency Interval', $record);
+    // TODO: move to config or get from creditor
+    if ($cycle_day_option == 2) {
+      $mandate_data['cycle_day'] = 21;
+    } else {
+      $mandate_data['cycle_day'] = 7;
     }
+
 
     // check if IBAN is given
     $iban = CRM_Utils_Array::value('IBAN', $record);
