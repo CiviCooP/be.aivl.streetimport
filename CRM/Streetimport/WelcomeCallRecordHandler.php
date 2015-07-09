@@ -180,6 +180,8 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $require_new_mandate = $mandate_diff;
     unset($require_new_mandate['amount']);
     unset($require_new_mandate['end_date']);
+    unset($require_new_mandate['date']);
+    unset($require_new_mandate['validation_date']);
 
     if (empty($require_new_mandate)) {
       // CHANGES ONLY TO end_date and/or amount
@@ -192,6 +194,17 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], 
                                                     $new_mandate_data['end_date'], 
                                                     $cancel_reason=$config->translate("Update via welcome call."));
+      }
+
+      if (!empty($mandate_diff['validation_date'])) {
+        // update validation date
+        $new_validation_date = strtotime($new_mandate_data['validation_date']);
+        $new_signature_date  = strtotime($new_mandate_data['date']);
+        civicrm_api3('SepaMandate', 'create', array( 
+                  'id'              => $old_mandate_data['id'], 
+                  'validation_date' => date("YmdHis", $new_validation_date),
+                  'date'            => date("YmdHis", $new_signature_date),
+                  ));
       }
 
     } else {

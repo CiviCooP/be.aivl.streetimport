@@ -383,7 +383,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       }
       $signature_date_parsed = $now;
     }
-    $signature_date_parsed = max($now, $signature_date_parsed);
 
     // get the start date
     $mandate_data['end_date'] = '';
@@ -400,17 +399,19 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
 
     // fill the other required fields
-    $mandate_data['contact_id']    = $donor_id;
-    $mandate_data['reference']     = CRM_Utils_Array::value('Mandate Reference', $record);
-    $mandate_data['amount']        = (float) CRM_Utils_Array::value('Amount', $record);
-    $mandate_data['currency']      = 'EUR';
-    $mandate_data['start_date']    = date('YmdHis', $start_date_parsed);
-    $mandate_data['creation_date'] = date('YmdHis', $signature_date_parsed);
-    $mandate_data['iban']          = $iban;
-    $mandate_data['bic']           = $bic;
-    $mandate_data['source']        = $config->translate('Street Recruitment');
-    $mandate_data['bank_name']     = CRM_Utils_Array::value('Bank Name', $record);
-    $mandate_data['campaign_id']   = $this->getCampaignParameter($record);
+    $mandate_data['contact_id']         = $donor_id;
+    $mandate_data['reference']          = CRM_Utils_Array::value('Mandate Reference', $record);
+    $mandate_data['amount']             = (float) CRM_Utils_Array::value('Amount', $record);
+    $mandate_data['currency']           = 'EUR';
+    $mandate_data['start_date']         = date('YmdHis', $start_date_parsed);
+    $mandate_data['creation_date']      = date('YmdHis'); // NOW
+    $mandate_data['date']               = date('YmdHis', $signature_date_parsed);
+    $mandate_data['validation_date']    = date('YmdHis'); // NOW
+    $mandate_data['iban']               = $iban;
+    $mandate_data['bic']                = $bic;
+    $mandate_data['source']             = $config->translate('Street Recruitment');
+    $mandate_data['bank_name']          = CRM_Utils_Array::value('Bank Name', $record);
+    $mandate_data['campaign_id']        = $this->getCampaignParameter($record);
     $mandate_data['financial_type_id']  = $config->getDefaultFinancialTypeId();
 
     // don't set $mandate_data['creditor_id'], use default creditor
