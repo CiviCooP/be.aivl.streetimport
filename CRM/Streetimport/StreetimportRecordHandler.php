@@ -356,19 +356,22 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
 
     // get the start date
+    $now = strtotime("now");
     $start_date = CRM_Utils_Array::value('Start Date', $record);
     $start_date = CRM_Streetimport_Utils::formatCsvDate($start_date);
     $start_date_parsed = strtotime($start_date);
-    $now = strtotime("now");
+    $offset = (int) $config->getOffsetDays();
+    $earliest_start_date = strtotime("+$offset days");
     if (empty($start_date_parsed)) {
       if (!empty($start_date)) {
         $this->logger->logWarning("Couldn't parse start date '$start_date'. Set to start now.");
       }
-      $start_date_parsed = $now;
-    } elseif ($start_date_parsed < $now) {
+      $start_date_parsed = $earliest_start_date;
+    } elseif ($start_date_parsed < $earliest_start_date) {
       $this->logger->logWarning("Given start date is in the past. Set to start now.");
-      $start_date_parsed = $now;
+      $start_date_parsed = $earliest_start_date;
     }
+    unset($start_date);
 
     // get the signature date
     $signature_date = CRM_Utils_Array::value("Recruitment Date", $record);
