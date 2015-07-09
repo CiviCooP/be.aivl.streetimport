@@ -169,7 +169,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
       $contact_data['prefix']            = CRM_Utils_Array::value('Prefix',     $record);
       $contact_data['gender_id']         = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
-      $contact_data['birth_date']        = CRM_Utils_Array::value('Birth date', $record);
+      $contact_data['birth_date']        = date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Birth date'])));
     }
     $donor = $this->createContact($contact_data, true);
     if (empty($donor)) {
@@ -357,6 +357,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
     // get the start date
     $start_date = CRM_Utils_Array::value('Start Date', $record);
+    $start_date = CRM_Streetimport_Utils::formatCsvDate($start_date);
     $start_date_parsed = strtotime($start_date);
     $now = strtotime("now");
     if (empty($start_date_parsed)) {
@@ -371,6 +372,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
     // get the signature date
     $signature_date = CRM_Utils_Array::value("Recruitment Date", $record);
+    $signature_date = CRM_Streetimport_Utils::formatCsvDate($signature_date);
     $signature_date_parsed = strtotime($signature_date);
     if (empty($signature_date_parsed)) {
       if (!empty($signature_date)) {
@@ -383,6 +385,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // get the start date
     $mandate_data['end_date'] = '';
     $end_date = CRM_Utils_Array::value('End Date', $record);
+    $end_date = CRM_Streetimport_Utils::formatCsvDate($end_date);
     $end_date_parsed = strtotime($end_date);
     if (empty($end_date_parsed)) {
       if (!empty($end_date)) {
