@@ -169,7 +169,9 @@ abstract class CRM_Streetimport_RecordHandler {
     }
 
     // format birth date (issue #39)
-    $contact_data['birth_date'] = $this->formatBirthDate($contact_data['birth_date']);
+    if (isset($contact_data['birth_date'])) {
+      $contact_data['birth_date'] = $this->formatBirthDate($contact_data['birth_date']);
+    }
 
     // create via API
     try {

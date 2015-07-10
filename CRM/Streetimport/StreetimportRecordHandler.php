@@ -71,7 +71,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
 
     if ($recruiter==NULL) {
-      $this->logger->logDebug($config->translate("Recruiter not found, creting new one..."));
+      $this->logger->logDebug($config->translate("Recruiter not found, creating new one..."));
       // "If the contact is not known, a contact of the contact subtype 'Werver' is to be created"
       $recruiter_data = array(
         'contact_type'     => 'Individual',
@@ -81,7 +81,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         'prefix'           => CRM_Utils_Array::value('Recruiter Prefix', $record),
       );
       $recruiter_known = TRUE;
-      
+
       // "If the first name and last name are empty, the values 'Unknown Werver' 
       //  "and 'Organization name of recruiting org' will be used as first and last name."
       if (empty($record['Recruiter First Name']) && empty($record['Recruiter Last Name'])) {
@@ -136,7 +136,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     } else {
       $this->logger->logDebug($config->translate("Recruiter")." ".$record['Recruiter ID']." ".$config->translate("found"));
     }
-
     return $recruiter;
   }
 
@@ -153,7 +152,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       // TODO: update existing donor with latest contact information?
       return $donor;
     }
-
     // create base contact
     $householdPrefixes = $config->getHouseholdPrefixIds();
     $contact_data = array();
@@ -169,7 +167,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
       $contact_data['prefix']            = CRM_Utils_Array::value('Prefix',     $record);
       $contact_data['gender_id']         = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
-      $contact_data['birth_date']        = date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Birth date'])));
+      $contact_data['birth_date']        = $record['Birth date'];
     }
     $donor = $this->createContact($contact_data, true);
     if (empty($donor)) {
@@ -538,7 +536,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       return array();
     }
     return $this->getContact($contactId);
-
   }
 
   /**
