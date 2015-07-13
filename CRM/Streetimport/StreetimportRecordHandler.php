@@ -8,27 +8,6 @@
 abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimport_RecordHandler {
 
   /** 
-   * in case the recruiter ID is not set,
-   * we will create a new recruiter, but store it so we can use the same one
-   * 
-   * keys for the array are "$last_name//$first_name//$prefix"
-   */
-  protected $created_recruiters = array();
-
-
-  protected function getConfigValue($key) {
-    $returnValue = 'LOOKUP-ERROR';
-    $extensionConfig = CRM_Streetimport_Config::singleton();
-    switch ($key) {
-      case 'Recruiter':
-        $returnValue = $extensionConfig->getRecruiterContactSubType();
-        break;
-    }
-    return $returnValue;
-  }
-
-
-  /** 
    * look up the recruiting organisation
    *
    * From the process description:
@@ -65,77 +44,74 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   protected function processRecruiter($record, $recruiting_organisation) {
     $config = CRM_Streetimport_Config::singleton();
-    $recruiter = NULL;
+    $external_recruiter_id_field = $config->getRecruiterInformationCustomFields('external_recruiter_id');
+    if (empty($external_recruiter_id_field)) {
+      $this->logger->abort($config->translate("Custom field 'external_recruiter_id' not found. Please re-install streetimport extension."));
+      return;
+    }
+    $recruiter_id_field = 'custom_' . $external_recruiter_id_field['id'];
+
     if (!empty($record['Recruiter ID'])) {
-      $recruiter = $this->getContact($record['Recruiter ID']);
-    }
-
-    if ($recruiter==NULL) {
-      $this->logger->logDebug($config->translate("Recruiter not found, creating new one..."));
-      // "If the contact is not known, a contact of the contact subtype 'Werver' is to be created"
-      $recruiter_data = array(
-        'contact_type'     => 'Individual',
-        'contact_sub_type' => $this->getConfigValue('Recruiter'),
-        'first_name'       => CRM_Utils_Array::value('Recruiter First Name', $record),
-        'last_name'        => CRM_Utils_Array::value('Recruiter Last Name',  $record),
-        'prefix'           => CRM_Utils_Array::value('Recruiter Prefix', $record),
-      );
-      $recruiter_known = TRUE;
-
-      // "If the first name and last name are empty, the values 'Unknown Werver' 
-      //  "and 'Organization name of recruiting org' will be used as first and last name."
-      if (empty($record['Recruiter First Name']) && empty($record['Recruiter Last Name'])) {
-        $recruiter_data['first_name'] = $this->getConfigValue('Unknown Recruiter');
-        $recruiter_data['last_name']  = CRM_Utils_Array::value('organization_name', $recruiting_organisation);
-        $recruiter_data['prefix']     = '';
-        $recruiter_known = FALSE;
-      }
-
-      // check if we had already created the recruiter
-      $recruiter_key = "{$recruiter_data['last_name']}//{$recruiter_data['first_name']}//{$recruiter_data['prefix']}";
-      if (!empty($this->created_recruiters[$recruiter_key])) {
-        // ...and indeed we have
-        $recruiter = $this->created_recruiters[$recruiter_key];
-        $this->logger->logDebug($config->translate("Recruiter")." ".$recruiter['id']." ".$config->translate("already created."));
+      // LOOK UP RECRUITER
+      $recruiter_id = $record['Recruiter ID'];
+      try {
+        $recruiter = civicrm_api3('Contact', 'getsingle', array($recruiter_id_field => $recruiter_id));
+        $this->logger->logDebug($config->translate("Recruiter with external ID '$recruiter_id' identified as CiviCRM contact ".$recruiter['id']));
         return $recruiter;
+      } catch (Exception $e) {
+        // not found.
       }
-
-      // else, we have to create the recruiter...
-      $recruiter = $this->createContact($recruiter_data, true);
-      if (!$recruiter) {
-        $this->logger->abort($config->translate("Recruiter could not be created"));
-      }
-
-      // ..."with a relationship 'Werver' to the recruiting organization."
-      $relationshipData = array(
-        'contact_id_a' => $recruiting_organisation['id'],
-        'contact_id_b' => $recruiter['id'],
-        'relationship_type_id' => $config->getRecruiterRelationshipType()
-      );
-      $this->createRelationship($relationshipData);
-
-      // "In all cases where the contact is not known, an activity of the type 'Incompleet werver contact' 
-      //     will be generated  and assigned to the admin ID entered as a param"
-      if (!$recruiter_known) {
-        $this->createActivity(array(
-                              'activity_type_id'   => $config->getImportErrorActivityType(),
-                              'subject'            => $config->translate("Incomplete Recruiter Contact"),
-                              'status_id'          => $config->getImportErrorActivityStatusId(),
-                              'activity_date_time' => date('YmdHis'),
-                              'target_contact_id'  => (int) $recruiter['id'],
-                              'source_contact_id'  => (int) $recruiter['id'],
-                              'assignee_contact_id'=> $config->getAdminContactID(),
-                              'campaign_id'        => $this->getCampaignParameter($record),
-                              'details'            => $this->renderTemplate('activities/IncompleteRecruiterContact.tpl', $record),
-                              ));        
-      }
-
-      // finally, store the result so we don't create the same recruiter over and over
-      $this->created_recruiters[$recruiter_key] = $recruiter;
-      $this->logger->logDebug($config->translate("Recruiter")." ".$recruiter['id']." ".$config->translate("created"));
-    } else {
-      $this->logger->logDebug($config->translate("Recruiter")." ".$record['Recruiter ID']." ".$config->translate("found"));
     }
+
+    // CREATE RECRUITER CONTACT
+    $this->logger->logDebug($config->translate("Recruiter not found, creating new one..."));
+    // "If the contact is not known, a contact of the contact subtype 'Werver' is to be created"
+    $recruiter_data = array(
+      'contact_type'      => 'Individual',
+      'contact_sub_type'  => $config->getRecruiterContactSubType(),
+      'first_name'        => CRM_Utils_Array::value('Recruiter First Name', $record),
+      'last_name'         => CRM_Utils_Array::value('Recruiter Last Name',  $record),
+      'prefix'            => CRM_Utils_Array::value('Recruiter Prefix', $record),
+      $recruiter_id_field => CRM_Utils_Array::value('Recruiter ID', $record),
+    );
+
+    // "If the first name and last name are empty, the values 'Unknown Werver' 
+    //  "and 'Organization name of recruiting org' will be used as first and last name."
+    if (empty($record['Recruiter First Name']) && empty($record['Recruiter Last Name'])) {
+      $recruiter_data['first_name'] = $config->translate('Unknown Recruiter');
+      $recruiter_data['last_name']  = CRM_Utils_Array::value('organization_name', $recruiting_organisation);
+      $recruiter_data['prefix']     = '';
+    }
+
+    $recruiter = $this->createContact($recruiter_data, true);
+    if (!$recruiter) {
+      $this->logger->abort($config->translate("Recruiter could not be created"));
+      return NULL;
+    }
+
+    // ..."with a relationship 'Werver' to the recruiting organization."
+    $relationshipData = array(
+      'contact_id_a' => $recruiting_organisation['id'],
+      'contact_id_b' => $recruiter['id'],
+      'relationship_type_id' => $config->getRecruiterRelationshipType()
+    );
+    $this->createRelationship($relationshipData);
+
+    // "In all cases where the contact is not known, an activity of the type 'Incompleet werver contact' 
+    //     will be generated  and assigned to the admin ID entered as a param"
+    $this->createActivity(array(
+                          'activity_type_id'   => $config->getImportErrorActivityType(),
+                          'subject'            => $config->translate("Incomplete Recruiter Contact"),
+                          'status_id'          => $config->getImportErrorActivityStatusId(),
+                          'activity_date_time' => date('YmdHis'),
+                          'target_contact_id'  => (int) $recruiter['id'],
+                          'source_contact_id'  => (int) $recruiter['id'],
+                          'assignee_contact_id'=> $config->getAdminContactID(),
+                          'campaign_id'        => $this->getCampaignParameter($record),
+                          'details'            => $this->renderTemplate('activities/IncompleteRecruiterContact.tpl', $record),
+                          ));        
+
+    $this->logger->logDebug($config->translate("Recruiter")." ".$recruiter['id']." ".$config->translate("created"));
     return $recruiter;
   }
 
