@@ -154,7 +154,7 @@ class CRM_Streetimport_ImportResult {
    * shortcut for logFatal AND throwing an exception (with the same message)
    * @throws Exception
    */
-  public function abort($message, $record) {
+  public function abort($message, $record = NULL) {
     $this->logFatal($message, $record);
     // TODO: use a specific exception type? add more Information?
     throw new Exception($message);
@@ -231,7 +231,11 @@ class CRM_Streetimport_ImportResult {
    * generate a descriptive ID for the given record
    */
   public function getIDforRecord(&$record) {
-    return $record['source'] . ':' . $record['id'];
+    if (empty($record['source']) && empty($record['id'])) {
+      return 'NO_REF';
+    } else {
+      return $record['source'] . ':' . $record['id'];
+    }
   }
 
   /**

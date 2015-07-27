@@ -142,7 +142,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $old_contribution['amount'] = $old_contribution['total_amount'];
       } else {
         $config= CRM_Streetimport_Config::singleton();
-        $this->logger->abort($config->translate("Bad SDD mandate type found. Contact developer"));
+        $this->logger->abort($config->translate("Bad SDD mandate type found. Contact developer"), $record);
         return NULL;
       }
     } catch (Exception $e) {

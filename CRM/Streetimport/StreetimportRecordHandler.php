@@ -18,12 +18,12 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
   protected function getRecruitingOrganisation($record) {
     $config = CRM_Streetimport_Config::singleton();
     if (empty($record['Recruiting organization ID'])) {
-      $this->logger->abort($config->translate("Recruiting organization ID not given"));
+      $this->logger->abort($config->translate("Recruiting organization ID not given"), $record);
       return NULL;
     }
     $recruiting_organisation = $this->getContact((int) $record['Recruiting organization ID'], $record, true);
     if ($recruiting_organisation==NULL) {
-      $this->logger->abort($config->translate("Recruiting organization")." ".$record['Recruiting organization ID']." ".$config->translate("not found"), true);
+      $this->logger->abort($config->translate("Recruiting organization")." ".$record['Recruiting organization ID']." ".$config->translate("not found"), $record);
       return NULL;
     }
     $this->logger->logDebug($config->translate("Recruiting organization identified as contact")." ".$recruiting_organisation['id'], $record);
@@ -46,7 +46,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $config = CRM_Streetimport_Config::singleton();
     $external_recruiter_id_field = $config->getRecruiterInformationCustomFields('external_recruiter_id');
     if (empty($external_recruiter_id_field)) {
-      $this->logger->abort($config->translate("Custom field 'external_recruiter_id' not found. Please re-install streetimport extension."));
+      $this->logger->abort($config->translate("Custom field 'external_recruiter_id' not found. Please re-install streetimport extension."), $record);
       return;
     }
     $recruiter_id_field = 'custom_' . $external_recruiter_id_field['id'];
@@ -85,7 +85,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
     $recruiter = $this->createContact($recruiter_data, $record);
     if (!$recruiter) {
-      $this->logger->abort($config->translate("Recruiter could not be created"));
+      $this->logger->abort($config->translate("Recruiter could not be created"), $record);
       return NULL;
     }
 
@@ -147,7 +147,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
     $donor = $this->createContact($contact_data, $record);
     if (empty($donor)) {
-      $this->logger->abort($config->translate("Cannot create new donor. Import failed."));
+      $this->logger->abort($config->translate("Cannot create new donor. Import failed."), $record);
     }
     $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id'], $record);
 
@@ -440,7 +440,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $config = CRM_Streetimport_Config::singleton();
     $type_id_IBAN = (int) CRM_Core_OptionGroup::getValue('civicrm_banking.reference_types', 'IBAN', 'name', 'String', 'id'); 
     if (empty($type_id_IBAN)) {
-      $this->logger->abort("Could't find 'IBAN' reference type. Maybe CiviBanking is not installed?");
+      $this->logger->abort("Could't find 'IBAN' reference type. Maybe CiviBanking is not installed?", $record);
       return;
     }
 
