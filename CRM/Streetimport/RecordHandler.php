@@ -81,7 +81,7 @@ abstract class CRM_Streetimport_RecordHandler {
       if (!$record_processed) {
         $config = CRM_Streetimport_Config::singleton();
         // no handlers found.
-        $dataSource->logger->logImport('#' . ($counter + 1), false, '', $config->translate('No handlers found'));
+        $dataSource->logger->logImport($record, false, '', $config->translate('No handlers found'));
       }
     }
   }
@@ -110,10 +110,10 @@ abstract class CRM_Streetimport_RecordHandler {
    * @return mixed
    */
 
-  protected function getContact($contact_id, $cached = true) {
+  protected function getContact($contact_id, $record, $cached = true) {
     if (empty($contact_id) || ((int)  $contact_id)==0) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logWarning($config->translate("Invalid ID for contact lookup").": ".$contact_id);
+      $this->logger->logWarning($config->translate("Invalid ID for contact lookup").": ".$contact_id, $record);
       return NULL;
     }
 
@@ -132,7 +132,7 @@ abstract class CRM_Streetimport_RecordHandler {
 
     } catch (CiviCRM_API3_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logWarning($config->translate("Contact lookup failed").": ".$contact_id);
+      $this->logger->logWarning($config->translate("Contact lookup failed").": ".$contact_id, $record);
     }
     
     return NULL;
@@ -144,26 +144,26 @@ abstract class CRM_Streetimport_RecordHandler {
    *
    * @return array with contact entity
    */
-  protected function createContact($contact_data) {
+  protected function createContact($contact_data, $record) {
     $config= CRM_Streetimport_Config::singleton();
     // verify data
     if (empty($contact_data['contact_type'])) {
-      $this->logger->logError($config->translate("Contact missing contact_type"), $config->translate("Create Contact Error"));
+      $this->logger->logError($config->translate("Contact missing contact_type"), $record, $config->translate("Create Contact Error"));
       return NULL;
     }
     if ($contact_data['contact_type'] == 'Organization') {
       if (empty($contact_data['organization_name'])) {
-        $this->logger->logError($config->translate("Contact missing organization_name"), $config->translate("Create Contact Error"));
+        $this->logger->logError($config->translate("Contact missing organization_name"), $record, $config->translate("Create Contact Error"));
         return NULL;
       }      
     } elseif ($contact_data['contact_type'] == 'Household') {
       if (empty($contact_data['household_name'])) {
-        $this->logger->logError($config->translate("Contact missing household_name"), $config->translate("Create Contact Error"));
+        $this->logger->logError($config->translate("Contact missing household_name"), $record, $config->translate("Create Contact Error"));
         return NULL;
       }
     } else {
       if (empty($contact_data['first_name']) && empty($contact_data['last_name'])) {
-        $this->logger->logError($config->translate("Contact missing first/last_name"), $config->translate("Create Contact Error"));
+        $this->logger->logError($config->translate("Contact missing first/last_name"), $record, $config->translate("Create Contact Error"));
         return NULL;
       }
     }
@@ -177,10 +177,10 @@ abstract class CRM_Streetimport_RecordHandler {
     try {
       $result  = civicrm_api3('Contact', 'create', $contact_data);
       $contact = $result['values'][$result['id']];
-      $this->logger->logDebug($config->translate("Contact created").": ".$contact['id']);
+      $this->logger->logDebug($config->translate("Contact created").": ".$contact['id'], $record);
       return $contact;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage(), $config->translate("Create Contact Error"));
+      $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Contact Error"));
       return NULL;
     }
   }
@@ -190,7 +190,7 @@ abstract class CRM_Streetimport_RecordHandler {
    *
    * @return actvity BAO object
    */
-  public function createActivity($data, $assigned_contact_ids=NULL) {
+  public function createActivity($data, $record, $assigned_contact_ids=NULL) {
     $config= CRM_Streetimport_Config::singleton();
 
     // TODO: $data sanitation
@@ -198,7 +198,7 @@ abstract class CRM_Streetimport_RecordHandler {
     // remark: using BAOs, the API here is somewhat messy
     $activity = CRM_Activity_BAO_Activity::create($data);
     if (empty($activity->id)) {
-      $this->logger->logError($config->translate("Couldn't create activity"), $config->translate("Create Activity Error"));
+      $this->logger->logError($config->translate("Couldn't create activity"), $record, $config->translate("Create Activity Error"));
       return NULL;
     }
 
@@ -214,7 +214,7 @@ abstract class CRM_Streetimport_RecordHandler {
       }
     }
 
-    $this->logger->logDebug($config->translate("Activity created").": ".$activity->id.": ".$data['subject']);
+    $this->logger->logDebug($config->translate("Activity created").": ".$activity->id.": ".$data['subject'], $record);
     return $activity;
   }
 
@@ -223,7 +223,7 @@ abstract class CRM_Streetimport_RecordHandler {
    *
    * @return array with email entity
    */
-  protected function createEmail($data) {
+  protected function createEmail($data, $record) {
     // verify data
     if (empty($data['email'])) {
       return NULL;
@@ -232,10 +232,10 @@ abstract class CRM_Streetimport_RecordHandler {
     // create via API
     try {
       $email = civicrm_api3('Email', 'create', $data);
-      $this->logger->logDebug($config->translate("Email created")." ".$data['email']." ".$config->translate("for contact")." ".$data['contact_id']);
+      $this->logger->logDebug($config->translate("Email created")." ".$data['email']." ".$config->translate("for contact")." ".$data['contact_id'], $record);
       return $email;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage(), $config->translate("Create Email Error"));
+      $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Email Error"));
       return NULL;
     }
   }
@@ -245,13 +245,13 @@ abstract class CRM_Streetimport_RecordHandler {
    *
    * @return array with address entity
    */
-  protected function createAddress($data) {
+  protected function createAddress($data, $record) {
     $config = CRM_Streetimport_Config::singleton();
     // verify data
     $required_address_attributes = array("city", "street_name", "contact_id");
     foreach ($required_address_attributes as $attribute) {
       if (empty($data[$attribute])) {
-        $this->logger->logError($config->translate("Address missing")." ".$attribute, $config->translate("Create Address Error"));
+        $this->logger->logError($config->translate("Address missing")." ".$attribute, $record, $config->translate("Create Address Error"));
         return NULL;
       }
     }
@@ -259,10 +259,10 @@ abstract class CRM_Streetimport_RecordHandler {
     // create via API
     try {
       $address = civicrm_api3('Address', 'create', $data);
-      $this->logger->logDebug($config->translate("Address created")." ".$address['id']." ".$config->translate("for contact").$data['contact_id']);
+      $this->logger->logDebug($config->translate("Address created")." ".$address['id']." ".$config->translate("for contact").$data['contact_id'], $record);
       return $address;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage(), $config->translate("Create Address Error"));
+      $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Address Error"));
       return NULL;
     }
   }
@@ -272,7 +272,7 @@ abstract class CRM_Streetimport_RecordHandler {
    *
    * @return array with phone entity
    */
-  protected function createPhone($data) {
+  protected function createPhone($data, $record) {
     $config = CRM_Streetimport_Config::singleton();
     // verify data
     if (empty($data['phone'])) {
@@ -282,10 +282,10 @@ abstract class CRM_Streetimport_RecordHandler {
     // create via API
     try {
       $phone = civicrm_api3('Phone', 'create', $data);
-      $this->logger->logDebug($config->translate("Phone created")." ".$data['phone']." ".$config->translate("for contact").$data['contact_id']);
+      $this->logger->logDebug($config->translate("Phone created")." ".$data['phone']." ".$config->translate("for contact").$data['contact_id'], $record);
       return $phone;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage(), $config->translate("Create Phone Error"));
+      $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Phone Error"));
       return NULL;
     }
   }
@@ -298,10 +298,10 @@ abstract class CRM_Streetimport_RecordHandler {
    * @return mixed
    * @access protected
    */
-  protected function addContactToGroup($contactId, $groupId) {
+  protected function addContactToGroup($contactId, $groupId, $record) {
     if (empty($contactId) || empty($groupId)) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logError($config->translate('Empty contact_id or group_id, could not add contact to group'));
+      $this->logger->logError($config->translate('Empty contact_id or group_id, could not add contact to group'), $record);
       return NULL;
     }
     $params = array(
@@ -312,7 +312,7 @@ abstract class CRM_Streetimport_RecordHandler {
       return $result;
     } catch (CiviCRM_API3_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logError($config->translate('Error from API GroupContact Create').': '.$ex->getMessage());
+      $this->logger->logError($config->translate('Error from API GroupContact Create').': '.$ex->getMessage(), $record);
       return NULL;
     }
   }
@@ -324,12 +324,12 @@ abstract class CRM_Streetimport_RecordHandler {
    * @return mixed
    * @access protected
    */
-  protected function createMembership($membershipData) {
+  protected function createMembership($membershipData, $record) {
     $mandatoryParams = array('contact_id', 'membership_type_id', 'membership_source');
     foreach ($mandatoryParams as $mandatory) {
       if (!isset($membershipData[$mandatory])) {
         $config = CRM_Streetimport_Config::singleton();
-        $this->logger->logError($config->translate('Membership not created, mandatory param missing').': '.$mandatory);
+        $this->logger->logError($config->translate('Membership not created, mandatory param missing').': '.$mandatory, $record);
         return NULL;
       }
     }
@@ -338,7 +338,7 @@ abstract class CRM_Streetimport_RecordHandler {
       return $result;
     } catch (CiviCRM_API3_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logError($config->translate('Membership not created, error from API Membership Create').': '.$ex->getMessage());
+      $this->logger->logError($config->translate('Membership not created, error from API Membership Create').': '.$ex->getMessage(), $record);
       return NULL;
     }
   }
@@ -346,13 +346,13 @@ abstract class CRM_Streetimport_RecordHandler {
   /**
    * create a relationship with given data
    */
-  protected function createRelationship($relationshipData) {
+  protected function createRelationship($relationshipData, $record) {
 
     $mandatoryParams = array('contact_id_a', 'contact_id_b', 'relationship_type_id');
     foreach ($mandatoryParams as $mandatory) {
       if (empty($relationshipData[$mandatory])) {
         $config = CRM_Streetimport_Config::singleton();
-        $this->logger->logError($config->translate('Relationship not created, mandatory param missing').': '.$mandatory);
+        $this->logger->logError($config->translate('Relationship not created, mandatory param missing').': '.$mandatory, $record);
         return NULL;
       }
     }
@@ -364,7 +364,7 @@ abstract class CRM_Streetimport_RecordHandler {
       return $result;
     } catch (CiviCRM_API3_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logError($config->translate('Relationship not created, error from API Relationship Create').': '.$ex->getMessage());
+      $this->logger->logError($config->translate('Relationship not created, error from API Relationship Create').': '.$ex->getMessage(), $record);
       return NULL;
     }
   }

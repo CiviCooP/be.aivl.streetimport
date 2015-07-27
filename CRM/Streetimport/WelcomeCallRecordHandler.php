@@ -27,7 +27,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
    */
   public function processRecord($record) {
     $config = CRM_Streetimport_Config::singleton();
-    $this->logger->logDebug($config->translate("Processing WelcomeCall record")." #".$record['__id']."...");
+    $this->logger->logDebug($config->translate("Processing WelcomeCall record..."), $record);
 
     // STEP 1: lookup recruiting organisation
     $recruiting_organisation = $this->getRecruitingOrganisation($record);
@@ -36,12 +36,12 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $recruiter = $this->processRecruiter($record, $recruiting_organisation);
 
     // STEP 3: look up / create donor
-    $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['id']);
+    $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['id'], $record);
     if (empty($donor)) {
-      $this->logger->logError("Donor ".$record['DonorID']." ".$config->translate("should already exist. Created new contact in order to process record anyway."));
+      $this->logger->logError("Donor ".$record['DonorID']." ".$config->translate("should already exist. Created new contact in order to process record anyway."), $record);
       $donor = $this->processDonor($record, $recruiting_organisation);
     } else {
-      $this->logger->logDebug($config->translate("Donor [{$donor['id']}] identified."));
+      $this->logger->logDebug($config->translate("Donor [{$donor['id']}] identified."), $record);
     }
 
     // STEP 5: create activity "WelcomeCall"
@@ -55,9 +55,9 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       'campaign_id'        => $this->getCampaignParameter($record),
       //'assignee_contact_id'=> $recruiter['id'],
       'details'            => $this->renderTemplate('activities/WelcomeCall.tpl', $record),
-    ));
+    ), $record);
     // add custom data to the created activity
-    $this->createActivityCustomData($createdActivity->id, $config->getWelcomeCallCustomGroup('table_name'), $this->buildActivityCustomData($record));
+    $this->createActivityCustomData($createdActivity->id, $config->getWelcomeCallCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
 
     // STEP 6: update SEPA mandate if required
     $this->processMandate($record, $donor['id']);
@@ -65,7 +65,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // STEP 7: add to newsletter group if requested
     if ($this->isTrue($record, "Newsletter")) {
       $newsletter_group_id = $config->getNewsletterGroupID();
-      $this->addContactToGroup($donor['id'], $newsletter_group_id);
+      $this->addContactToGroup($donor['id'], $newsletter_group_id, $record);
     }
 
     // STEP 8: CHECK membership 
@@ -79,7 +79,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       if ($existing_memberships['count'] == 0) {
         // the contact has no membership yet, create (see https://github.com/CiviCooP/be.aivl.streetimport/issues/49)
         $membership_data['membership_source'] = $config->translate('Activity').' '.$config->translate('Welcome Call').' '.$createdActivity->id;
-        $this->createMembership($membership_data);
+        $this->createMembership($membership_data, $record);
       }
     }
 
@@ -95,11 +95,11 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         'assignee_contact_id'=> $config->getFundraiserContactID(),
         'campaign_id'        => $this->getCampaignParameter($record),
         'details'            => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
-      ));
+      ), $record);
     }
 
     // DONE
-    $this->logger->logImport($record['__id'], true, $config->translate('WelcomeCall'));
+    $this->logger->logImport($record, true, $config->translate('WelcomeCall'));
   }
 
 
@@ -120,7 +120,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $old_mandate_data['end_date'] = '';
       }
     } catch (Exception $e) {
-      $this->logger->logError(sprintf($config->translate("SDD mandate '%s' count not be found."), $new_mandate_data['reference']));
+      $this->logger->logError(sprintf($config->translate("SDD mandate '%s' count not be found."), $record, $new_mandate_data['reference']));
       return NULL;
     }
 
@@ -146,7 +146,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         return NULL;
       }
     } catch (Exception $e) {
-      $this->logger->logError($config->translate("Couldn't load contribution entity for mandate").' '.$old_mandate_data['id']);
+      $this->logger->logError($config->translate("Couldn't load contribution entity for mandate").' '.$old_mandate_data['id'], $record);
       return NULL;      
     }
 
@@ -181,7 +181,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     //  => this should only happen if the donor ID lookup failed...
 
     if (empty($mandate_diff)) {
-      $this->logger->logDebug($config->translate("No SDD mandate update required"));
+      $this->logger->logDebug($config->translate("No SDD mandate update required"), $record);
       return;
     }
 
@@ -229,13 +229,13 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         }
       }
       if (empty($new_reference_number)) {
-        $this->logger->logError(sprintf($config->translate("Couldn't create reference for amended mandate '%s'."), $new_mandate_data['reference']));
+        $this->logger->logError(sprintf($config->translate("Couldn't create reference for amended mandate '%s'."), $new_mandate_data['reference']), $record);
         return;
       }
 
       // step 2: create new mandate
       $new_mandate_data['reference'] = $new_reference_number;
-      $new_mandate = $this->createSDDMandate($new_mandate_data);
+      $new_mandate = $this->createSDDMandate($new_mandate_data, $record);
       
       // step 3: stop old mandate
       $cancel_date = $now;
@@ -250,7 +250,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
 
       // step 4: save bank account if it has changed:
       if (!empty($mandate_diff['iban']) || !empty($mandate_diff['bic'])) {
-        $this->saveBankAccount($new_mandate_data);
+        $this->saveBankAccount($new_mandate_data, $record);
       }
 
       return $new_mandate;

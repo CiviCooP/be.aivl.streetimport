@@ -27,7 +27,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    */
   public function processRecord($record) {
     $config = CRM_Streetimport_Config::singleton();
-    $this->logger->logDebug($config->translate("Processing StreetRecruitment record")." #".$record['__id']."...");
+    $this->logger->logDebug($config->translate("Processing StreetRecruitment record..."), $record);
 
     // STEP 1: lookup recruiting organisation
     $recruiting_organisation = $this->getRecruitingOrganisation($record);
@@ -50,22 +50,22 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                             //'assignee_contact_id'=> $recruiter['id'],
                             'campaign_id'        => $this->getCampaignParameter($record),
                             'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
-                              ));
+                              ), $record);
     // add custom data to the created activity
-    $this->createActivityCustomData($createdActivity->id, $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record));
+    $this->createActivityCustomData($createdActivity->id, $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
 
     // STEP 6: create SEPA mandate
-    $mandate_data = $this->extractMandate($record, $donor['id']);
+    $mandate_data = $this->extractMandate($record, $donor['id'], $record);
     $mandate = $this->createSDDMandate($mandate_data);
     if ($mandate) {
       // if successful, store the bank account data
-      $this->saveBankAccount($mandate_data);
+      $this->saveBankAccount($mandate_data, $record);
     }
 
     // STEP 7: add to newsletter group if requested
     if ($this->isTrue($record, "Newsletter")) {
       $newsletter_group_id = $config->getNewsletterGroupID();
-      $this->addContactToGroup($donor['id'], $newsletter_group_id);
+      $this->addContactToGroup($donor['id'], $newsletter_group_id, $record);
     }
     
     // STEP 8: create membership if requested
@@ -74,7 +74,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
         'contact_id'         => $donor['id'],
         'membership_type_id' => $config->getMembershipTypeID(),
         'membership_source' => $config->translate('Activity').' '.$config->translate('Street Recruitment').' '.$createdActivity->id
-      ));
+      ), $record);
     }
 
 
@@ -90,11 +90,11 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                               'assignee_contact_id'=> $config->getFundraiserContactID(),
                               'campaign_id'        => $this->getCampaignParameter($record),
                               'details'            => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
-                              ));
+                              ), $record);
     }
 
     // DONE
-    $this->logger->logImport($record['__id'], true, $config->translate('StreetRecruitment'));
+    $this->logger->logImport($record, true, $config->translate('StreetRecruitment'));
   }
 
 

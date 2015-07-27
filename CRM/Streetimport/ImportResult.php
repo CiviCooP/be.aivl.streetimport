@@ -77,7 +77,7 @@ class CRM_Streetimport_ImportResult {
   /**
    * Log a message or error
    */
-  public function logMessage($message, $record, $log_level = BE_AIVL_STREETIMPORT_INFO) {
+  public function logMessage($message, $record = NULL, $log_level = BE_AIVL_STREETIMPORT_INFO) {
     if ($log_level > $this->logging_threshold) {
       $this->log_entries[] = array(
         'timestamp' => date('Y-m-d h:i:s'),
@@ -212,7 +212,7 @@ class CRM_Streetimport_ImportResult {
                             'source_contact_id'  => (int) $this->config->getAdminContactID(),
                             'assignee_contact_id'=> (int) $this->config->getAdminContactID(),
                             'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
-                            ));
+                            ), $record);
       
     } catch (Exception $e) {
       error_log($this->config->translate("Error while creating an activity to report another error").": " . $e->getMessage());
