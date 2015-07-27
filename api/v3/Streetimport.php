@@ -64,6 +64,10 @@ function civicrm_api3_streetimport_importcsvfile($params) {
       if (!$source_file) {
         $result->logMessage($config->translate("No source files found"));
       } else {
+        // set log file first
+        $log_file_path = dirname($source_file) . PATH_SEPARATOR . basename($source_file) . '-' . date('YmdHis') . '.log';
+        $result->setLogFile($log_file_path);
+
         $dataSource = new CRM_Streetimport_FileCsvDataSource($source_file, $result);
         CRM_Streetimport_RecordHandler::processDataSource($dataSource);
 

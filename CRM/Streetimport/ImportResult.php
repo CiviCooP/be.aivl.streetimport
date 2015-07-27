@@ -24,6 +24,7 @@ class CRM_Streetimport_ImportResult {
 
   // logs
   protected $log_entries     = array();
+  protected $log_file        = NULL;
 
   // stats
   protected $import_success  = array();
@@ -42,10 +43,7 @@ class CRM_Streetimport_ImportResult {
   function __construct($context) {
     $this->$config = CRM_Streetimport_Config::singleton();
 
-    // TODO: open log file
-
-    // TODO: get/override log thresholds from config
-
+    // TODO: get/override log thresholds from config?
   }
 
   /**
@@ -78,10 +76,13 @@ class CRM_Streetimport_ImportResult {
    * Log a message or error
    */
   public function logMessage($message, $record = NULL, $log_level = BE_AIVL_STREETIMPORT_INFO) {
+    $record_id = $this->getIDforRecord($record);
+    $log_level_string = $this->resolveLogLevel($log_level);
+
     if ($log_level > $this->logging_threshold) {
       $this->log_entries[] = array(
         'timestamp' => date('Y-m-d h:i:s'),
-        'id'        => $this->getIDforRecord($record),
+        'id'        => $record_id,
         'log_level' => $log_level,
         'message'   => $message,
         );      
@@ -98,8 +99,15 @@ class CRM_Streetimport_ImportResult {
     }
 
     // log to file
-    if ($log_level >= $this->file_threshold) {
-      // TODO: log to file
+    if ($this->log_file && $log_level >= $this->file_threshold) {
+      fputs($this->log_file, date('Y-m-d h:i:s'));
+      fputs($this->log_file, ' [');
+      fputs($this->log_file, $log_level_string);
+      fputs($this->log_file, '] ');
+      fputs($this->log_file, $record_id);
+      fputs($this->log_file, ': ');
+      fputs($message);
+      fputs($this->log_file, '\n');
     }
   }
 
@@ -244,5 +252,23 @@ class CRM_Streetimport_ImportResult {
       default:
         return $this->config->translate('UNKNOWN');
     }
-  } 
+  }
+
+  /**
+   * Creates a new log file 'next to' the input file,
+   * replacing the file extension with "-YYYYmmddHHiiss.log"
+   **/
+  protected function setLogFile($file) {
+    // if another file exists, close that first...
+    if ($this->log_file) {
+      fclose($this->log_file);
+      $this->log_file = NULL;
+    }
+
+    // open a log file
+    $this->log_file = fopen($file);
+    if (!$this->log_file) {
+      $this->logFatal("Cannot open log file '$file'.", NULL);
+    }
+  }
 }
