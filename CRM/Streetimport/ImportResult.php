@@ -25,6 +25,7 @@ class CRM_Streetimport_ImportResult {
   // logs
   protected $log_entries     = array();
   protected $log_file        = NULL;
+  protected $log_file_path   = NULL;
 
   // stats
   protected $import_success  = array();
@@ -37,11 +38,11 @@ class CRM_Streetimport_ImportResult {
   // logging thresholds (will be overwritten by config)
   protected $logging_threshold = BE_AIVL_STREETIMPORT_DEBUG;
   protected $console_threshold = BE_AIVL_STREETIMPORT_INFO;
-  protected $file_threshold    = BE_AIVL_STREETIMPORT_INFO;
+  protected $file_threshold    = BE_AIVL_STREETIMPORT_DEBUG;
 
   // simple constructor
-  function __construct($context) {
-    $this->$config = CRM_Streetimport_Config::singleton();
+  function __construct() {
+    $this->config = CRM_Streetimport_Config::singleton();
 
     // TODO: get/override log thresholds from config?
   }
@@ -54,7 +55,7 @@ class CRM_Streetimport_ImportResult {
    * @param $type     optional string representing the type of record
    * @param $message  optional additional message
    */
-  public function logImport($record, $success, $type = '', $message = '') {
+  public function logImport($record, $success, $type = 'UNKNOWN', $message = '') {
     $id = $this->getIDforRecord($record);
     if ($success) {
       if (!isset($this->import_success[$id])) $this->import_success[$id] = NULL;
@@ -95,19 +96,19 @@ class CRM_Streetimport_ImportResult {
 
     // log to console
     if ($log_level >= $this->console_threshold) {
-      error_log("$log_level: $message");
+      error_log(sprintf("%s [%s]: %s", $log_level_string, $record_id, $message));
     }
 
     // log to file
     if ($this->log_file && $log_level >= $this->file_threshold) {
       fputs($this->log_file, date('Y-m-d h:i:s'));
-      fputs($this->log_file, ' [');
+      fputs($this->log_file, ' ');
       fputs($this->log_file, $log_level_string);
-      fputs($this->log_file, '] ');
+      fputs($this->log_file, ' [');
       fputs($this->log_file, $record_id);
-      fputs($this->log_file, ': ');
-      fputs($message);
-      fputs($this->log_file, '\n');
+      fputs($this->log_file, ']: ');
+      fputs($this->log_file, $message);
+      fputs($this->log_file, "\n");
     }
   }
 
@@ -262,17 +263,29 @@ class CRM_Streetimport_ImportResult {
    * Creates a new log file 'next to' the input file,
    * replacing the file extension with "-YYYYmmddHHiiss.log"
    **/
-  protected function setLogFile($file) {
+  public function setLogFile($file) {
     // if another file exists, close that first...
     if ($this->log_file) {
       fclose($this->log_file);
-      $this->log_file = NULL;
+      $this->log_file      = NULL;
+      $this->log_file_path = NULL;
     }
 
-    // open a log file
-    $this->log_file = fopen($file);
-    if (!$this->log_file) {
-      $this->logFatal("Cannot open log file '$file'.", NULL);
+    if ($file) {
+      // open a log file
+      $this->log_file      = fopen($file, 'w');
+      $this->log_file_path = $file;
+      if (!$this->log_file) {
+        $this->logFatal("Cannot open log file '$file'.", NULL);
+        $this->log_file_path = NULL;
+      }      
     }
+  }
+
+  /**
+   * returns the currently set log file path
+   */
+  public function getLogFile() {
+    return $this->log_file_path;
   }
 }

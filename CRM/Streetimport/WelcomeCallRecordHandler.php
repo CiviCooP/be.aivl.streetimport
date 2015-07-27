@@ -120,7 +120,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $old_mandate_data['end_date'] = '';
       }
     } catch (Exception $e) {
-      $this->logger->logError(sprintf($config->translate("SDD mandate '%s' count not be found."), $record, $new_mandate_data['reference']));
+      $this->logger->logError(sprintf($config->translate("SDD mandate '%s' count not be found."), $new_mandate_data['reference']), $record);
       return NULL;
     }
 
