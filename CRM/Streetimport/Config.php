@@ -32,7 +32,7 @@ class CRM_Streetimport_Config {
   protected $newsLetterGroupId = null;
   protected $membershipTypeId = null;
   protected $recruitingOrganizationsGroupId = null;
-  protected $frequenceUnitOptionGroup = null;
+  protected $frequencyUnitOptionGroup = null;
   protected $areasOfInterestOptionGroup = null;
   protected $translatedStrings = array();
 
@@ -81,7 +81,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getFrequencyUnitOptionGroup($key = 'id') {
-    return $this->frequenceUnitOptionGroup[$key];
+    return $this->frequencyUnitOptionGroup[$key];
   }
 
   /**
@@ -716,7 +716,7 @@ class CRM_Streetimport_Config {
    * @throws Exception when resource file not found
    * @access protected
    */
-  protected function setOptiongroups() {
+  protected function setOptionGroups() {
     $jsonFile = $this->resourcesPath.'option_groups.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load option_groups configuration file for extension,
