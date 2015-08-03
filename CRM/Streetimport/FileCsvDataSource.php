@@ -25,6 +25,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
    */
   public function reset() {
     $config = CRM_Streetimport_Config::singleton();
+    $this->set_separator();
     // try loading the given file
     $this->reader  = fopen($this->uri, 'r');
     $this->header  = NULL;
@@ -105,5 +106,25 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
       // set ID if not defined by file/mapping
       if (empty($this->next['__id'])) $this->next['__id'] = $this->line_nr;      
     }
+  }
+  /**
+   * Function to check which csv separator to use. Assumption is that
+   * separator is ';', if reading first record return record with only
+   * 1 field, then ',' should be used
+   */
+  function set_separator() {
+    $testSeparator = fopen($this->uri, 'r');
+    /*
+     * first test if semi-colon or comma separated, based on assumption that
+     * it is semi-colon and it should be comma if I only get one record then
+     */
+    if ($testRow = fgetcsv($testSeparator, 0, ';')) {
+      if (!isset($testRow[1])) {
+        $this->default_delimiter = ",";
+      } else {
+        $this->default_delimiter = ";";
+      }
+    }
+    fclose($testSeparator);
   }
 }

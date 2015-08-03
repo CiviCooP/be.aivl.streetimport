@@ -141,10 +141,10 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $customData['new_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
     $customData['new_sdd_freq_unit'] = array('value' => $this->getFrequencyUnit($record['Frequency Unit']), 'type' => 'Integer');
     if (!empty($record['Start Date'])) {
-      $customData['new_sdd_start_date'] = array('value' => date('Ymd', strtotime($record['Start Date'])), 'type' => 'Date');
+      $customData['new_sdd_start_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Start Date']))), 'type' => 'Date');
     }
     if (!empty($record['End Date'])) {
-      $customData['new_sdd_end_date'] = array('value' => date('Ymd', strtotime($record['End Date'])), 'type' => 'Date');
+      $customData['new_sdd_end_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['End Date']))), 'type' => 'Date');
     }
     return $customData;
   }

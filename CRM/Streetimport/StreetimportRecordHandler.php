@@ -361,6 +361,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $now = strtotime("now");
     $start_date = CRM_Utils_Array::value('Start Date', $record);
     $start_date = CRM_Streetimport_Utils::formatCsvDate($start_date);
+
     $start_date_parsed = strtotime($start_date);
     $offset = (int) $config->getOffsetDays();
     $earliest_start_date = strtotime("+$offset days");

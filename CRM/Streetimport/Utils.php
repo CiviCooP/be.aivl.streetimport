@@ -605,9 +605,11 @@ class CRM_Streetimport_Utils {
         break;
       case 1:
         $dateParts = explode("/", $inDate);
-        $inDay = $dateParts[0];
-        $inMonth = $dateParts[1];
-        $inYear = $dateParts[2];
+        if (isset($dateParts[1]) && isset($dateParts[2])) {
+          $inDay = $dateParts[0];
+          $inMonth = $dateParts[1];
+          $inYear = $dateParts[2];
+        }
         break;
       case 2:
         $dateParts = explode("-", $inDate);
