@@ -44,6 +44,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
                             'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
                             'subject'            => $config->translate("Street Recruitment"),
                             'status_id'          => $config->getStreetRecruitmentActivityStatusId(),
+                            'location'           => $record['Recruitment Location'],
                             'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
                             'target_contact_id'  => (int) $donor['id'],
                             'source_contact_id'  => $recruiter['id'],
@@ -110,7 +111,6 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $acceptedYesValues = $config->getAcceptedYesValues();
     $customData = array();
     $customData['new_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
-    $customData['new_recruit_location'] = array('value' => $record['Recruitment Location'], 'type' => 'String');
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
       $customData['new_follow_up_call'] = array('value' => 1, 'type' => 'Integer');
     } else {

@@ -50,6 +50,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       'subject'            => $config->translate("Welcome Call"),
       'status_id'          => $config->getWelcomeCallActivityStatusId(),
       'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
+      'location'           => $record['Recruitment Location'],
       'target_contact_id'  => (int) $donor['id'],
       'source_contact_id'  => $recruiter['id'],
       'campaign_id'        => $this->getCampaignParameter($record),
@@ -269,7 +270,6 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $acceptedYesValues = $config->getAcceptedYesValues();
     $customData = array();
     $customData['wc_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
-    $customData['wc_recruit_location'] = array('value' => $record['Recruitment Location'], 'type' => 'String');
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
       $customData['wc_follow_up_call'] = array('value' => 1, 'type' => 'Integer');
     } else {

@@ -54,18 +54,7 @@
         "is_view":1,
         "date_format":"dd-mm-yy",
         "column_name":"new_date_import",
-        "weight":-180,
-        "is_active":1
-      },
-      "new_recruit_location":{
-        "name":"new_recruit_location",
-        "label":"Wervingslocatie",
-        "data_type":"String",
-        "html_type":"Text",
-        "is_searchable":1,
-        "is_view":1,
-        "column_name":"new_recruit_location",
-        "weight":-170,
+        "weight":-160,
         "is_active":1
       },
       "new_follow_up_call":{
@@ -262,18 +251,7 @@
         "is_view":1,
         "date_format":"dd-mm-yy",
         "column_name":"wc_date_import",
-        "weight":-180,
-        "is_active":1
-      },
-      "wc_recruit_location":{
-        "name":"wc_recruit_location",
-        "label":"Wervingslocatie",
-        "data_type":"String",
-        "html_type":"Text",
-        "is_searchable":1,
-        "is_view":1,
-        "column_name":"wc_recruit_location",
-        "weight":-170,
+        "weight":-160,
         "is_active":1
       },
       "wc_follow_up_call":{
