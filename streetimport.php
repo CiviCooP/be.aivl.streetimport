@@ -28,8 +28,37 @@ function streetimport_civicrm_xmlMenu(&$files) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
 function streetimport_civicrm_install() {
+  /*
+   * only install if CiviSepa, CiviBanking and Little Bic Extension are installed
+   */
+  $sepa = FALSE;
+  $banking = FALSE;
+  $bic = FALSE;
+  $installedExtensions = civicrm_api3('Extension', 'Get', array());
+  foreach ($installedExtensions['values'] as $installedExtension) {
+    switch ($installedExtension['key']) {
+      case "org.project60.sepa":
+        if ($installedExtension['status'] == 'installed') {
+          $sepa = TRUE;
+        }
+      break;
+      case "org.project60.banking":
+        if ($installedExtension['status'] == 'installed') {
+          $banking = TRUE;
+        }
+      break;
+      case "org.project60.bic":
+        if ($installedExtension['status'] == 'installed') {
+          $bic = TRUE;
+        }
+        break;
+    }
+    if (!$sepa || !$banking || !$bic) {
+      CRM_Core_Error::fatal('One (or more) of the mandatory extensions SEPA Direct Debit, CiviBanking or Little Bic Extension not found, could not install Street Recruitment Import extension');
+    }
+  }
   _streetimport_civix_civicrm_install();
-  $extensionConfig = CRM_Streetimport_Config::singleton('install');
+  CRM_Streetimport_Config::singleton('install');
 }
 
 /**
