@@ -36,6 +36,7 @@ function streetimport_civicrm_install() {
   $bic = FALSE;
   $installedExtensions = civicrm_api3('Extension', 'Get', array());
   foreach ($installedExtensions['values'] as $installedExtension) {
+    CRM_Core_Error::debug('ext', $installedExtension);
     switch ($installedExtension['key']) {
       case "org.project60.sepa":
         if ($installedExtension['status'] == 'installed') {
@@ -53,9 +54,9 @@ function streetimport_civicrm_install() {
         }
         break;
     }
-    if (!$sepa || !$banking || !$bic) {
-      CRM_Core_Error::fatal('One (or more) of the mandatory extensions SEPA Direct Debit, CiviBanking or Little Bic Extension not found, could not install Street Recruitment Import extension');
-    }
+  }
+  if (!$sepa || !$banking || !$bic) {
+    CRM_Core_Error::fatal('One (or more) of the mandatory extensions SEPA Direct Debit, CiviBanking or Little Bic Extension not found, could not install Street Recruitment Import extension');
   }
   _streetimport_civix_civicrm_install();
   CRM_Streetimport_Config::singleton('install');
