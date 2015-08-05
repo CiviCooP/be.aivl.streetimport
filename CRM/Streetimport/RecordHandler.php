@@ -321,10 +321,11 @@ abstract class CRM_Streetimport_RecordHandler {
    * Method to create membership with given data
    *
    * @param array $membershipData
+   * @param int $recruiterId
    * @return mixed
    * @access protected
    */
-  protected function createMembership($membershipData) {
+  protected function createMembership($membershipData, $recruiterId) {
     $mandatoryParams = array('contact_id', 'membership_type_id', 'membership_source');
     foreach ($mandatoryParams as $mandatory) {
       if (!isset($membershipData[$mandatory])) {
@@ -335,6 +336,10 @@ abstract class CRM_Streetimport_RecordHandler {
     }
     try {
       $result = civicrm_api3('Membership', 'create', $membershipData);
+
+      // issue #48 - change source contact of membership signup activity
+      $this->updateMembershipActivity($result['values'][$result['id']]['contact_id'], $result['id'], $recruiterId);
+
       return $result;
     } catch (CiviCRM_API3_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
@@ -413,5 +418,35 @@ abstract class CRM_Streetimport_RecordHandler {
   protected function formatBirthDate($birthDate) {
     $correctDate = new DateTime(CRM_Streetimport_Utils::formatCsvDate($birthDate));
     return $correctDate->format('d-m-Y');
+  }
+
+  /**
+   * Method to update the source contact of the membership signup activity
+   * (issue #48 on GitHub)
+   *
+   * @param int $contactId
+   * @param int $membershipId
+   * @param int $recruiterId
+   */
+  protected function updateMembershipActivity($contactId, $membershipId, $recruiterId) {
+    // find activity with contactId as target, membershipId as source_record_id and activity type for membership signup
+    $activityTypeId = CRM_Streetimport_Utils::getActivityTypeWithName('Membership Signup');
+    $activityParams = array(
+      'activity_type_id' => $activityTypeId['value'],
+      'is_current_revision' => 1,
+      'is_deleted' => 0,
+      'source_record_id' => $membershipId,
+      'target_contact_id' => $contactId);
+    try {
+      $foundActivities = civicrm_api3('Activity', 'Get', $activityParams);
+      foreach ($foundActivities['values'] as $activity) {
+        $query = 'UPDATE civicrm_activity_contact SET contact_id = %1 WHERE activity_id = %2 AND record_type_id = %3';
+        $params = array(
+          1 => array($recruiterId, 'Integer'),
+          2 => array($activity['id'], 'Integer'),
+          3 => array(2, 'Integer'));
+        CRM_Core_DAO::executeQuery($query, $params);
+      }
+    } catch (CiviCRM_API3_Exception $ex) {}
   }
 }

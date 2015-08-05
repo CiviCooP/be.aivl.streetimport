@@ -75,7 +75,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
         'contact_id'         => $donor['id'],
         'membership_type_id' => $config->getMembershipTypeID(),
         'membership_source' => $config->translate('Activity').' '.$config->translate('Street Recruitment').' '.$createdActivity->id
-      ));
+      ), $recruiter['id']);
     }
 
 

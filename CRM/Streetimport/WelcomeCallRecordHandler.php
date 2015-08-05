@@ -80,7 +80,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       if ($existing_memberships['count'] == 0) {
         // the contact has no membership yet, create (see https://github.com/CiviCooP/be.aivl.streetimport/issues/49)
         $membership_data['membership_source'] = $config->translate('Activity').' '.$config->translate('Welcome Call').' '.$createdActivity->id;
-        $this->createMembership($membership_data);
+        $this->createMembership($membership_data, $recruiter['id']);
       }
     }
 
