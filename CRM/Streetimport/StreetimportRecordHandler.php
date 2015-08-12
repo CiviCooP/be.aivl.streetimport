@@ -169,7 +169,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $contact_data['contact_type']      = 'Individual';
       $contact_data['first_name']        = CRM_Utils_Array::value('First Name', $record);
       $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
-      $contact_data['prefix']            = CRM_Utils_Array::value('Prefix',     $record);
+      $contact_data['prefix_id']         = $this->getPrefixIdWithLabel(CRM_Utils_Array::value('Prefix', $record));
       $contact_data['gender_id']         = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
       $contact_data['birth_date']        = $record['Birth date'];
     }
