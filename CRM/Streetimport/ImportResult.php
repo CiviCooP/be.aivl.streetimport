@@ -96,7 +96,6 @@ class CRM_Streetimport_ImportResult {
 
   /**
    * shortcut for logMessage($message, ERROR)
-   * @param abort  if true, an exception will be raised, stopping the execution
    */
   public function logFatal($message, $source = "Unknown", $line_id = "n/a", $title = "Import Failure") {
     $config = CRM_Streetimport_Config::singleton();
