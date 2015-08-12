@@ -38,7 +38,6 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
     // STEP 3: look up / create donor
     $donor = $this->processDonor($record, $recruiting_organisation);
-
     // STEP 5: create activity "Straatwerving"
     $campaignId = $this->getCampaignParameter($record);
     $createdActivity = $this->createActivity(array(

@@ -142,14 +142,18 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
   /**
    * will create/lookup the donor along with all relevant information
    *
-   * @param $record
+   * @param array $record
+   * @param array $recruiting_organisation
    * @return array with entity data
    */
   protected function processDonor($record, $recruiting_organisation) {
     $config = CRM_Streetimport_Config::singleton();
     $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['id']);
     if (!empty($donor)) {
-      // TODO: update existing donor with latest contact information?
+      $donor = $this->updateDonor($record, $donor);
+      $this->additionalPhone($record, $donor['contact_id']);
+      $this->additionalEmail($record, $donor['contact_id']);
+      $this->additionalAddress($record, $donor['contact_id']);
       return $donor;
     }
     // create base contact
@@ -663,6 +667,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * @param string $tableName
    * @param array $data array holding key/value pairs (expecting column names in key and array with type and value in value)
    * @return bool
+   * @access public
    */
   public function createActivityCustomData($activityId, $tableName, $data) {
     $config = CRM_Streetimport_Config::singleton();
@@ -697,6 +702,277 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       return TRUE;
     } catch (Exception $ex) {
       $this->logger->logError($config->translate('No custom data for activity created'));
+      return FALSE;
+    }
+  }
+
+  /**
+   * Method to check if donor needs to be updated with new data, and execute update
+   *
+   * @param array $record
+   * @param array $currentDonor
+   * @return array
+   * @access public
+   */
+  public function updateDonor($record, $currentDonor) {
+    $config = CRM_Streetimport_Config::singleton();
+    if ($this->donorNeedsToBeUpdated($record, $currentDonor) == TRUE) {
+      try {
+        civicrm_api3('Contact', 'Create', $this->setUpdateDonorParams($record, $currentDonor));
+      } catch (CiviCRM_API3_Exception $ex) {
+        $this->logger->logError($config->translate("Could not update contact")." ".$currentDonor['id']);
+      }
+    }
+    return $this->getContact($currentDonor['id']);
+  }
+
+  /**
+   * Method to check if the donor needs to be updated
+   *
+   * @param $record
+   * @param $donor
+   * @return bool
+   * @access public
+   */
+  public function donorNeedsToBeUpdated($record, $donor) {
+    if ($record['First Name'] != $donor['first_name'] || $record['Last Name'] != $donor['last_name']) {
+      return TRUE;
+    }
+    $donorBirthDate = date('Ymd', strtotime($donor['birth_date']));
+    $recordBirthDate = date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Birth date'])));
+    if ($donorBirthDate != $recordBirthDate) {
+      return TRUE;
+    }
+    $donorPrefix = $this->getPrefixWithId($donor['prefix_id']);
+    if ($donorPrefix != $record['Prefix']) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
+   * Method to set the params for update based on current donor and incoming record
+   *
+   * @param array $record
+   * @param array $donor
+   * @return array $params
+   */
+  public function setUpdateDonorParams($record, $donor) {
+    $params = array();
+    if ($record['First Name'] != $donor['first_name']) {
+      $params['first_name'] = $record['First Name'];
+    }
+    if ($record['Last Name'] != $donor['last_name']) {
+      $params['last_name'] = $record['Last Name'];
+    }
+    $donorBirthDate = date('Ymd', strtotime($donor['birth_date']));
+    $recordBirthDate = date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Birth date'])));
+    if ($recordBirthDate != $donorBirthDate) {
+      $params['birth_date'] = $recordBirthDate;
+    }
+    $donorPrefix = $this->getPrefixWithId($donor['prefix_id']);
+    if ($record['Prefix'] != $donorPrefix) {
+      $params['prefix_id'] = $this->getPrefixIdWithLabel(strtolower($record['Prefix']));
+      $params['gender_id'] = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
+    }
+    if (!empty($params)) {
+      $params['id'] = $donor['id'];
+    }
+    return $params;
+  }
+
+  /**
+   * Method to add additional phones to contact if they do not exist yet
+   *
+   * @param array $record
+   * @param int $contactId
+   */
+  public function additionalPhone($record, $contactId) {
+    $config = CRM_Streetimport_Config::singleton();
+    $phoneArray = array(CRM_Utils_Array::value('Telephone1', $record), CRM_Utils_Array::value('Telephone2', $record));
+    foreach ($phoneArray as $phone) {
+      if (!empty($phone)) {
+        $params = array(
+          'contact_id' => $contactId,
+          'phone_numeric' => $phone);
+        try {
+          $phoneCount = civicrm_api3('Phone', 'Getcount', $params);
+          if ($phoneCount == 0) {
+            $this->createPhone(array(
+              'contact_id'       => $contactId,
+              'phone_type_id'    => $config->getPhonePhoneTypeId(),
+              'location_type_id' => $config->getLocationTypeId(),
+              'phone'            => $phone
+            ));
+          }
+        } catch (CiviCRM_API3_Exception $ex) {
+          $this->createPhone(array(
+            'contact_id' => $contactId,
+            'phone_type_id' => $config->getPhonePhoneTypeId(),
+            'location_type_id' => $config->getLocationTypeId(),
+            'phone' => $phone
+          ));
+        }
+      }
+    }
+    $mobileArray = array($record['Mobile1'], $record['Mobile2']);
+    foreach ($mobileArray as $mobile) {
+      if (!empty($mobile)) {
+        $params = array(
+          'contact_id' => $contactId,
+          'phone_numeric' => $mobile);
+        try {
+          $phoneCount = civicrm_api3('Phone', 'Getcount', $params);
+          if ($phoneCount == 0) {
+            $this->createPhone(array(
+              'contact_id'       => $contactId,
+              'phone_type_id'    => $config->getMobilePhoneTypeId(),
+              'location_type_id' => $config->getLocationTypeId(),
+              'phone'            => $mobile
+            ));
+          }
+        } catch (CiviCRM_API3_Exception $ex) {
+          $this->createPhone(array(
+            'contact_id' => $contactId,
+            'phone_type_id' => $config->getMobilePhoneTypeId(),
+            'location_type_id' => $config->getLocationTypeId(),
+            'phone' => $mobile
+          ));
+        }
+      }
+    }
+  }
+
+  /**
+   * Method to add additional emails to contact if they do not exist yet
+   *
+   * @param array $record
+   * @param int $contactId
+   */
+  public function additionalEmail($record, $contactId) {
+    $config = CRM_Streetimport_Config::singleton();
+    if (!empty(CRM_Utils_Array::value('Email', $record))) {
+      $params = array(
+        'contact_id' => $contactId,
+        'email' => CRM_Utils_Array::value('Email', $record));
+      try {
+        $emailCount = civicrm_api3('Email', 'Getcount', $params);
+        if ($emailCount == 0) {
+          $this->createEmail(array(
+            'contact_id'       => $contactId,
+            'location_type_id' => $config->getOtherLocationTypeId(),
+            'email'            => CRM_Utils_Array::value('Email', $record)
+          ));
+        }
+      } catch (CiviCRM_API3_Exception $ex) {
+        $this->createEmail(array(
+          'contact_id'       => $contactId,
+          'location_type_id' => $config->getLocationTypeId(),
+          'email'            => CRM_Utils_Array::value('Email', $record),
+        ));
+      }
+    }
+  }
+
+  /**
+   * Method to add additional addresses to contact if they do not exist yet
+   *
+   * @param array $record
+   * @param int $contactId
+   */
+  public function additionalAddress($record, $contactId) {
+    $config = CRM_Streetimport_Config::singleton();
+    if (!empty(CRM_Utils_Array::value('Country', $record))) {
+      $country = CRM_Streetimport_Utils::getCountryByIso(CRM_Utils_Array::value('Country', $record));
+      if (empty($country)) {
+        $countryId = $config->getDefaultCountryId();
+      } else {
+        $countryId = $country['country_id'];
+      }
+    } else {
+      $countryId = $config->getDefaultCountryId();
+    }
+    $params = array(
+      'contact_id' => $contactId,
+      'street_name' => CRM_Utils_Array::value('Street Name', $record),
+      'street_number' => CRM_Utils_Array::value('Street Number', $record),
+      'postal_code' => CRM_Utils_Array::value('Postal code', $record),
+      'city' => CRM_Utils_Array::value('City', $record),
+      'country_id' => $countryId
+    );
+    if (!empty(CRM_Utils_Array::value('Street Unit', $record))) {
+      $params['street_unit'] = CRM_Utils_Array::value('Street Unit', $record);
+    }
+    try {
+      $addressCount = civicrm_api3('Address', 'Getcount', $params);
+      if ($addressCount == 0) {
+        $this->createAddress(array(
+          'contact_id'       => $contactId,
+          'location_type_id' => $config->getLocationTypeId(),
+          'street_name'      => CRM_Utils_Array::value('Street Name', $record),
+          'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
+          'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
+          'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
+          'street_address'   => trim(CRM_Utils_Array::value('Street Name', $record).' '
+            .CRM_Utils_Array::value('Street Number', $record).' '.CRM_Utils_Array::value('Street Unit', $record)),
+          'city'             => CRM_Utils_Array::value('City', $record),
+          'country_id'       => $countryId
+        ));
+      }
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->createAddress(array(
+        'contact_id'       => $contactId,
+        'location_type_id' => $config->getLocationTypeId(),
+        'street_name'      => CRM_Utils_Array::value('Street Name', $record),
+        'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
+        'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
+        'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
+        'street_address'   => trim(CRM_Utils_Array::value('Street Name', $record).' '
+          .CRM_Utils_Array::value('Street Number', $record).' '.CRM_Utils_Array::value('Street Unit', $record)),
+        'city'             => CRM_Utils_Array::value('City', $record),
+        'country_id'       => $countryId
+      ));
+    }
+  }
+
+  /**
+   * Method to get the prefix value with label
+   *
+   * @param string $prefix
+   * @return array|bool
+   * @access public
+   */
+  public function getPrefixIdWithLabel($prefix) {
+    $prefixOptionGroup = CRM_Streetimport_Utils::getOptionGroupWithName("individual_prefix");
+    $params = array(
+      'option_group_id' => $prefixOptionGroup['id'],
+      'label' => $prefix,
+      'return' => 'value'
+    );
+    try {
+      return civicrm_api3('OptionValue', 'Getvalue', $params);
+    } catch (CiviCRM_API3_Exception $ex) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Method to get the prefix label with value
+   *
+   * @param int $prefixId
+   * @return array|bool
+   * @access public
+   */
+  public function getPrefixWithId($prefixId) {
+    $prefixOptionGroup = CRM_Streetimport_Utils::getOptionGroupWithName("individual_prefix");
+    $params = array(
+      'option_group_id' => $prefixOptionGroup['id'],
+      'value' => $prefixId,
+      'return' => 'label'
+    );
+    try {
+      return civicrm_api3('OptionValue', 'Getvalue', $params);
+    } catch (CiviCRM_API3_Exception $ex) {
       return FALSE;
     }
   }
