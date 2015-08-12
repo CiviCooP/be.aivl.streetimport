@@ -617,6 +617,46 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
   }
 
   /**
+   * Method to retrieve the campaign title with the campaign id
+   * (GitHub issue 63)
+   *
+   * @param int $campaignId
+   * @return string|bool
+   * @access public
+   */
+  public function getCampaignTitle($campaignId) {
+    $params = array(
+      'id' => $campaignId,
+      'return' => 'title');
+    try {
+      return civicrm_api3('Campaign', 'Getvalue', $params);
+    } catch (CiviCRM_API3_Exception $ex) {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Method to concat subject for activity with campaign title
+   * (GitHub issue 63)
+   *
+   * @param null $subject
+   * @param null $campaignId
+   * @return null|string
+   */
+  public function concatActivitySubject($subject = null, $campaignId = null) {
+    $config = CRM_Streetimport_Config::singleton();
+    if (empty($campaignId) || empty($subject)) {
+      return $subject;
+    } else {
+      $campaignTitle = $this->getCampaignTitle($campaignId);
+      $subject = $config->translate($subject);
+      if ($campaignTitle) {
+        return $subject." - ".$config->translate("Campaign").": ".$campaignTitle;
+      }
+    }
+  }
+
+  /**
    * Method to add custom data for activity
    *
    * @param int $activityId

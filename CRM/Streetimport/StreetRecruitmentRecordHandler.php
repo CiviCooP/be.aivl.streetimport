@@ -40,16 +40,17 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $donor = $this->processDonor($record, $recruiting_organisation);
 
     // STEP 5: create activity "Straatwerving"
+    $campaignId = $this->getCampaignParameter($record);
     $createdActivity = $this->createActivity(array(
                             'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
-                            'subject'            => $config->translate("Street Recruitment"),
+                            'subject'            => $this->concatActivitySubject("Street Recruitment", $campaignId),
                             'status_id'          => $config->getStreetRecruitmentActivityStatusId(),
                             'location'           => $record['Recruitment Location'],
                             'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
                             'target_contact_id'  => (int) $donor['id'],
                             'source_contact_id'  => $recruiter['id'],
                             //'assignee_contact_id'=> $recruiter['id'],
-                            'campaign_id'        => $this->getCampaignParameter($record),
+                            'campaign_id'        => $campaignId,
                             'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
                               ));
     // add custom data to the created activity

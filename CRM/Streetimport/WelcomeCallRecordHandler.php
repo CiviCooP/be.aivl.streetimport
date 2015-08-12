@@ -45,15 +45,17 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     }
 
     // STEP 5: create activity "WelcomeCall"
+    $campaignId = $this->getCampaignParameter($record);
+
     $createdActivity = $this->createActivity(array(
       'activity_type_id'   => $config->getWelcomeCallActivityType(),
-      'subject'            => $config->translate("Welcome Call"),
+      'subject'            => $this->concatActivitySubject("Welcome Call", $campaignId),
       'status_id'          => $config->getWelcomeCallActivityStatusId(),
       'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
       'location'           => $record['Recruitment Location'],
       'target_contact_id'  => (int) $donor['id'],
       'source_contact_id'  => $recruiter['id'],
-      'campaign_id'        => $this->getCampaignParameter($record),
+      'campaign_id'        => $campaignId,
       //'assignee_contact_id'=> $recruiter['id'],
       'details'            => $this->renderTemplate('activities/WelcomeCall.tpl', $record),
     ));
