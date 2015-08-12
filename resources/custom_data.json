@@ -184,7 +184,7 @@
       },
       "new_sdd_freq_unit":{
         "name":"new_sdd_freq_unit",
-        "label":"Frequentie eenhed",
+        "label":"Frequentie eenheid",
         "option_group":"frequenceUnit",
         "data_type":"String",
         "html_type":"Select",
@@ -381,7 +381,7 @@
       },
       "wc_sdd_freq_unit":{
         "name":"wc_sdd_freq_unit",
-        "label":"Frequentie eenhed",
+        "label":"Frequentie eenheid",
         "option_group":"frequenceUnit",
         "data_type":"String",
         "html_type":"Select",

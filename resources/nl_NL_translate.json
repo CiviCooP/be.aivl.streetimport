@@ -129,7 +129,7 @@
   "Error from API OptionGroup Getvalue":"Foutmelding van API OptionGroup Getvalue",
   "Processing WelcomeCall record":"Verwerkt welkomstgesprek record",
   "should already exist. Created new contact in order to process record anyway.":"moet eigenlijk al bestaan. Voor alle zekerheid toch nieuw contact toegevoegd.",
-  "Welcome Call":"Welkomtgesprek",
+  "Welcome Call":"Welkomstgesprek",
   "could not be found":"niet gevonden",
   "Bad SDD mandate type found. Contact developer":"Foutief SDD mandaat type gevonden, neem contact op met de ontwikkelaar",
   "Couldn't load contribution entity for mandate":"Kon geen bijdrage laden voor mandaat",
