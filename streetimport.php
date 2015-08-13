@@ -36,7 +36,6 @@ function streetimport_civicrm_install() {
   $bic = FALSE;
   $installedExtensions = civicrm_api3('Extension', 'Get', array());
   foreach ($installedExtensions['values'] as $installedExtension) {
-    CRM_Core_Error::debug('ext', $installedExtension);
     switch ($installedExtension['key']) {
       case "org.project60.sepa":
         if ($installedExtension['status'] == 'installed') {

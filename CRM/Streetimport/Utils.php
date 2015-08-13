@@ -361,7 +361,7 @@ class CRM_Streetimport_Utils {
         $config = CRM_Streetimport_Config::singleton();
         throw new Exception($config->translate('Could not create custom group with name').' '.$params['name']
           .' '.$config->translate('to extend').' '.$params['extends'].', '.$config->translate('error from API CustomGroup Create')
-          .': '.$ex->getMessage());
+          .': '.$ex->getMessage().", parameters : ".implode(";", $params));
       }
     }
     return $customGroup['values'][$customGroup['id']];
