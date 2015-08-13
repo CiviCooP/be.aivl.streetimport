@@ -699,7 +699,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         $this->logger->logError($config->translate("Could not update contact")." ".$currentDonor['id']);
       }
     }
-    return $this->getContact($currentDonor['id']);
+    return $this->getContact($currentDonor['id'], $record);
   }
 
   /**
@@ -779,7 +779,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
               'phone_type_id'    => $config->getPhonePhoneTypeId(),
               'location_type_id' => $config->getLocationTypeId(),
               'phone'            => $phone
-            ));
+            ), $record);
           }
         } catch (CiviCRM_API3_Exception $ex) {
           $this->createPhone(array(
@@ -787,7 +787,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
             'phone_type_id' => $config->getPhonePhoneTypeId(),
             'location_type_id' => $config->getLocationTypeId(),
             'phone' => $phone
-          ));
+          ), $record);
         }
       }
     }
@@ -805,7 +805,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
               'phone_type_id'    => $config->getMobilePhoneTypeId(),
               'location_type_id' => $config->getLocationTypeId(),
               'phone'            => $mobile
-            ));
+            ), $record);
           }
         } catch (CiviCRM_API3_Exception $ex) {
           $this->createPhone(array(
@@ -813,7 +813,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
             'phone_type_id' => $config->getMobilePhoneTypeId(),
             'location_type_id' => $config->getLocationTypeId(),
             'phone' => $mobile
-          ));
+          ), $record);
         }
       }
     }
@@ -838,14 +838,14 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
             'contact_id'       => $contactId,
             'location_type_id' => $config->getOtherLocationTypeId(),
             'email'            => CRM_Utils_Array::value('Email', $record)
-          ));
+          ), $record);
         }
       } catch (CiviCRM_API3_Exception $ex) {
         $this->createEmail(array(
           'contact_id'       => $contactId,
           'location_type_id' => $config->getLocationTypeId(),
           'email'            => CRM_Utils_Array::value('Email', $record),
-        ));
+        ), $record);
       }
     }
   }
@@ -893,7 +893,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
             .CRM_Utils_Array::value('Street Number', $record).' '.CRM_Utils_Array::value('Street Unit', $record)),
           'city'             => CRM_Utils_Array::value('City', $record),
           'country_id'       => $countryId
-        ));
+        ), $record);
       }
     } catch (CiviCRM_API3_Exception $ex) {
       $this->createAddress(array(
@@ -907,7 +907,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
           .CRM_Utils_Array::value('Street Number', $record).' '.CRM_Utils_Array::value('Street Unit', $record)),
         'city'             => CRM_Utils_Array::value('City', $record),
         'country_id'       => $countryId
-      ));
+      ), $record);
     }
   }
 
