@@ -382,7 +382,7 @@ abstract class CRM_Streetimport_RecordHandler {
   public function renderTemplate($template_path, $vars) {
     $smarty = CRM_Core_Smarty::singleton();
 
-    // first backup orgininal variables, since smarty instance is a singleton
+    // first backup original variables, since smarty instance is a singleton
     $oldVars = $smarty->get_template_vars();
     $backupFrame = array();
     foreach ($vars as $key => $value) {
