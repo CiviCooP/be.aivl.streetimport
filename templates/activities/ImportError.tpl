@@ -5,11 +5,7 @@
     <td>{$message}</td>
   </tr>
   <tr>
-    <td>{ts}Source{/ts}</td>
-    <td>{$source}</td>
-  </tr>
-  <tr>
-    <td>{ts}Line#{/ts}</td>
-    <td>{$line_id}</td>
+    <td>{ts}File Reference{/ts}</td>
+    <td>{$id}</td>
   </tr>
 </table>

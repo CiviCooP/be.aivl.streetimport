@@ -26,6 +26,8 @@ class CRM_Streetimport_Config {
   protected $welcomeCallCustomFields = array();
   protected $externalDonorIdCustomGroup = array();
   protected $externalDonorIdCustomFields = array();
+  protected $recruiterInformationCustomGroup = array();
+  protected $recruiterInformationCustomFields = array();
   protected $streetRecruitmentImportType = null;
   protected $welcomeCallImportType = null;
   protected $acceptedYesValues = array();
@@ -586,6 +588,43 @@ class CRM_Streetimport_Config {
     } else {
       // find field by name or ID
       foreach ($this->externalDonorIdCustomFields as $field_id => $customField) {
+        if ($customField['name'] == $key || $field_id==$key) {
+          return $customField;
+        } 
+      }
+      // no such field
+      return NULL;
+    }
+  }
+
+  /**
+   * Method to get the external donor id custom group (whole array or specific element)
+   *
+   * @param null $key
+   * @return mixed
+   * @access public
+   */
+  public function getRecruiterInformationCustomGroup($key = null) {
+    if (empty($key)) {
+      return $this->recruiterInformationCustomGroup;
+    } else {
+      return $this->recruiterInformationCustomGroup[$key];
+    }
+  }
+
+  /**
+   * Method to get the custom fields for external donor id (whole array or specific field array)
+   *
+   * @param null $key
+   * @return array
+   * @access public
+   */
+  public function getRecruiterInformationCustomFields($key = null) {
+    if (empty($key)) {
+      return $this->recruiterInformationCustomFields;
+    } else {
+      // find field by name or ID
+      foreach ($this->recruiterInformationCustomFields as $field_id => $customField) {
         if ($customField['name'] == $key || $field_id==$key) {
           return $customField;
         } 

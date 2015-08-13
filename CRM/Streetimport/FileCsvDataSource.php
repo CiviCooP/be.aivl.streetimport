@@ -103,8 +103,9 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
       }
       $this->next = $this->applyMapping($record);
 
-      // set ID if not defined by file/mapping
-      if (empty($this->next['__id'])) $this->next['__id'] = $this->line_nr;      
+      // add some meta data
+      if (empty($this->next['id']))     $this->next['id']     = $this->line_nr;
+      if (empty($this->next['source'])) $this->next['source'] = $this->uri;
     }
   }
   /**

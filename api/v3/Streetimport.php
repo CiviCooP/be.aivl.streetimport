@@ -28,21 +28,21 @@ function civicrm_api3_streetimport_importcsvfile($params) {
 
   // first, get the parameters sorted out
   if (isset($params['source_folder'])) {
-    $source_folder = $params['source_folder'];
+    $source_folder = rtrim($params['source_folder'], DIRECTORY_SEPARATOR);
   } else {
-    $source_folder = $config->getImportFileLocation();
+    $source_folder = rtrim($config->getImportFileLocation(), DIRECTORY_SEPARATOR);
   }
 
   if (isset($params['archive_folder'])) {
-    $archive_folder = $params['archive_folder'];
+    $archive_folder = rtrim($params['archive_folder'], DIRECTORY_SEPARATOR);
   } else {
-    $archive_folder = $config->getProcessedFileLocation();
+    $archive_folder = rtrim($config->getProcessedFileLocation(), DIRECTORY_SEPARATOR);
   }
 
   if (isset($params['failed_folder'])) {
-    $failed_folder = $params['failed_folder'];
+    $failed_folder = rtrim($params['failed_folder'], DIRECTORY_SEPARATOR);
   } else {
-    $failed_folder = $config->getFailFileLocation();
+    $failed_folder = rtrim($config->getFailFileLocation(), DIRECTORY_SEPARATOR);
   }
 
   $source_file = NULL;
@@ -52,8 +52,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
 
   } else {
     // NO filepath given, get one from the directory
-    $files = glob($source_folder . "/*.csv");
-    
+    $files = glob($source_folder . DIRECTORY_SEPARATOR . "*.csv");
     // make sure it's sorted
     sort($files);    
   }
@@ -64,15 +63,25 @@ function civicrm_api3_streetimport_importcsvfile($params) {
       if (!$source_file) {
         $result->logMessage($config->translate("No source files found"));
       } else {
+        // set log file first
+        $log_file_path = dirname($source_file) . DIRECTORY_SEPARATOR . basename($source_file) . '-' . date('YmdHis') . '.log';
+        $result->setLogFile($log_file_path);
+
         $dataSource = new CRM_Streetimport_FileCsvDataSource($source_file, $result);
         CRM_Streetimport_RecordHandler::processDataSource($dataSource);
 
-        // finally: move the file to the failed folder
+        // finally: move the file to the failed folder, along with the .log file
         if (!empty($archive_folder)) {
           $processed_file = $archive_folder . DIRECTORY_SEPARATOR . basename($source_file);
           $success = rename($source_file, $processed_file);
           if ($success) {
             $result->logMessage($config->translate("Moved file")." ".$source_file." ".$config->translate("to")." ".$processed_file);
+
+            // move the log file to the same location
+            $log_file_path = $result->getLogFile();
+            $log_file_new  = $archive_folder . DIRECTORY_SEPARATOR . basename($log_file_path);
+            $result->setLogFile(NULL); // do we need to close the log file before moving?
+            rename($log_file_path, $log_file_new);
           } else {
             $result->abort($config->translate("FAILED to move file")." ".$source_file.$config->translate("to")." ".$processed_file);
           }
@@ -88,6 +97,13 @@ function civicrm_api3_streetimport_importcsvfile($params) {
         $success = rename($source_file, $failed_file);
         if ($success) {
           $result->logMessage($config->translate("Moved failed file")." ".$source_file." ".$config->translate("to")." ".$failed_file);
+
+          // move the log file to the same location        
+          $log_file_path = $result->getLogFile();
+          $log_file_new  = $failed_folder . DIRECTORY_SEPARATOR . basename($log_file_path);
+          $result->setLogFile(NULL); // do we need to close the log file before moving?
+          rename($log_file_path, $log_file_new);
+
         } else {
           $result->abort($config->translate("FAILED to move failed file")." ".$source_file.$config->translate("to")." ".$failed_file);
         }
