@@ -136,5 +136,6 @@
   "SDD mandate update requested":"SDD mandaat update aangevraagd",
   "but this has not been implemented yet":"maar dit is nog niet geïmplementeerd",
   "No SDD mandate update required":"Geen SDD mandaat update nodig",
-  "Date Format of CSV":"Datum formaat in CSV"
+  "Date Format of CSV":"Datum formaat in CSV",
+  "Group for deduping new contacts":"Groep voor ontdubbelen contacten"
 }

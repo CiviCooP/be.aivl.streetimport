@@ -43,6 +43,9 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
         case 'newsletter_group_id':
           $this->add('select', $settingName, $config->translate($settingValues['label']), $groupList, TRUE);
           break;
+        case 'dedupe_group_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $groupList, TRUE);
+          break;
         case 'membership_type_id':
           $this->add('select', $settingName, $config->translate($settingValues['label']), $membershipTypeList, TRUE);
           break;

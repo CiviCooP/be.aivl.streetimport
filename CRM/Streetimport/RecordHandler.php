@@ -177,6 +177,7 @@ abstract class CRM_Streetimport_RecordHandler {
     try {
       $result  = civicrm_api3('Contact', 'create', $contact_data);
       $contact = $result['values'][$result['id']];
+      $this->addContactToGroup($contact['id'], $config->getDedupeContactsGroupID(), $record);
       $this->logger->logDebug($config->translate("Contact created").": ".$contact['id'], $record);
       return $contact;
     } catch (CiviCRM_API3_Exception $ex) {

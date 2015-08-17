@@ -31,7 +31,6 @@ class CRM_Streetimport_Config {
   protected $streetRecruitmentImportType = null;
   protected $welcomeCallImportType = null;
   protected $acceptedYesValues = array();
-  protected $newsLetterGroupId = null;
   protected $membershipTypeId = null;
   protected $recruitingOrganizationsGroupId = null;
   protected $frequencyUnitOptionGroup = null;
@@ -44,6 +43,7 @@ class CRM_Streetimport_Config {
    * @param string $context
    */
   function __construct($context) {
+
     $settings = civicrm_api3('Setting', 'Getsingle', array());
     $this->resourcesPath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
     $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
@@ -310,6 +310,17 @@ class CRM_Streetimport_Config {
   public function getNewsletterGroupID() {
     $importSettings = $this->getImportSettings();
     return $importSettings['newsletter_group_id']['value'];
+  }
+
+  /**
+   * Method to retrieve the dedupe contacts group id
+   *
+   * @return int
+   * @access public
+   */
+  public function getDedupeContactsGroupID() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['dedupe_group_id']['value'];
   }
 
   /**
