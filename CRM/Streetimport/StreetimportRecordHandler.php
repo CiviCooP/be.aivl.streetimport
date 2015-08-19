@@ -882,12 +882,14 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       'city' => CRM_Utils_Array::value('City', $record),
       'country_id' => $countryId
     );
-    if (!empty(CRM_Utils_Array::value('Street Unit', $record))) {
-      $params['street_unit'] = CRM_Utils_Array::value('Street Unit', $record);
+    $streetUnitFromRecord = CRM_Utils_Array::value('Street Unit', $record);
+    $streetNameFromRecord = CRM_Utils_Array::value('Street Name', $record);
+    $streetNumberFromRecord = CRM_Utils_Array::value('Street Number', $record);
+    if (!empty($streetUnitFromRecord)) {
+      $params['street_unit'] = $streetUnitFromRecord;
     }
     $locationTypeId = $config->getLocationTypeId();
-    $streetAddress = trim(CRM_Utils_Array::value('Street Name', $record).' '
-      .CRM_Utils_Array::value('Street Number', $record).' '.CRM_Utils_Array::value('Street Unit', $record));
+    $streetAddress = trim($streetNameFromRecord.' '.$streetNumberFromRecord.' '.$streetUnitFromRecord);
     try {
       $addressCount = civicrm_api3('Address', 'Getcount', $params);
       if ($addressCount == 0) {
