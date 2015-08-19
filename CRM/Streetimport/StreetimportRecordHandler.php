@@ -831,10 +831,11 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
   public function additionalEmail($record, $contactId) {
     $config = CRM_Streetimport_Config::singleton();
     $locationTypeId = $config->getLocationTypeId();
-    if (!empty(CRM_Utils_Array::value('Email', $record))) {
+    $emailFromRecord = CRM_Utils_Array::value('Email', $record);
+    if (!empty($emailFromRecord)) {
       $params = array(
         'contact_id' => $contactId,
-        'email' => CRM_Utils_Array::value('Email', $record));
+        'email' => $emailFromRecord);
       try {
         $emailCount = civicrm_api3('Email', 'Getcount', $params);
         if ($emailCount == 0) {
@@ -862,8 +863,9 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   public function additionalAddress($record, $contactId) {
     $config = CRM_Streetimport_Config::singleton();
-    if (!empty(CRM_Utils_Array::value('Country', $record))) {
-      $country = CRM_Streetimport_Utils::getCountryByIso(CRM_Utils_Array::value('Country', $record));
+    $countryFromRecord = CRM_Utils_Array::value('Country', $record);
+    if (!empty($countryFromRecord)) {
+      $country = CRM_Streetimport_Utils::getCountryByIso($countryFromRecord);
       if (empty($country)) {
         $countryId = $config->getDefaultCountryId();
       } else {
