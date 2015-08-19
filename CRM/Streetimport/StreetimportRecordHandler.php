@@ -546,7 +546,9 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
             'label' => trim($part));
           try {
             $optionValue = civicrm_api3('OptionValue', 'Create', $createParams);
-            $tempAreas[] = $optionValue['values']['value'];
+            if (isset($optionValue['values']['value'])) {
+              $tempAreas[] = $optionValue['values']['value'];
+            }
           } catch (CiviCRM_API3_Exception $ex) {}
         }
       }
