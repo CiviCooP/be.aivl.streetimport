@@ -765,6 +765,9 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   public function additionalPhone($record, $contactId) {
     $config = CRM_Streetimport_Config::singleton();
+    $locationTypeId = $config->getLocationTypeId();
+    $phoneTypeId = $config->getPhonePhoneTypeId();
+    $mobileTypeId = $config->getMobilePhoneTypeId();
     $phoneArray = array(CRM_Utils_Array::value('Telephone1', $record), CRM_Utils_Array::value('Telephone2', $record));
     foreach ($phoneArray as $phone) {
       if (!empty($phone)) {
@@ -776,16 +779,16 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
           if ($phoneCount == 0) {
             $this->createPhone(array(
               'contact_id'       => $contactId,
-              'phone_type_id'    => $config->getPhonePhoneTypeId(),
-              'location_type_id' => $config->getLocationTypeId(),
+              'phone_type_id'    => $phoneTypeId,
+              'location_type_id' => $locationTypeId,
               'phone'            => $phone
             ), $record);
           }
         } catch (CiviCRM_API3_Exception $ex) {
           $this->createPhone(array(
             'contact_id' => $contactId,
-            'phone_type_id' => $config->getPhonePhoneTypeId(),
-            'location_type_id' => $config->getLocationTypeId(),
+            'phone_type_id' => $phoneTypeId,
+            'location_type_id' => $locationTypeId,
             'phone' => $phone
           ), $record);
         }
@@ -802,16 +805,16 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
           if ($phoneCount == 0) {
             $this->createPhone(array(
               'contact_id'       => $contactId,
-              'phone_type_id'    => $config->getMobilePhoneTypeId(),
-              'location_type_id' => $config->getLocationTypeId(),
+              'phone_type_id'    => $mobileTypeId,
+              'location_type_id' => $locationTypeId,
               'phone'            => $mobile
             ), $record);
           }
         } catch (CiviCRM_API3_Exception $ex) {
           $this->createPhone(array(
             'contact_id' => $contactId,
-            'phone_type_id' => $config->getMobilePhoneTypeId(),
-            'location_type_id' => $config->getLocationTypeId(),
+            'phone_type_id' => $mobileTypeId,
+            'location_type_id' => $locationTypeId,
             'phone' => $mobile
           ), $record);
         }
@@ -827,6 +830,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   public function additionalEmail($record, $contactId) {
     $config = CRM_Streetimport_Config::singleton();
+    $locationTypeId = $config->getLocationTypeId();
     if (!empty(CRM_Utils_Array::value('Email', $record))) {
       $params = array(
         'contact_id' => $contactId,
@@ -836,14 +840,14 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         if ($emailCount == 0) {
           $this->createEmail(array(
             'contact_id'       => $contactId,
-            'location_type_id' => $config->getOtherLocationTypeId(),
+            'location_type_id' => $locationTypeId,
             'email'            => CRM_Utils_Array::value('Email', $record)
           ), $record);
         }
       } catch (CiviCRM_API3_Exception $ex) {
         $this->createEmail(array(
           'contact_id'       => $contactId,
-          'location_type_id' => $config->getLocationTypeId(),
+          'location_type_id' => $locationTypeId,
           'email'            => CRM_Utils_Array::value('Email', $record),
         ), $record);
       }
@@ -879,18 +883,20 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     if (!empty(CRM_Utils_Array::value('Street Unit', $record))) {
       $params['street_unit'] = CRM_Utils_Array::value('Street Unit', $record);
     }
+    $locationTypeId = $config->getLocationTypeId();
+    $streetAddress = trim(CRM_Utils_Array::value('Street Name', $record).' '
+      .CRM_Utils_Array::value('Street Number', $record).' '.CRM_Utils_Array::value('Street Unit', $record));
     try {
       $addressCount = civicrm_api3('Address', 'Getcount', $params);
       if ($addressCount == 0) {
         $this->createAddress(array(
           'contact_id'       => $contactId,
-          'location_type_id' => $config->getLocationTypeId(),
+          'location_type_id' => $locationTypeId,
           'street_name'      => CRM_Utils_Array::value('Street Name', $record),
           'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
           'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
           'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
-          'street_address'   => trim(CRM_Utils_Array::value('Street Name', $record).' '
-            .CRM_Utils_Array::value('Street Number', $record).' '.CRM_Utils_Array::value('Street Unit', $record)),
+          'street_address'   => $streetAddress,
           'city'             => CRM_Utils_Array::value('City', $record),
           'country_id'       => $countryId
         ), $record);
@@ -898,14 +904,12 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     } catch (CiviCRM_API3_Exception $ex) {
       $this->createAddress(array(
         'contact_id'       => $contactId,
-        'location_type_id' => $config->getLocationTypeId(),
+        'location_type_id' => $locationTypeId,
         'street_name'      => CRM_Utils_Array::value('Street Name', $record),
         'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
         'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
         'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
-        'street_address'   => trim(CRM_Utils_Array::value('Street Name', $record).' '
-          .CRM_Utils_Array::value('Street Number', $record).' '.CRM_Utils_Array::value('Street Unit', $record)),
-        'city'             => CRM_Utils_Array::value('City', $record),
+        'street_address'   => $streetAddress,
         'country_id'       => $countryId
       ), $record);
     }
