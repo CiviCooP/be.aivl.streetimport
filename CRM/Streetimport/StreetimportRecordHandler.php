@@ -384,7 +384,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // fill the other required fields
     $mandate_data['contact_id']         = $donor_id;
     $mandate_data['reference']          = CRM_Utils_Array::value('Mandate Reference', $record);
-    $mandate_data['amount']             = (float) CRM_Utils_Array::value('Amount', $record);
+    $mandate_data['amount']             = (float) CRM_Streetimport_Utils::fixImportedAmount(CRM_Utils_Array::value('Amount', $record));
     $mandate_data['currency']           = 'EUR';
     $mandate_data['start_date']         = date('YmdHis', $start_date_parsed);
     $mandate_data['creation_date']      = date('YmdHis'); // NOW
@@ -410,6 +410,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // verify campaign_id
     if (!empty($mandate_data['campaign_id'])) {
       $mandate_data['campaign_id'] = (int) $mandate_data['campaign_id'];
+
       $result = civicrm_api3('Campaign', 'getcount', array('id' => $mandate_data['campaign_id']));
       if ($result != 1) {
         $config = CRM_Streetimport_Config::singleton();
