@@ -905,6 +905,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
           'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
           'street_address'   => $streetAddress,
           'city'             => CRM_Utils_Array::value('City', $record),
+          'is_primary'       => 1,
           'country_id'       => $countryId
         ), $record);
       }
@@ -917,6 +918,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
         'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
         'street_address'   => $streetAddress,
+        'is_primary'       => 1,
         'country_id'       => $countryId
       ), $record);
     }
