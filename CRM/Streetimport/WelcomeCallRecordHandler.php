@@ -88,11 +88,12 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
 
     // STEP 9: create activity 'Opvolgingsgesprek' if requested
     if ($this->isTrue($record, "Follow Up Call")) {
+      $followUpDateTime = date('YmdHis', strtotime("+".$config->getFollowUpOffsetDays()." day"));
       $this->createActivity(array(
         'activity_type_id'   => $config->getFollowUpCallActivityType(),
         'subject'            => $config->translate("Follow Up Call from")." ".$config->translate('Welcome Call'),
         'status_id'          => $config->getFollowUpCallActivityStatusId(),
-        'activity_date_time' => date('YmdHis', strtotime("+1 day")),
+        'activity_date_time' => $followUpDateTime,
         'target_contact_id'  => (int) $donor['id'],
         'source_contact_id'  => $recruiter['id'],
         'assignee_contact_id'=> $config->getFundraiserContactID(),

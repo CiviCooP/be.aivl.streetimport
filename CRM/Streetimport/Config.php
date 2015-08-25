@@ -379,6 +379,17 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get the follow up offset days
+   *
+   * @return int
+   * @access public
+   */
+  public function getFollowUpOffsetDays() {
+    $importSettings = $this->getImportSettings();
+    return $importSettings['follow_up_offset_days']['value'];
+  }
+
+  /**
    * Method to get the offset days
    *
    * @return int

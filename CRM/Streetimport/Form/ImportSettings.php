@@ -198,6 +198,9 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     if (!ctype_digit($fields['offset_days'])) {
       $errors['offset_days'] = $config->translate('This field can only contain numbers!');
     }
+    if (!ctype_digit($fields['follow_up_offset_days'])) {
+      $errors['follow_up_offset_days'] = $config->translate('This field can only contain numbers!');
+    }
     if (empty($errors)) {
       return TRUE;
     } else {
