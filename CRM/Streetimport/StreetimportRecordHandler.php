@@ -75,10 +75,12 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $recruiter_id_field => CRM_Utils_Array::value('Recruiter ID', $record),
     );
 
-    // "If the first name and last name are empty, the values 'Unknown Werver' 
+    // "If the first name and last name are empty, the values recruiter_id
     //  "and 'Organization name of recruiting org' will be used as first and last name."
-    if (empty($record['Recruiter First Name']) && empty($record['Recruiter Last Name'])) {
-      $recruiter_data['first_name'] = $config->translate('Unknown Recruiter');
+    $testFirst = trim($record['Recruiter First Name']);
+    $testLast = trim($record['Recruiter Last Name']);
+    if (empty($testFirst) && empty($testLast)) {
+      $recruiter_data['first_name'] = $record['Recruiter ID'];
       $recruiter_data['last_name']  = CRM_Utils_Array::value('organization_name', $recruiting_organisation);
       $recruiter_data['prefix']     = '';
     }
