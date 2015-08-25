@@ -35,8 +35,10 @@ Depending on the configuration the **street recruitment** record import will aut
 Depending on the configuration the **welcome call** record import will automatically do the following:
 * a new contact for the recruiter if it does not exist yet with the contact sub type 'recruiter' and an active relationship 'recruiter for' with the recruiting organziation
 * it will lookup the donor with the donorID of the recruiting organization, using the custom group where the donorID was stored at Street Recruitment
-* it will add phone number if there is one for the donor that is not in CiviCRM yet
-* it will update email, address, birth date and gender if it has to
+* it will add phone number(s) if there is one for the donor that is not in CiviCRM yet
+* it will add email(s) if there is one for the donor that is not in CiviCRM yet
+* it will add an address for the donor if there is one that CiviCRM does not know yet, and set that new address as the primary one
+* it will update birth date and gender if it has to
 * it will add a bank account if not there yet
 * the contact will be added to the newsletter group if appropriate if it not there yet
 * a membership will be created for the contact if appropriate and not existing yet
@@ -46,6 +48,7 @@ Depending on the configuration the **welcome call** record import will automatic
 * if any error occurred in the process, the data will still be imported if possible but an activity of the type 'Import Error' will be created with the flagged problem, assigned to the error handling employee specified in the settings (see section Import Settings)
 
 Once the complete file is processed, the file will be moved to a folder specified in the settings.
+If the import of the file fails, the file will be moved to a folder specified in the settings.
 
 ## INSTALLATION ##
 You can install the extension by downloading a zip file from GitHub or by pulling, fetching or cloning the repository. You can then use the CiviCRM manage extensions menu option to install the extension.
@@ -75,7 +78,10 @@ If a donor during street recruitment or welcome call answered that they would li
 The scheduled job that calls the street recruitment process api will by default try to read all CSV files in this folder in alphabetical order.
 
 ### Folder to move processed CSV files to ###
-Once the CSV file has been processed completely, it will be moved to this folder to make sure the files are kept but not processed more than one time.
+Once the CSV file has been processed completely, it will be moved to this folder to make sure the files are kept but not processed more than one time. A log file (showing the name of the file and ending on .log) will detail what has been done.
+
+### Folder to move failed CSV files to ###
+Once the CSV file fails, it will be moved to this folder. A log file (showing the name of the file and ending on .log) will details what the error was.
 
 ### Newsletter group ###
 If the CSV record for the donor has a value that is seen as 'yes' in the newsletter column, the contact will be added to this group.
@@ -85,6 +91,9 @@ If the CSV record for the donor has a value that is seen as 'yes' in the members
 
 ### Offset days for SDD ###
 When the mandate is created, this is the number of days that will be added to the start date before the first transaction will be done.
+
+### Offset days for follow up activity ###
+When the follow up activity is created, the activity will be scheduled for the run date + the amount of days specified in this setting.
 
 ### Phone type for landlines ###
 The phone type that will be used for the first and second land ('normal') phone numbers in the donor CSV record.
@@ -119,3 +128,8 @@ In the CSV record the prefix will determine the gender. If the value is not 'men
 ### Relationship types for other/employee ###
 When specifying the employee dealing with the Import Errors or Folluw Up Calls, you do not get a select list of all contacts in your database but only 'your' employees. By default the 'Employee of' relationship type id will be used, but here you can specify more relationsships to be seen as employees.
 
+### Date Format of CSV ###
+Details the date format that is used in the CSV import files. You can select an option from the list, other types are not allowed.
+
+### Group for deduping new contacts ###
+All imported contacts will be added to this group with the purpose of deduping the newly imported contacts regularly.
