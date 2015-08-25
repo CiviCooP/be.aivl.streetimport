@@ -25,7 +25,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
    */
   public function reset() {
     $config = CRM_Streetimport_Config::singleton();
-    $this->set_separator();
+    $this->validate_separator();
     // try loading the given file
     $this->reader  = fopen($this->uri, 'r');
     $this->header  = NULL;
@@ -109,19 +109,15 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     }
   }
   /**
-   * Function to check which csv separator to use. Assumption is that
-   * separator is ';', if reading first record return record with only
-   * 1 field, then ',' should be used
+   * Function to validate which csv separator to use. Only ';' is allowed
    */
-  function set_separator() {
+  function validate_separator() {
+    $config = CRM_Streetimport_Config::singleton();
     $testSeparator = fopen($this->uri, 'r');
-    /*
-     * first test if semi-colon or comma separated, based on assumption that
-     * it is semi-colon and it should be comma if I only get one record then
-     */
     if ($testRow = fgetcsv($testSeparator, 0, ';')) {
       if (!isset($testRow[1])) {
-        $this->default_delimiter = ",";
+        $this->logger->abort($config->translate("File")." ".$this->uri." "
+            .$config->translate("does not have ; as a field delimiter and can not be processed"));
       } else {
         $this->default_delimiter = ";";
       }

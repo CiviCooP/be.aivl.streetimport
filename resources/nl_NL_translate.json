@@ -137,5 +137,6 @@
   "but this has not been implemented yet":"maar dit is nog niet geïmplementeerd",
   "No SDD mandate update required":"Geen SDD mandaat update nodig",
   "Date Format of CSV":"Datum formaat in CSV",
-  "Group for deduping new contacts":"Groep voor ontdubbelen contacten"
+  "Group for deduping new contacts":"Groep voor ontdubbelen contacten",
+  "does not have ; as a field delimiter and can not be processed":"heeft geen ; als veldscheidingsteken, kan niet verwerkt worden."
 }
