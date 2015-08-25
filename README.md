@@ -10,9 +10,8 @@ The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres 
 [3 IMPORT SETTINGS] (#import-settings)
 
 [3.1 Employee handling errors] (#employee-handling-errors)
-
 [3.2 Employee doing folluw up calls] (#employee-doing-follow-up-calls)
-
+[3.3 Folder to get CSV files from] (#folder-to-get-csv-files-from)
 
 
 ## BASIC FUNCTIONALITY ##
