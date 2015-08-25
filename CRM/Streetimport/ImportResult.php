@@ -212,16 +212,24 @@ class CRM_Streetimport_ImportResult {
         'title'   => $this->config->translate($title),
         'record'  => $record,
         'id'      => $this->getIDforRecord($record));
-      $handler->createActivity(array(
-                            'activity_type_id'   => $this->config->getImportErrorActivityType(),
-                            'subject'            => $this->config->translate($title),
-                            'status_id'          => $this->config->getImportErrorActivityStatusId(),
-                            'activity_date_time' => date('YmdHis'),
-                            // 'target_contact_id'  => (int) $this->config->getAdminContactID(),
-                            'source_contact_id'  => (int) $this->config->getAdminContactID(),
-                            'assignee_contact_id'=> (int) $this->config->getAdminContactID(),
-                            'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
-                            ), $record);
+
+      $activityParams = array(
+        'activity_type_id'   => $this->config->getImportErrorActivityType(),
+        'subject'            => $this->config->translate($title),
+        'status_id'          => $this->config->getImportErrorActivityStatusId(),
+        'activity_date_time' => date('YmdHis'),
+        'source_contact_id'  => (int) $this->config->getAdminContactID(),
+        'assignee_contact_id'=> (int) $this->config->getAdminContactID(),
+        'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
+      );
+      // issue #73 set donor as activity_target_id for error creating SDD mandate
+      if ($title == $this->config->translate("Create SDD Mandate Error")) {
+        $donor = $handler->getDonorWithExternalId($record['DonorID'], $record['Recruiting organization ID'], $record);
+        if (!empty($donor)) {
+          $activityParams['target_contact_id'] = $donor['id'];
+        }
+      }
+      $handler->createActivity($activityParams, $record);
       
     } catch (Exception $e) {
       error_log($this->config->translate("Error while creating an activity to report another error").": " . $e->getMessage());

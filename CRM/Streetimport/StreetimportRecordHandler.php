@@ -431,7 +431,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       return $mandate;
     } catch (CiviCRM_API3_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logError($config->translate("Error while trying to create mandate. Error was").": " . $ex->getMessage(), $record, $config->translate("Create SDD Mandate Error"));
+      $this->logger->logError($config->translate("Error while trying to create mandate. Error was").": " . $ex->getMessage(), $record, "Create SDD Mandate Error");
       return NULL;
     }
   }
