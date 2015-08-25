@@ -25,6 +25,33 @@ The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres 
 
 [3.8 Offset days for SDD mandate] (#offset-days-for-sdd)
 
+[3.9 Offset days for Follow Up activity] (#offset-days-for-follow-up-activity)
+
+[3.10 Phone type for landlines] (#phone-type-for-landlines)
+
+[3.11 Phone type for mobiles] (#phone-type-for-mobiles)
+
+[3.12 Location type for address, email and first phones] (#location-type-for-address-and-1st-phone)
+
+[3.13 Location type for additional phones] (#location-type-for-additional-phones)
+
+[3.14 Default country] (#default-country)
+
+[3.15 Default financial type for SDD] (#default-financial-type-for-sdd)
+
+[3.16 Prefix for individual or household] (#prefix-for-individualhousehold)
+
+[3.17 Gender for female contacts imported] (#gender-for-female-import)
+
+[3.18 Gender for male contacts imported] (#gender-for-male-imports)
+
+[3.19 Gender for unknown import] (#gender-for-unknown-import)
+
+[3.20 Relationship types for employees or other] (#relationship-types-for-otheremployee)
+
+[3.21 Date format used in CSV] (#date-format-of-csv)
+
+[3.22 Group for deduping contacts] (#group-for-deduping-new-contacts)
 
 ## BASIC FUNCTIONALITY ##
 AIVL use street recruitment to get new donors and SEPA Direct Debits (SDD). The actual street recruitment is done by a supplier, who follows up the recruitment with a welcoming call to the new donor within a week of recruitment.
