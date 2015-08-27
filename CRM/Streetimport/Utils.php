@@ -677,17 +677,4 @@ class CRM_Streetimport_Utils {
     }
     return $inDay.'-'.$inMonth.'-'.$inYear;
   }
-
-  /**
-   * Function to change the imported amount if digital comma is used rather than dot
-   *
-   * @param $importedAmount
-   * @return string
-   * @access public
-   * @static
-   */
-  public static function fixImportedAmount($importedAmount) {
-    $amountString = (string) $importedAmount;
-    return str_replace(',', '.', $amountString);
-  }
 }

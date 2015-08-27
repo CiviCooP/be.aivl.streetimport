@@ -386,7 +386,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // fill the other required fields
     $mandate_data['contact_id']         = $donor_id;
     $mandate_data['reference']          = CRM_Utils_Array::value('Mandate Reference', $record);
-    $mandate_data['amount']             = (float) CRM_Streetimport_Utils::fixImportedAmount(CRM_Utils_Array::value('Amount', $record));
+    $mandate_data['amount']             = (float) $this->fixImportedAmount(CRM_Utils_Array::value('Amount', $record));
     $mandate_data['currency']           = 'EUR';
     $mandate_data['start_date']         = date('YmdHis', $start_date_parsed);
     $mandate_data['creation_date']      = date('YmdHis'); // NOW
@@ -966,5 +966,21 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     } catch (CiviCRM_API3_Exception $ex) {
       return FALSE;
     }
+  }
+
+  /**
+   * Function to change the imported amount if digital comma is used rather than dot
+   * and round it to 2 decimals (issue #81)
+   *
+   * @param $importedAmount
+   * @return string
+   * @access public
+   * @static
+   */
+  public function fixImportedAmount($importedAmount) {
+    $amountString = (string) $importedAmount;
+    $amountString = str_replace(',', '.', $amountString);
+    $amount = (float) $amountString;
+    return round($amount, 2);
   }
 }
