@@ -299,7 +299,8 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $customData['wc_sdd_iban'] = array('value' => $record['IBAN'], 'type' => 'String');
     $customData['wc_sdd_bank_name'] = array('value' => $record['Bank Name'], 'type' => 'String');
     $customData['wc_sdd_bic'] = array('value' => $record['Bic'], 'type' => 'String');
-    $customData['wc_sdd_amount'] = array('value' => $record['Amount'], 'type' => 'Money');
+    $fixedAmount = CRM_Streetimport_Utils::fixImportedAmount($record['Amount']);
+    $customData['wc_sdd_amount'] = array('value' => $fixedAmount, 'type' => 'Money');
     $customData['wc_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
     $customData['wc_sdd_freq_unit'] = array('value' => $this->getFrequencyUnit($record['Frequency Unit']), 'type' => 'Integer');
     if (!empty($record['Start Date'])) {
