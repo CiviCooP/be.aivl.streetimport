@@ -21,13 +21,13 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
   /** 
    * process the given record
    *
-   * @param $record  an array of key=>value pairs
+   * @param array $record array of key=>value pairs
    * @return true
    * @throws exception if failed
    */
   public function processRecord($record) {
     $config = CRM_Streetimport_Config::singleton();
-    $this->logger->logDebug($config->translate("Processing StreetRecruitment record..."), $record);
+    $this->logger->logDebug($config->translate("Processing StreetRecruitment record")."...", $record);
 
     // STEP 1: lookup recruiting organisation
     $recruiting_organisation = $this->getRecruitingOrganisation($record);
@@ -38,61 +38,66 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
     // STEP 3: look up / create donor
     $donor = $this->processDonor($record, $recruiting_organisation);
-    // STEP 5: create activity "Straatwerving"
-    $campaignId = $this->getCampaignParameter($record);
-    $createdActivity = $this->createActivity(array(
-                            'activity_type_id'   => $config->getStreetRecruitmentActivityType(),
-                            'subject'            => $this->concatActivitySubject("Street Recruitment", $campaignId),
-                            'status_id'          => $config->getStreetRecruitmentActivityStatusId(),
-                            'location'           => $record['Recruitment Location'],
-                            'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
-                            'target_contact_id'  => (int) $donor['id'],
-                            'source_contact_id'  => $recruiter['id'],
-                            //'assignee_contact_id'=> $recruiter['id'],
-                            'campaign_id'        => $campaignId,
-                            'details'            => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
-                              ), $record);
-    // add custom data to the created activity
-    $this->createActivityCustomData($createdActivity->id, $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
 
-    // STEP 6: create SEPA mandate
-    $mandate_data = $this->extractMandate($record, $donor['id'], $record);
-    $mandate = $this->createSDDMandate($mandate_data, $record);
-    if ($mandate) {
-      // if successful, store the bank account data
-      $this->saveBankAccount($mandate_data, $record);
-    }
+    // next steps only if we have a donor (issue #82)
+    if (!empty($donor)) {
 
-    // STEP 7: add to newsletter group if requested
-    if ($this->isTrue($record, "Newsletter")) {
-      $newsletter_group_id = $config->getNewsletterGroupID();
-      $this->addContactToGroup($donor['id'], $newsletter_group_id, $record);
-    }
-    
-    // STEP 8: create membership if requested
-    if ($this->isTrue($record, "Member")) {
-      $this->createMembership(array(
-        'contact_id'         => $donor['id'],
-        'membership_type_id' => $config->getMembershipTypeID(),
-        'membership_source' => $config->translate('Activity').' '.$config->translate('Street Recruitment').' '.$createdActivity->id
-      ), $recruiter['id'], $record);
-    }
+      // STEP 5: create activity "Straatwerving"
+      $campaignId = $this->getCampaignParameter($record);
+      $createdActivity = $this->createActivity(array(
+          'activity_type_id' => $config->getStreetRecruitmentActivityType(),
+          'subject' => $this->concatActivitySubject("Street Recruitment", $campaignId),
+          'status_id' => $config->getStreetRecruitmentActivityStatusId(),
+          'location' => $record['Recruitment Location'],
+          'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
+          'target_contact_id' => (int)$donor['id'],
+          'source_contact_id' => $recruiter['id'],
+        //'assignee_contact_id'=> $recruiter['id'],
+          'campaign_id' => $campaignId,
+          'details' => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
+      ), $record);
+      // add custom data to the created activity
+      $this->createActivityCustomData($createdActivity->id, $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
+
+      // STEP 6: create SEPA mandate
+      $mandate_data = $this->extractMandate($record, $donor['id'], $record);
+      $mandate = $this->createSDDMandate($mandate_data, $record);
+      if ($mandate) {
+        // if successful, store the bank account data
+        $this->saveBankAccount($mandate_data, $record);
+      }
+
+      // STEP 7: add to newsletter group if requested
+      if ($this->isTrue($record, "Newsletter")) {
+        $newsletter_group_id = $config->getNewsletterGroupID();
+        $this->addContactToGroup($donor['id'], $newsletter_group_id, $record);
+      }
+
+      // STEP 8: create membership if requested
+      if ($this->isTrue($record, "Member")) {
+        $this->createMembership(array(
+            'contact_id' => $donor['id'],
+            'membership_type_id' => $config->getMembershipTypeID(),
+            'membership_source' => $config->translate('Activity') . ' ' . $config->translate('Street Recruitment') . ' ' . $createdActivity->id
+        ), $recruiter['id'], $record);
+      }
 
 
-    // STEP 8: create activity 'Opvolgingsgesprek' if requested
-    if ($this->isTrue($record, "Follow Up Call")) {
-      $followUpDateTime = date('YmdHis', strtotime("+".$config->getFollowUpOffsetDays()." day"));
-      $this->createActivity(array(
-                              'activity_type_id'   => $config->getFollowUpCallActivityType(),
-                              'subject'            => $config->translate("Follow Up Call from")." ".$config->translate('Street Recruitment'),
-                              'status_id'          => $config->getFollowUpCallActivityStatusId(),
-                              'activity_date_time' => $followUpDateTime,
-                              'target_contact_id'  => (int) $donor['id'],
-                              'source_contact_id'  => $recruiter['id'],
-                              'assignee_contact_id'=> $config->getFundraiserContactID(),
-                              'campaign_id'        => $this->getCampaignParameter($record),
-                              'details'            => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
-                              ), $record);
+      // STEP 8: create activity 'Opvolgingsgesprek' if requested
+      if ($this->isTrue($record, "Follow Up Call")) {
+        $followUpDateTime = date('YmdHis', strtotime("+" . $config->getFollowUpOffsetDays() . " day"));
+        $this->createActivity(array(
+            'activity_type_id' => $config->getFollowUpCallActivityType(),
+            'subject' => $config->translate("Follow Up Call from") . " " . $config->translate('Street Recruitment'),
+            'status_id' => $config->getFollowUpCallActivityStatusId(),
+            'activity_date_time' => $followUpDateTime,
+            'target_contact_id' => (int)$donor['id'],
+            'source_contact_id' => $recruiter['id'],
+            'assignee_contact_id' => $config->getFundraiserContactID(),
+            'campaign_id' => $this->getCampaignParameter($record),
+            'details' => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
+        ), $record);
+      }
     }
 
     // DONE

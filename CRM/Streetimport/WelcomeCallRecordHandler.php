@@ -27,7 +27,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
    */
   public function processRecord($record) {
     $config = CRM_Streetimport_Config::singleton();
-    $this->logger->logDebug($config->translate("Processing WelcomeCall record..."), $record);
+    $this->logger->logDebug($config->translate("Processing WelcomeCall record")."...", $record);
 
     // STEP 1: lookup recruiting organisation
     $recruiting_organisation = $this->getRecruitingOrganisation($record);

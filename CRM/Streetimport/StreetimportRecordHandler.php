@@ -56,7 +56,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $recruiter_id = $record['Recruiter ID'];
       try {
         $recruiter = civicrm_api3('Contact', 'getsingle', array($recruiter_id_field => $recruiter_id));
-        $this->logger->logDebug($config->translate("Recruiter with external ID '$recruiter_id' identified as CiviCRM contact ".$recruiter['id']), $record);
+        $this->logger->logDebug($config->translate("Recruiter with external ID")." ".$recruiter_id." "
+            .$config->translate("identified as CiviCRM contact")." ".$recruiter['id'], $record);
         return $recruiter;
       } catch (Exception $e) {
         // not found.
@@ -128,11 +129,20 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $config = CRM_Streetimport_Config::singleton();
     $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['id'], $record);
     if (!empty($donor)) {
-      $donor = $this->updateDonor($record, $donor);
-      $this->additionalPhone($record, $donor['contact_id']);
-      $this->additionalEmail($record, $donor['contact_id']);
-      $this->additionalAddress($record, $donor['contact_id']);
-      return $donor;
+      // issue #82 if loading type is street recruitment, donor should be new so error if already known
+      $loadingType = (int) $record['Loading type'];
+      $allowedLoadingTypes = $config->getLoadingTypes();
+      if ($allowedLoadingTypes[$loadingType] == "Street Recruitment") {
+        $this->logger->logError($config->translate("Donor with ID")." ".$record['DonorID']." ".$config->translate("for recr. org.")
+            ." ".$recruiting_organisation['id']." ".$config->translate("already exists. No act. or mandate created"), $record);
+        return array();
+      } else {
+        $donor = $this->updateDonor($record, $donor);
+        $this->additionalPhone($record, $donor['contact_id']);
+        $this->additionalEmail($record, $donor['contact_id']);
+        $this->additionalAddress($record, $donor['contact_id']);
+        return $donor;
+      }
     }
     // create base contact
     $householdPrefixes = $config->getHouseholdPrefixIds();
@@ -468,7 +478,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       }
 
       if ($account_exists) {
-        $this->logger->logDebug("Bank account '{$mandate_data['iban']}' already exists with contact [{$mandate_data['contact_id']}].", $record);
+        $this->logger->logDebug($config->translate("Bank account")." ".$mandate_data['iban']." "
+            .$config->translate("already exists with contact")." ".$mandate_data['contact_id'], $record);
       } else {
         // create bank account (using BAOs)
         $ba_extra = array(
@@ -495,10 +506,11 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
           'ba_id'             => $ba['id'],
           ));
 
-        $this->logger->logDebug("Bank account '{$mandate_data['iban']}' created for contact [{$mandate_data['contact_id']}].", $record);
+        $this->logger->logDebug($config->translate("Bank account")." ".$mandate_data['iban']." ".$config->translate("created for contact")
+            ." ".$mandate_data['contact_id'], $record);
       }
     } catch (Exception $ex) {
-      $this->logger->logError("An error occurred while saving the bank account: " . $ex->getMessage(), $record);
+      $this->logger->logError($config->translate("An error occurred while saving the bank account").": " . $ex->getMessage(), $record);
     }
   }
 

@@ -138,5 +138,14 @@
   "No SDD mandate update required":"Geen SDD mandaat update nodig",
   "Date Format of CSV":"Datum formaat in CSV",
   "Group for deduping new contacts":"Groep voor ontdubbelen contacten",
-  "does not have ; as a field delimiter and can not be processed":"heeft geen ; als veldscheidingsteken, kan niet verwerkt worden."
+  "does not have ; as a field delimiter and can not be processed":"heeft geen ; als veldscheidingsteken, kan niet verwerkt worden.",
+  "Recruiter with external ID":"Werver met extern ID",
+  "identified as CiviCRM contact":"geïdentificeerd als CiviCRM contact",
+  "Bank account":"Bankrekening",
+  "already exists with contact":"bestaat al voor contact",
+  "created for contact":"toegevoegd voor contact",
+  "An error occurred while saving the bank account":"Er is een fout opgetreden bij het toevoegen van bankrekening",
+  "Successfully importped record of type":"Succesvolle import van record met type",
+  "Donor with ID":"Donor met ID",
+  "already exists. No act. or mandate created":"Bestaat al, geen act. of mandaat toegevoegd"
 }

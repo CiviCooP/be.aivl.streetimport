@@ -283,7 +283,7 @@ abstract class CRM_Streetimport_RecordHandler {
     // create via API
     try {
       $phone = civicrm_api3('Phone', 'create', $data);
-      $this->logger->logDebug($config->translate("Phone created")." ".$data['phone']." ".$config->translate("for contact").$data['contact_id'], $record);
+      $this->logger->logDebug($config->translate("Phone created")." ".$data['phone']." ".$config->translate("for contact")." ".$data['contact_id'], $record);
       return $phone;
     } catch (CiviCRM_API3_Exception $ex) {
       $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Phone Error"));
