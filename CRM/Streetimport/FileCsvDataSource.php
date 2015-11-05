@@ -26,6 +26,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
   public function reset() {
     $config = CRM_Streetimport_Config::singleton();
     $this->validate_separator();
+    $this->validate_encoding();
     // try loading the given file
     $this->reader  = fopen($this->uri, 'r');
     $this->header  = NULL;
@@ -118,10 +119,23 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
       if (!isset($testRow[1])) {
         $this->logger->abort($config->translate("File")." ".$this->uri." "
             .$config->translate("does not have ; as a field delimiter and can not be processed"));
+        $this->reader = NULL;
       } else {
         $this->default_delimiter = ";";
       }
     }
     fclose($testSeparator);
+  }
+
+  /**
+   *
+   */
+  function validate_encoding() {
+    $config = CRM_Streetimport_Config::singleton();
+    if (!mb_check_encoding(file_get_contents($this->uri), "UTF-8")) {
+      $this->logger->abort($config->translate("File")." ".$this->uri." "
+        .$config->translate("is not encoded as UTF-8 and can not be processed"));
+      $this->reader = NULL;
+    }
   }
 }
