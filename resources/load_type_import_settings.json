@@ -1,0 +1,138 @@
+{
+  "1": {
+    "name":"street_recruitment",
+    "label":"Street Recruitment",
+    "settings": {
+      "error_handling_contact_id": "1878",
+      "other_activities_contact_id": "1972",
+      "groups": {
+        "newsletter": "27",
+        "any": [
+          "1666"
+        ]
+      },
+      "membership_type_id": "1",
+      "sdd": {
+        "financial_type_id": "1",
+        "payment_instrument_id": "6"
+      },
+      "sepa_mandate_column": "mandaat",
+      "activity_ids": {
+        "follow_up_call":{
+          "activity_type_id": "49",
+          "activity_status_id": "1",
+          "offset_days": "3",
+          "subject": "Follow Up Call From Street Recruitment"
+        },
+        "volunteer": {
+          "activity_type_id": "53",
+          "activity_status_id": "1",
+          "offset_days": "3",
+          "subject": "Interested in Volunteering at Street Recruitment"
+        }
+      }
+    }
+  },
+  "2": {
+    "name":"welcome_call",
+    "label":"Welcome Call",
+    "settings": {
+      "error_handling_contact_id": "1878",
+      "other_activities_contact_id": "1972",
+      "groups": {
+        "newsletter": "27",
+        "any": [
+          "1666"
+        ]
+      },
+      "membership_type_id": "1",
+      "sdd": {
+        "financial_type_id": "1",
+        "payment_instrument_id": "6"
+      },
+      "sepa_mandate_column": "mandaat",
+      "activity_ids": {
+        "follow_up_call":{
+          "activity_type_id": "49",
+          "activity_status_id": "1",
+          "offset_days": "3",
+          "subject": "Follow Up Call From Welcome Call"
+        },
+        "volunteer": {
+          "activity_type_id": "53",
+          "activity_status_id": "1",
+          "offset_days": "3",
+          "subject": "Interested in Volunteering at Welcome Call"
+        }
+      }
+    }
+  },
+  "3": {
+    "name":"street_recruitment_correction",
+    "label":"Street Recruitment Correction",
+    "settings": {
+      "error_handling_contact_id": "1878",
+      "other_activities_contact_id": "1972",
+      "groups": {
+        "newsletter": "27",
+        "any": [
+          "1666"
+        ]
+      },
+      "membership_type_id": "1",
+      "sdd": {
+        "financial_type_id": "1",
+        "payment_instrument_id": "6"
+      },
+      "sepa_mandate_column": "mandaat",
+      "activity_ids": {
+        "follow_up_call":{
+          "activity_type_id": "49",
+          "activity_status_id": "1",
+          "offset_days": "3",
+          "subject": "Follow Up Call From Street Recruitment"
+        },
+        "volunteer": {
+          "activity_type_id": "53",
+          "activity_status_id": "1",
+          "offset_days": "3",
+          "subject": "Interested in Volunteering at Street Recruitment"
+        }
+      }
+    }
+  },
+  "4": {
+    "name":"welcome_call_correction",
+    "label":"Welcome Call Correction",
+    "settings": {
+      "error_handling_contact_id": "1878",
+      "other_activities_contact_id": "1972",
+      "groups": {
+        "newsletter": "27",
+        "any": [
+          "1666"
+        ]
+      },
+      "membership_type_id": "1",
+      "sdd": {
+        "financial_type_id": "1",
+        "payment_instrument_id": "6"
+      },
+      "sepa_mandate_column": "mandaat",
+      "activity_ids": {
+        "follow_up_call":{
+          "activity_type_id": "49",
+          "activity_status_id": "1",
+          "offset_days": "3",
+          "subject": "Follow Up Call From Welcome Call"
+        },
+        "volunteer": {
+          "activity_type_id": "53",
+          "activity_status_id": "1",
+          "offset_days": "3",
+          "subject": "Interested in Volunteering at Welcome Call"
+        }
+      }
+    }
+  }
+}
