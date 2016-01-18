@@ -6,4 +6,10 @@
     <title>ImportSettings</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/siloadtype</path>
+    <page_callback>CRM_Streetimport_Page_LoadType</page_callback>
+    <title>LoadType</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>
