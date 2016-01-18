@@ -38,8 +38,6 @@ class CRM_Streetimport_Config {
   protected $frequencyUnitOptionGroup = null;
   protected $areasOfInterestOptionGroup = null;
   protected $translatedStrings = array();
-  protected $loadingTypes =array();
-
   /**
    * Constructor method
    *
@@ -53,10 +51,6 @@ class CRM_Streetimport_Config {
     $this->streetRecruitmentImportType = 1;
     $this->welcomeCallImportType = 2;
     $this->acceptedYesValues = array('J', 'j', 'Ja', 'ja', 'true', 'waar', 'yes', 'Yes', 1);
-    $this->loadingTypes = array(
-      1 => 'Street Recruitment',
-      2 => 'Welcome Call'
-    );
 
     $this->setContactSubTypes();
     $this->setRelationshipTypes();
@@ -69,16 +63,6 @@ class CRM_Streetimport_Config {
     }
     $this->setGroups();
     $this->setTranslationFile();
-  }
-
-  /**
-   * Method to get loading types
-   *
-   * @return array
-   * @access public
-   */
-  public function getLoadingTypes() {
-    return $this->loadingTypes;
   }
   /**
    * Method to get option group for areas of interest
