@@ -227,11 +227,9 @@ class CRM_Streetimport_ImportResult {
         'assignee_contact_id'=> (int) $this->config->getAdminContactID(),
         'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
       );
-      if ($title == $this->config->translate("Create SDD Mandate Error")) {
-        $donor = $handler->getDonorWithExternalId($record['DonorID'], $record['Recruiting organization ID'], $record);
-        if (!empty($donor)) {
-          $activityParams['target_contact_id'] = $donor['id'];
-        }
+      $donor = $handler->getDonorWithExternalId($record['DonorID'], $record['Recruiting organization ID'], $record);
+      if (!empty($donor)) {
+        $activityParams['target_contact_id'] = $donor['id'];
       }
       $errorActivity = $handler->createActivity($activityParams, $record);
       $this->setCustomErrorType($errorActivity->id, $errorType);
