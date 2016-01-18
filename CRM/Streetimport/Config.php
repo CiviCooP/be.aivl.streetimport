@@ -24,6 +24,8 @@ class CRM_Streetimport_Config {
   protected $streetRecruitmentCustomFields = array();
   protected $welcomeCallCustomGroup = array();
   protected $welcomeCallCustomFields = array();
+  protected $importErrorCustomGroup = array();
+  protected $importErrorCustomFields = array();
   protected $externalDonorIdCustomGroup = array();
   protected $externalDonorIdCustomFields = array();
   protected $recruiterInformationCustomGroup = array();
@@ -597,6 +599,21 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get the import error custom group (whole array or specific element)
+   *
+   * @param null $key
+   * @return mixed
+   * @access public
+   */
+  public function getImportErrorCustomGroup($key = null) {
+    if (empty($key)) {
+      return $this->importErrorCustomGroup;
+    } else {
+      return $this->importErrorCustomGroup[$key];
+    }
+  }
+
+  /**
    * Method to get the external donor id custom group (whole array or specific element)
    *
    * @param null $key
@@ -627,6 +644,27 @@ class CRM_Streetimport_Config {
         if ($customField['name'] == $key || $field_id==$key) {
           return $customField;
         } 
+      }
+      // no such field
+      return NULL;
+    }
+  }
+
+  /**
+   * Method to get the custom fields for error type (whole array or specific field array)
+   *
+   * @param null $key
+   * @return array
+   * @access public
+   */
+  public function getImportErrorCustomFields($key = null) {
+    if (empty($key)) {
+      return $this->importErrorCustomFields;
+    } else {
+      foreach ($this->importErrorCustomFields as $field_id => $customField) {
+        if ($customField['name'] == $key || $field_id==$key) {
+          return $customField;
+        }
       }
       // no such field
       return NULL;

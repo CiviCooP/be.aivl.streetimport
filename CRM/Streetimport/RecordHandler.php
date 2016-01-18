@@ -148,22 +148,22 @@ abstract class CRM_Streetimport_RecordHandler {
     $config= CRM_Streetimport_Config::singleton();
     // verify data
     if (empty($contact_data['contact_type'])) {
-      $this->logger->logError($config->translate("Contact missing contact_type"), $record, $config->translate("Create Contact Error"));
+      $this->logger->logError($config->translate("Contact missing contact_type"), $record, $config->translate("Create Contact Error"), "Error");
       return NULL;
     }
     if ($contact_data['contact_type'] == 'Organization') {
       if (empty($contact_data['organization_name'])) {
-        $this->logger->logError($config->translate("Contact missing organization_name"), $record, $config->translate("Create Contact Error"));
+        $this->logger->logError($config->translate("Contact missing organization_name"), $record, $config->translate("Create Contact Error"), "Error", 'Error');
         return NULL;
       }      
     } elseif ($contact_data['contact_type'] == 'Household') {
       if (empty($contact_data['household_name'])) {
-        $this->logger->logError($config->translate("Contact missing household_name"), $record, $config->translate("Create Contact Error"));
+        $this->logger->logError($config->translate("Contact missing household_name"), $record, $config->translate("Create Contact Error"), "Error");
         return NULL;
       }
     } else {
       if (empty($contact_data['first_name']) && empty($contact_data['last_name'])) {
-        $this->logger->logError($config->translate("Contact missing first/last_name"), $record, $config->translate("Create Contact Error"));
+        $this->logger->logError($config->translate("Contact missing first/last_name"), $record, $config->translate("Create Contact Error"), "Error");
         return NULL;
       }
     }
@@ -181,7 +181,7 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logDebug($config->translate("Contact created").": ".$contact['id'], $record);
       return $contact;
     } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Contact Error"));
+      $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Contact Error"), "Error");
       return NULL;
     }
   }
@@ -189,17 +189,14 @@ abstract class CRM_Streetimport_RecordHandler {
   /** 
    * Create an activity with the given data
    *
-   * @return actvity BAO object
+   * @return activity BAO object
    */
   public function createActivity($data, $record, $assigned_contact_ids=NULL) {
     $config= CRM_Streetimport_Config::singleton();
-
-    // TODO: $data sanitation
-
     // remark: using BAOs, the API here is somewhat messy
     $activity = CRM_Activity_BAO_Activity::create($data);
     if (empty($activity->id)) {
-      $this->logger->logError($config->translate("Couldn't create activity"), $record, $config->translate("Create Activity Error"));
+      $this->logger->logError($config->translate("Couldn't create activity"), $record, $config->translate("Create Activity Error"), "Error");
       return NULL;
     }
 

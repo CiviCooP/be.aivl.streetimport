@@ -124,7 +124,8 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $old_mandate_data['end_date'] = '';
       }
     } catch (Exception $e) {
-      $this->logger->logError(sprintf($config->translate("SDD mandate '%s' count not be found."), $new_mandate_data['reference']), $record);
+      $this->logger->logError(sprintf($config->translate("SDD mandate '%s' could not be found."), $new_mandate_data['reference']),
+        $record, "SDD Mandate not found","Error");
       return NULL;
     }
 
@@ -150,7 +151,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         return NULL;
       }
     } catch (Exception $e) {
-      $this->logger->logError($config->translate("Couldn't load contribution entity for mandate").' '.$old_mandate_data['id'], $record);
+      $this->logger->logError($config->translate("Couldn't load contribution entity for mandate").' '.$old_mandate_data['id'], $record, "Error");
       return NULL;      
     }
 
@@ -233,7 +234,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         }
       }
       if (empty($new_reference_number)) {
-        $this->logger->logError(sprintf($config->translate("Couldn't create reference for amended mandate '%s'."), $new_mandate_data['reference']), $record);
+        $this->logger->logError(sprintf($config->translate("Couldn't create reference for amended mandate '%s'."), $new_mandate_data['reference']), $record, "Error");
         return;
       }
 

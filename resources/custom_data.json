@@ -452,5 +452,28 @@
         "is_active":1
       }
     }
+  },
+  "importError":{
+    "name":"importError",
+    "title":"Foutieve data import",
+    "extends":"Activity",
+    "extends_entity_column_value":"importError",
+    "table_name":"civicrm_value_import_error",
+    "is_reserved":1,
+    "collapse_display":0,
+    "is_active":1,
+    "fields":{
+      "error_type":{
+        "name":"error_type",
+        "label":"Type fout",
+        "data_type":"String",
+        "html_type":"Select",
+        "is_searchable":1,
+        "is_view":1,
+        "column_name":"error_type",
+        "weight":-150,
+        "is_active":1
+      }
+    }
   }
 }

@@ -145,8 +145,9 @@
   "already exists with contact":"bestaat al voor contact",
   "created for contact":"toegevoegd voor contact",
   "An error occurred while saving the bank account":"Er is een fout opgetreden bij het toevoegen van bankrekening",
-  "Successfully importped record of type":"Succesvolle import van record met type",
+  "Successfully imported record of type":"Succesvolle import van record met type",
   "Donor with ID":"Donor met ID",
   "already exists. No act. or mandate created":"Bestaat al, geen act. of mandaat toegevoegd",
-  "is not encoded as UTF-8 and can not be processed":"is niet gecodeerd als UTF-8 en kan niet verwerkt worden"
+  "is not encoded as UTF-8 and can not be processed":"is niet gecodeerd als UTF-8 en kan niet verwerkt worden",
+  "Error":"Fout"
 }

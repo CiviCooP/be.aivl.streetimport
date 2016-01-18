@@ -130,12 +130,12 @@ class CRM_Streetimport_ImportResult {
    * shortcut for logMessage($message, BE_AIVL_STREETIMPORT_ERROR)
    * Will also create an activity
    */
-  public function logError($message, $record, $title = NULL) {
+  public function logError($message, $record, $title = NULL, $errorType = 'Info') {
     $this->logMessage($message, $record, BE_AIVL_STREETIMPORT_ERROR);
 
     if ($title==NULL) $title = substr($message, 0, 64);
     $title = $this->config->translate($title);
-    $this->createErrorActivity($message, $record, $title);
+    $this->createErrorActivity($message, $record, $title, $errorType);
   }
 
   /**
@@ -148,7 +148,7 @@ class CRM_Streetimport_ImportResult {
 
     if ($title==NULL) $title = substr($message, 0, 64);
     $title = $this->config->translate($title);
-    $this->createErrorActivity($message, $record, $title);
+    $this->createErrorActivity($message, $record, $title, 'Error');
   }
 
   /**
@@ -197,13 +197,18 @@ class CRM_Streetimport_ImportResult {
   }
 
   /**
-   * This will create an "Error" activity assigned to the admin
+   * This will create an "Error" activity assigned to the admin in the config
+   *
+   * @param $message
+   * @param $record
+   * @param $title
+   * @param $errorType
    * @see https://github.com/CiviCooP/be.aivl.streetimport/issues/11
    */
-  protected function createErrorActivity($message, $record, $title = "Import Error") {
+  protected function createErrorActivity($message, $record, $title = "Import Error", $errorType) {
     try {  // AVOID raising another exception leading to this very handler
 
-      // TOOD: replace this ugly workaround:
+      // TODO: replace this ugly workaround:
       $handler = new CRM_Streetimport_StreetRecruitmentRecordHandler($this);
 
       // create the activity
@@ -222,17 +227,50 @@ class CRM_Streetimport_ImportResult {
         'assignee_contact_id'=> (int) $this->config->getAdminContactID(),
         'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
       );
-      // issue #73 set donor as activity_target_id for error creating SDD mandate
       if ($title == $this->config->translate("Create SDD Mandate Error")) {
         $donor = $handler->getDonorWithExternalId($record['DonorID'], $record['Recruiting organization ID'], $record);
         if (!empty($donor)) {
           $activityParams['target_contact_id'] = $donor['id'];
         }
       }
-      $handler->createActivity($activityParams, $record);
-      
+      $errorActivity = $handler->createActivity($activityParams, $record);
+      $this->setCustomErrorType($errorActivity->id, $errorType);
     } catch (Exception $e) {
       error_log($this->config->translate("Error while creating an activity to report another error").": " . $e->getMessage());
+    }
+  }
+
+  /**
+   * Method to set error type for error activity (see issue 76)
+   * @param $activityId
+   * @param $errorType
+   */
+  private function setCustomErrorType($activityId, $errorType) {
+    $config = CRM_Streetimport_Config::singleton();
+    $importErrorCustomGroup = $config->getImportErrorCustomGroup();
+    $importErrorCustomFields = $config->getImportErrorCustomFields();
+    foreach ($importErrorCustomFields as $customFieldId => $customField) {
+      if ($customField['name'] == "error_type") {
+        $errorTypeColumnName = $customField['column_name'];
+      }
+    }
+    if (!isset($errorTypeColumnName)) {
+      CRM_Core_Error::fatal('Could not find a custom field for error_type');
+    } else {
+      $errorExists = CRM_Core_DAO::singleValueQuery('SELECT COUNT(*) FROM ' . $importErrorCustomGroup['table_name']
+        . ' WHERE entity_id = %1', array(1 => array($activityId, 'Integer')));
+      if ($errorExists > 0) {
+        $query = "UPDATE " . $importErrorCustomGroup['table_name'] . " SET " . $errorTypeColumnName . " = %1
+          WHERE entity_id = %2";
+      } else {
+        $query = "INSERT INTO " . $importErrorCustomGroup['table_name'] . " SET " . $errorTypeColumnName
+          . " = %1, entity_id = %2";
+      }
+      $params = array(
+        1 => array($config->translate($errorType), 'String'),
+        2 => array($activityId, 'Integer')
+      );
+      CRM_Core_DAO::executeQuery($query, $params);
     }
   }
 

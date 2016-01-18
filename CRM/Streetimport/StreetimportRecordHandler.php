@@ -310,7 +310,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // extract the mandate type from the 'Frequency Unit' field
     $mandate_data = $config->extractSDDtype($frequency_unit);
     if (!$mandate_data) {
-      $this->logger->logError($config->translate("Bad mandate specification").": " . CRM_Utils_Array::value('Frequency Unit', $record), $record);
+      $this->logger->logError($config->translate("Bad mandate specification").": " . CRM_Utils_Array::value('Frequency Unit', $record), $record, "Error");
       return NULL;
     }
 
@@ -327,7 +327,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // check if IBAN is given
     $iban = CRM_Utils_Array::value('IBAN', $record);
     if (empty($iban)) {
-      $this->logger->logError("Record has no IBAN.", $record);
+      $this->logger->logError("Record has no IBAN.", $record, "Error");
       return;
     }
 
@@ -441,7 +441,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       return $mandate;
     } catch (CiviCRM_API3_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logError($config->translate("Error while trying to create mandate. Error was").": " . $ex->getMessage(), $record, "Create SDD Mandate Error");
+      $this->logger->logError($config->translate("Error while trying to create mandate. Error was").": " . $ex->getMessage(), $record, "Create SDD Mandate Error", "Error");
       return NULL;
     }
   }
@@ -510,7 +510,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
             ." ".$mandate_data['contact_id'], $record);
       }
     } catch (Exception $ex) {
-      $this->logger->logError($config->translate("An error occurred while saving the bank account").": " . $ex->getMessage(), $record);
+      $this->logger->logError($config->translate("An error occurred while saving the bank account").": " . $ex->getMessage(), $record, "Error");
     }
   }
 
