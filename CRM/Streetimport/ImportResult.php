@@ -279,7 +279,7 @@ class CRM_Streetimport_ImportResult {
     if (empty($record['source']) && empty($record['id'])) {
       return 'NO_REF';
     } else {
-      return $record['source'] . ':' . $record['id'];
+      return $record['source'] . ', on line ' . $record['id'];
     }
   }
 
