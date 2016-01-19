@@ -88,6 +88,7 @@ class CRM_Streetimport_Config {
   public function getAreasOfInterestOptionGroup($key = 'id') {
     return $this->areasOfInterestOptionGroup[$key];
   }
+
   /**
    * Method to get option group for frequency unit
    *
