@@ -227,10 +227,16 @@ class CRM_Streetimport_ImportResult {
         'assignee_contact_id'=> (int) $this->config->getAdminContactID(),
         'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
       );
-      $donor = $handler->getDonorWithExternalId($record['DonorID'], $record['Recruiting organization ID'], $record);
-      if (!empty($donor)) {
-        $activityParams['target_contact_id'] = $donor['id'];
-      }
+
+ /*     try {
+        $donorContactId = CRM_Streetimport_Utils::getContactIdFromDonorId($record['DonorID'], $record['Recruiting organization ID']);
+        if (!empty($donorContactId)) {
+          $activityParams['target_contact_id'] = $donorContactId;
+        }
+      } catch (Exception $e) {
+		  // ignore the error;		  
+      }*/
+      
       $errorActivity = $handler->createActivity($activityParams, $record);
       $this->setCustomErrorType($errorActivity->id, $errorType);
     } catch (Exception $e) {

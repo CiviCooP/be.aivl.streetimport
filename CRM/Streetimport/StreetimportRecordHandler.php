@@ -263,32 +263,15 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * @return mixed contact_id or NULL if not found
    */
   protected function getContactForDonorID($donorId, $recruitingOrganizationId, $record) {
-    $config = CRM_Streetimport_Config::singleton();
-    $tableName = $config->getExternalDonorIdCustomGroup('table_name');
-    $donorCustomField = $config->getExternalDonorIdCustomFields('external_donor_id');
-    $orgCustomField = $config->getExternalDonorIdCustomFields('recruiting_organization_id');
-    if (empty($donorCustomField)) {
-      $this->logger->logError($config->translate("CustomField external_donor_id not found. Please reinstall."), $record);
-      return NULL;
-    }
-    if (empty($orgCustomField)) {
-      $this->logger->logError($config->translate("CustomField recruiting_organization_id not found. Please reinstall."), $record);
-      return NULL;
-    }
-    $query = 'SELECT entity_id FROM '.$tableName.' WHERE '.$donorCustomField['column_name'].' = %1 AND '.$orgCustomField['column_name'].' = %2';
-    $params = array(
-      1 => array($donorId, 'Positive'),
-      2 => array($recruitingOrganizationId, 'Positive'));
-
-    $dao = CRM_Core_DAO::executeQuery($query, $params);
-    if ($dao->N > 1) {
-      $this->logger->logError($config->translate('More than one contact found for donor ID').': '.$donorId, $record);
-    } else {
-      if ($dao->fetch()) {
-        return $dao->entity_id;
-      }
-    }
-    return NULL;
+	try {
+      $contactId = CRM_Streetimport_Utils::getContactIdFromDonorId($donorId, $recruitingOrganizationId);		
+	}
+	catch (Exception $e) {
+      $this->logger->logError($e->getMessage(), $record);
+      return NULL;		
+	}
+	
+	return $contactId;
   }
 
   /**

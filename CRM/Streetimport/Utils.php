@@ -493,6 +493,43 @@ class CRM_Streetimport_Utils {
     }
     return $contactName;
   }
+  
+  /**
+   * Function to get the contact id for a donor without error logging.
+   * However, exceptions are thrown if needed.
+   * Can be safely used in error logging.
+   * 
+   * @param int donorId
+   * @param int recruitingOrganizationId
+   */
+  public static function getContactIdFromDonorId($donorId, $recruitingOrganizationId) {
+    $config = CRM_Streetimport_Config::singleton();
+    $tableName = $config->getExternalDonorIdCustomGroup('table_name');
+    $donorCustomField = $config->getExternalDonorIdCustomFields('external_donor_id');
+    $orgCustomField = $config->getExternalDonorIdCustomFields('recruiting_organization_id');
+    if (empty($donorCustomField)) {
+      throw new Exception($config->translate("CustomField external_donor_id not found. Please reinstall."));
+    }
+    if (empty($orgCustomField)) {
+      throw new Exception($config->translate("CustomField recruiting_organization_id not found. Please reinstall."));
+    }
+    $query = 'SELECT entity_id FROM '.$tableName.' WHERE '.$donorCustomField['column_name'].' = %1 AND '.$orgCustomField['column_name'].' = %2';
+    $params = array(
+      1 => array($donorId, 'Positive'),
+      2 => array($recruitingOrganizationId, 'Positive'));
+
+    $dao = CRM_Core_DAO::executeQuery($query, $params);
+    if ($dao->N > 1) {
+      throw new Exception($config->translate('More than one contact found for donor ID').': '.$donorId);
+    }
+     
+    if ($dao->fetch()) {
+      return $dao->entity_id;
+    }
+    else {
+      return NULL;
+	}
+  }
 
   /**
    * Function get country data with an iso code
