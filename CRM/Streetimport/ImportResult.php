@@ -228,14 +228,14 @@ class CRM_Streetimport_ImportResult {
         'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
       );
 
- /*     try {
+      try {
         $donorContactId = CRM_Streetimport_Utils::getContactIdFromDonorId($record['DonorID'], $record['Recruiting organization ID']);
         if (!empty($donorContactId)) {
           $activityParams['target_contact_id'] = $donorContactId;
         }
       } catch (Exception $e) {
 		  // ignore the error;		  
-      }*/
+      }
       
       $errorActivity = $handler->createActivity($activityParams, $record);
       $this->setCustomErrorType($errorActivity->id, $errorType);
