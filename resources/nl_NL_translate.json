@@ -152,5 +152,6 @@
   "Error":"Fout",
   "and name":"en naam",
   "has no Street Recruitment activity.":"heeft geen activiteit Straatwerving.",
-  "Line in import file for Welcome Call ignored.":"Regel voor Welkomstgesprek in import bestand genegeerd."
+  "Line in import file for Welcome Call ignored.":"Regel voor Welkomstgesprek in import bestand genegeerd.",
+  "No previous Street Recruitment when loading WelcomeCall":"Geen Straatwerving bij laden Welkomstgesprek"
 }
