@@ -529,7 +529,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     if (!empty($sourceAreasInterest)) {
       $config = CRM_Streetimport_Config::singleton();
       $tempAreas = array();
-      $optionGroupId = $config->getAreasOfIntereestOptionGroup();
+      $optionGroupId = $config->getAreasOfInterestOptionGroup();
       $parts = explode('/', $sourceAreasInterest);
       foreach ($parts as $part) {
         $params = array(
