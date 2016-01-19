@@ -44,6 +44,14 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $this->logger->logDebug($config->translate("Donor [{$donor['id']}] identified."), $record);
     }
 
+    // STEP 4: issue 86 do not process welcome call if no street recruitment for the contact
+    if (!$this->donorHasStreetRecruitment($donor)) {
+      $this->logger->logError("Donor ".$record['DonorID']." /CiviCRM contact id "
+        .$donor['id']." ".$config->translate("and name")." ".$donor['sort_name']." "
+        .$config->translate("has no Street Recruitment activity.")." "
+        .$config->translate("Line in import file for Welcome Call ignored."), $record, "Error");
+    }
+
     // STEP 5: create activity "WelcomeCall"
     $campaignId = $this->getCampaignParameter($record);
 
@@ -311,5 +319,31 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $customData['wc_sdd_end_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['End Date']))), 'type' => 'Date');
     }
     return $customData;
+  }
+
+  /**
+   * Method to check if the donor already has a street recruitment activity
+   *
+   * @param $donor
+   * @return bool
+   * @access protected
+   */
+  protected function donorHasStreetRecruitment($donor) {
+    $config = CRM_Streetimport_Config::singleton();
+    $query = "SELECT COUNT(*) as countStreetRecruitment FROM civicrm_activity
+      WHERE contact_id = %! AND is_current_revision = %2 AND is_deleted = %3 AND is_test = %3
+      AND activity_type_id = %4";
+    $params = array(
+      1 => array($config->getStreetRecruitmentActivityType('value'), 'Integer'),
+      2 => array(1, 'Integer'),
+      3 => array(0, 'Integer'),
+      4 => array($donor['id'], 'Integer')
+    );
+    $countStreetRecruitment = CRM_Core_DAO::singleValueQuery($query, $params);
+    if ($countStreetRecruitment > 0) {
+      return TRUE;
+    } else {
+      return FALSE;
+    }
   }
 }

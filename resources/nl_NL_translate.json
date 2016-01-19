@@ -149,5 +149,8 @@
   "Donor with ID":"Donor met ID",
   "already exists. No act. or mandate created":"Bestaat al, geen act. of mandaat toegevoegd",
   "is not encoded as UTF-8 and can not be processed":"is niet gecodeerd als UTF-8 en kan niet verwerkt worden",
-  "Error":"Fout"
+  "Error":"Fout",
+  "and name":"en naam",
+  "has no Street Recruitment activity.":"heeft geen activiteit Straatwerving.",
+  "Line in import file for Welcome Call ignored.":"Regel voor Welkomstgesprek in import bestand genegeerd."
 }
