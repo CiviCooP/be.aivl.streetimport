@@ -85,7 +85,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $recruiter_data['last_name']  = CRM_Utils_Array::value('organization_name', $recruiting_organisation);
       $recruiter_data['prefix']     = '';
     }
-
     $recruiter = $this->createContact($recruiter_data, $record);
     if (!$recruiter) {
       $this->logger->abort($config->translate("Recruiter could not be created"), $record);
@@ -98,22 +97,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       'contact_id_b' => $recruiter['id'],
       'relationship_type_id' => $config->getRecruiterRelationshipType()
     );
+
     $this->createRelationship($relationshipData, $record);
-
-    // "In all cases where the contact is not known, an activity of the type 'Incompleet werver contact' 
-    //     will be generated  and assigned to the admin ID entered as a param"
-    $this->createActivity(array(
-                          'activity_type_id'   => $config->getImportErrorActivityType(),
-                          'subject'            => $config->translate("Incomplete Recruiter Contact"),
-                          'status_id'          => $config->getImportErrorActivityStatusId(),
-                          'activity_date_time' => date('YmdHis'),
-                          'target_contact_id'  => (int) $recruiter['id'],
-                          'source_contact_id'  => (int) $recruiter['id'],
-                          'assignee_contact_id'=> $config->getAdminContactID(),
-                          'campaign_id'        => $this->getCampaignParameter($record),
-                          'details'            => $this->renderTemplate('activities/IncompleteRecruiterContact.tpl', $record),
-                          ), $record);        
-
     $this->logger->logDebug($config->translate("Recruiter")." ".$recruiter['id']." ".$config->translate("created"), $record);
     return $recruiter;
   }

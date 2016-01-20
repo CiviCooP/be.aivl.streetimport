@@ -4,7 +4,7 @@
       "name_a_b": "recruiter_is",
       "label_a_b":"Werver is",
       "contact_type_a":"Organization",
-      "contact_sub_type_a":"supplier",
+      "contact_sub_type_a":"recruitingOrganization",
       "name_b_a": "recruiter_for",
       "label_b_a":"Werver voor",
       "contact_type_b":"Individual",

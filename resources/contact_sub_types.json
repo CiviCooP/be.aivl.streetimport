@@ -1,8 +1,8 @@
 {
-  "supplier":
+  "recruitingOrganization":
     {
-      "name": "supplier",
-      "label":"Leverancier",
+      "name": "recruitingOrganization",
+      "label":"Wervingsorganisatie",
       "parent_id":3
     },
   "recruiter":
