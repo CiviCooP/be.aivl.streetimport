@@ -348,6 +348,10 @@ abstract class CRM_Streetimport_RecordHandler {
 
   /**
    * create a relationship with given data
+   *
+   * @param $relationshipData
+   * @param $record
+   * @return array|null
    */
   protected function createRelationship($relationshipData, $record) {
 
@@ -362,14 +366,64 @@ abstract class CRM_Streetimport_RecordHandler {
     if (!isset($relationshipData['start_date'])) {
       $relationshipData['start_date'] = date('YmdHis');
     }
-    try {
-      $result = civicrm_api3('Relationship', 'Create', $relationshipData);
-      return $result;
-    } catch (CiviCRM_API3_Exception $ex) {
-      $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logError($config->translate('Relationship not created, error from API Relationship Create').': '.$ex->getMessage(), $record);
+    $validParams = $this->validateRelationshipData($relationshipData, $record);
+    if ($validParams) {
+      try {
+        $result = civicrm_api3('Relationship', 'Create', $relationshipData);
+        return $result;
+      } catch (CiviCRM_API3_Exception $ex) {
+        $config = CRM_Streetimport_Config::singleton();
+        $this->logger->logError($config->translate('Relationship not created, error from API Relationship Create') . ': ' . $ex->getMessage(), $record);
+        return NULL;
+      }
+    } else {
       return NULL;
     }
+  }
+
+  /**
+   * Method to validate relationship data before creating one so we can do specific error reporting
+   *
+   * @param $relationshipData
+   * @param $record
+   * @return bool
+   */
+  protected function validateRelationshipData($relationshipData, $record) {
+    // check if relationship type id exists
+    $config = CRM_Streetimport_Config::singleton();
+    try {
+      $relationShipType = civicrm_api3('RelationshipType', 'Getsingle',
+        array('id' => $relationshipData['relationship_type_id']));
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError($config->translate('Relationship not created between contact')
+        .' '.$relationshipData['contact_id_a'].$config->translate('and contact').' '.$relationshipData['contact_id_b']
+        .', '.$config->translate('could not find relation_ship_type_id').' '
+        .$relationshipData['relationship_type_id'].'. '.$config->translate('error from API')
+        .' Relationship Create: '.$ex->getMessage(), $record, $config->translate('Relationship not created'));
+      return FALSE;
+    }
+    // check if relationship type is set for contact (sub) types
+    $contactAParams = array('id' => $relationshipData['contact_id_a'], 'return' => 'contact_sub_type');
+    $contactASubTypes = civicrm_api3('Contact', 'Getvalue', $contactAParams);
+    if (empty($contactASubTypes) || !in_array($relationShipType['contact_sub_type_a'], $contactASubTypes)) {
+      $this->logger->logError($config->translate('Relationship not created between contact')
+        .' '.$relationshipData['contact_id_a'].$config->translate('and contact').' '.$relationshipData['contact_id_b']
+        .', '.$config->translate('contact sub type of contact').' '.$relationshipData['contact_id_a']
+        .' '.$config->translate('conflicts with relationship type set up'), $record,
+        $config->translate('Relationship not created'));
+      return FALSE;
+    }
+    $contactBParams = array('id' => $relationshipData['contact_id_b'], 'return' => 'contact_sub_type');
+    $contactBSubTypes = civicrm_api3('Contact', 'Getvalue', $contactBParams);
+    if (empty($contactBSubTypes) || !in_array($relationShipType['contact_sub_type_b'], $contactBSubTypes)) {
+      $this->logger->logError($config->translate('Relationship not created between contact')
+        .$relationshipData['contact_id_a'].$config->translate('and contact').$relationshipData['contact_id_b']
+        .', '.$config->translate('contact sub type of contact').' '.$relationshipData['contact_id_b']
+        .' '.$config->translate('conflicts with relationship type set up'), $record,
+        $config->translate('Relationship not created'));
+      return FALSE;
+    }
+    return TRUE;
   }
 
   /**

@@ -72,12 +72,11 @@
   "'Membership not created, mandatory param missing":"Lidmaatschap niet toegevoegd, verplichte parameter niet gevonden",
   "Membership not created, error from API Membership Create":"Lidmaatschap niet toegevoegd, foutmelding van API Membership Create",
   "Relationship not created, mandatory param missing":"Relatie niet toegevoegd, verplichte parameter niet gevonden",
-  "Relationship not created, error from API Relationship Create":"Relatie niet toegevoegd, foutmelding van API Relationship Create",
   "Recruiting organization ID not given":"ID van wervingsorganisatie niet ingevuld",
   "Recruiting organization":"Wervingsorganisatie",
   "not found":"niet gevonden",
   "Recruiting organization identified as contact":"Wervingsorganisatie geidentificeerd als contact",
-  "Recruiter not found, creting new one...":"Werver niet gevonden, nieuwe toevoegen...",
+  "Recruiter not found, creating new one...":"Werver niet gevonden, nieuwe toevoegen...",
   "Recruiter":"Werver",
   "already created":"al toegevoegd",
   "Recruiter could not be created":"Werver kon niet toegevoegd worden",
@@ -153,5 +152,12 @@
   "and name":"en naam",
   "has no Street Recruitment activity.":"heeft geen activiteit Straatwerving.",
   "Line in import file for Welcome Call ignored.":"Regel voor Welkomstgesprek in import bestand genegeerd.",
-  "No previous Street Recruitment when loading WelcomeCall":"Geen Straatwerving bij laden Welkomstgesprek"
+  "No previous Street Recruitment when loading WelcomeCall":"Geen Straatwerving bij laden Welkomstgesprek",
+  "Relationship not created between contact":"Geen relatie aangemaakt tussen contact",
+  "Relationship not created":"Geen relatie aangemaakt",
+  "and contact":"en contact",
+  "could not find relation_ship_type_id":"kon geen data vinden voor relationship_type_id",
+  "error from API":"foutmelding van API",
+  "contact sub type of contact":"contact sub type van het contact",
+  "conflicts with relationship type set up":"komt niet overeen met de instellingen van het relatie type"
 }

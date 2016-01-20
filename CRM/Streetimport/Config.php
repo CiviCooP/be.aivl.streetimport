@@ -14,7 +14,7 @@ class CRM_Streetimport_Config {
   protected $aivlLegalName = null;
   protected $importSettings = array();
   protected $recruiterContactSubType = array();
-  protected $supplierContactSubType = array();
+  protected $recruitingOrganizationContactSubType = array();
   protected $recruiterRelationshipType = array();
   protected $streetRecruitmentActivityType = array();
   protected $welcomeCallActivityType = array();
@@ -294,14 +294,14 @@ class CRM_Streetimport_Config {
   }
 
   /**
-   * Method to retrieve supplier contact sub type data
+   * Method to retrieve recruting organization contact sub type data
    *
    * @param string $key
    * @return mixed
    * @access public
    */
-  public function getSupplierContactSubType($key= 'name' ) {
-    return $this->supplierContactSubType[$key];
+  public function getRecruitingOrganizationContactSubType($key= 'name' ) {
+    return $this->recruitingOrganizationContactSubType[$key];
   }
 
   /**
