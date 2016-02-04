@@ -159,5 +159,7 @@
   "could not find relation_ship_type_id":"kon geen data vinden voor relationship_type_id",
   "error from API":"foutmelding van API",
   "contact sub type of contact":"contact sub type van het contact",
-  "conflicts with relationship type set up":"komt niet overeen met de instellingen van het relatie type"
+  "conflicts with relationship type set up":"komt niet overeen met de instellingen van het relatie type",
+  "not found, no campaign used for donor":"niet gevonden, er is geen campaign verbonden aan donor",
+  "Campaign ID not found":"Campaign ID niet gevonden"
 }

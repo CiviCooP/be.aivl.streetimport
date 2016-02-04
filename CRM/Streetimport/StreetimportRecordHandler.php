@@ -569,12 +569,18 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * That means in particular, that it is an integer, however,
    * the API expects '' instead of '0'.
    */
-  public function getCampaignParameter($record) {
-
-    // TODO: verify if campaign exists?
-
+  public function getCampaignParameter(&$record) {
     $campaign_id = (int) CRM_Utils_Array::value("Campaign ID", $record);
     if ($campaign_id) {
+      try {
+        civicrm_api3('Campaign', 'Getsingle', array('id' => $campaign_id));
+      } catch (CiviCRM_API3_Exception $ex) {
+        $config = CRM_Streetimport_Config::singleton();
+        $this->logger->logError('Campaign ID '.$campaign_id.' '.$config->translate('not found, no campaign used for donor')
+          .' '.$record['DonorID'], $record, $config->translate('Campaign ID not found'));
+        $record['Campaign ID'] = '';
+        return '';
+      }
       return $campaign_id;
     } else {
       return '';

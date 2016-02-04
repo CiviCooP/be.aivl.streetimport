@@ -629,6 +629,9 @@ class CRM_Streetimport_Utils {
    * @return string
    */
   public static function formatCsvDate($inDate) {
+    if (empty($inDate)) {
+      return $inDate;
+    }
     $config = CRM_Streetimport_Config::singleton();
     $inDay = null;
     $inMonth = null;
