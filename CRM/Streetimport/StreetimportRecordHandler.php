@@ -274,7 +274,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       return NULL;
     }
 
-
     // extract the mandate type from the 'Frequency Unit' field
     $mandate_data = $config->extractSDDtype($frequency_unit);
     if (!$mandate_data) {
@@ -295,7 +294,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // check if IBAN is given
     $iban = CRM_Utils_Array::value('IBAN', $record);
     if (empty($iban)) {
-      $this->logger->logError("Record has no IBAN.", $record, "Error");
+      $this->logger->logError($config->translate("Record with mandate")." ".$record['Mandate Reference']." "
+        .$config->translate("has no IBAN"), $record, $config->translate("No IBAN for mandate"), "Error");
       return;
     }
 
@@ -312,7 +312,9 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         }
         $this->logger->logMessage("Successfully looked up BIC '$bic' with IBAN '$iban'.", $record);
       } catch (CiviCRM_API3_Exception $ex) {
-        $this->logger->logError("Record has no BIC, and a lookup with IBAN '$iban' failed.", $record);
+        $this->logger->logError($config->translate("Record with mandate")." ".$record['Mandate Reference']." "
+          .$config->translate("has no BIC, and a lookup with IBAN")." ".$iban." ".$config->translate("failed"),
+          $record, $config->translate("No BIC for mandate"), "Info");
         return;
       }
     }

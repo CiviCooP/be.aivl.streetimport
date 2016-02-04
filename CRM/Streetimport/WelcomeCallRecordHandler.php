@@ -133,8 +133,9 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $old_mandate_data['end_date'] = '';
       }
     } catch (Exception $e) {
-      $this->logger->logError(sprintf($config->translate("SDD mandate '%s' could not be found."), $new_mandate_data['reference']),
-        $record, "SDD Mandate not found","Error");
+      $this->logger->logError($config->translate("SDD mandate")." ".$new_mandate_data['reference']." "
+        .$config->translate("not found for donor")." ".$donor_id.". ".$config->translate("Mandate not updated at Welcome Call for").
+        " ".$record['First Name']." ".$record['Last Name'], $record, $config->translate("SDD Mandate not found"),"Error");
       return NULL;
     }
 
@@ -160,7 +161,9 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         return NULL;
       }
     } catch (Exception $e) {
-      $this->logger->logError($config->translate("Couldn't load contribution entity for mandate").' '.$old_mandate_data['id'], $record, "Error");
+      $this->logger->logError($config->translate("Couldn't load contribution or recurring contribution for mandate")
+        .' '.$old_mandate_data['id'].'. '.$config->translate("Mandate possibly corrupt at Welcome Call for").' '
+        .$record['First Name'].' '.$record['Last Name'], $record, $config->translate('No Contribution Entity Found'),"Error");
       return NULL;      
     }
 

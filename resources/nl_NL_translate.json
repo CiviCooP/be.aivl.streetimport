@@ -161,5 +161,17 @@
   "contact sub type of contact":"contact sub type van het contact",
   "conflicts with relationship type set up":"komt niet overeen met de instellingen van het relatie type",
   "not found, no campaign used for donor":"niet gevonden, er is geen campaign verbonden aan donor",
-  "Campaign ID not found":"Campaign ID niet gevonden"
+  "Campaign ID not found":"Campaign ID niet gevonden",
+  "not found for donor":"niet gevonden voor donor",
+  "Mandate not updated at Welcome Call for":"Mandaat tijdens Welkomstgesprek niet bijgewerkt voor",
+  "SDD Mandate not found":"SDD mandaat niet gevonden",
+  "Couldn't load contribution or recurring contribution for mandate":"Kon geen contributie en/of bestendige opdracht vinden voor mandaat",
+  "Mandate possibly corrupt at Welcome Call for":"Mandaat mogelijkerwijs corrupt bij Welkomstgesprek voor",
+  "No Contribution Entity Found":"Geen contributie of bestendige opdracht gevonden",
+  "Record with mandate":"Record met mandaat",
+  "has no IBAN":"heeft geen IBAN",
+  "No IBAN for mandate":"Geen IBAN voor mandaat",
+  "has no BIC, and a lookup with IBAN":"heeft geen BIC, en opzoeken met IBAN",
+  "failed":"is mislukt",
+  "No BIC for mandate":"Geen BIC voor mandaat"
 }
