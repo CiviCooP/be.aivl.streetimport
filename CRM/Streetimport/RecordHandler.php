@@ -162,9 +162,18 @@ abstract class CRM_Streetimport_RecordHandler {
         return NULL;
       }
     } else {
-      if (empty($contact_data['first_name']) && empty($contact_data['last_name'])) {
-        $this->logger->logError($config->translate("Contact missing first/last_name"), $record, $config->translate("Create Contact Error"), "Error");
+      if (empty(trim($contact_data['first_name'])) && empty(trim($contact_data['last_name']))) {
+        $this->logger->logError($config->translate("Donor missing first_name and last_name").": ".$record['DonorID'],
+          $record, $config->translate("Create Contact Error"), "Error");
         return NULL;
+      }
+      if (empty(trim($contact_data['first_name']))) {
+        $this->logger->logError($config->translate("Donor missing first_name, contact created without first name")
+          .": donor ".$record['DonorID'], $record, $config->translate("Missing Data For Donor"), "Info");
+      }
+      if (empty(trim($contact_data['last_name']))) {
+        $this->logger->logError($config->translate("Donor missing last_name, contact created without last name")
+          .": donor ".$record['DonorID'], $record, $config->translate("Missing Data For Donor"), "Info");
       }
     }
 

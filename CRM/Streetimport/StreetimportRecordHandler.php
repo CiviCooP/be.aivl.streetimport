@@ -147,67 +147,65 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $contact_data['birth_date']        = $record['Birth date'];
     }
     $donor = $this->createContact($contact_data, $record);
-    if (empty($donor)) {
-      $this->logger->abort($config->translate("Cannot create new donor. Import failed."), $record);
-    }
-    $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id'], $record);
+    if (!empty($donor)) {
+      $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id'], $record);
 
-    // create address
-    if (!empty($record['Country'])) {
-      $country = CRM_Streetimport_Utils::getCountryByIso($record['Country']);
-      if (empty($country)) {
-        $countryId = $config->getDefaultCountryId();
+      // create address
+      if (!empty($record['Country'])) {
+        $country = CRM_Streetimport_Utils::getCountryByIso($record['Country']);
+        if (empty($country)) {
+          $countryId = $config->getDefaultCountryId();
+        } else {
+          $countryId = $country['country_id'];
+        }
       } else {
-        $countryId = $country['country_id'];
+        $countryId = $config->getDefaultCountryId();
       }
-    } else {
-      $countryId = $config->getDefaultCountryId();
+      $this->createAddress(array(
+        'contact_id' => $donor['id'],
+        'location_type_id' => $config->getLocationTypeId(),
+        'street_name' => CRM_Utils_Array::value('Street Name', $record),
+        'street_number' => (int)CRM_Utils_Array::value('Street Number', $record),
+        'street_unit' => CRM_Utils_Array::value('Street Unit', $record),
+        'postal_code' => CRM_Utils_Array::value('Postal code', $record),
+        'street_address' => trim(CRM_Utils_Array::value('Street Name', $record) . ' ' . CRM_Utils_Array::value('Street Number', $record) . ' ' . CRM_Utils_Array::value('Street Unit', $record)),
+        'city' => CRM_Utils_Array::value('City', $record),
+        'country_id' => $countryId
+      ), $record);
+
+      // create phones
+      $this->createPhone(array(
+        'contact_id' => $donor['id'],
+        'phone_type_id' => $config->getPhonePhoneTypeId(),
+        'location_type_id' => $config->getLocationTypeId(),
+        'phone' => CRM_Utils_Array::value('Telephone1', $record),
+      ), $record);
+      $this->createPhone(array(
+        'contact_id' => $donor['id'],
+        'phone_type_id' => $config->getPhonePhoneTypeId(),
+        'location_type_id' => $config->getOtherLocationTypeId(),
+        'phone' => CRM_Utils_Array::value('Telephone2', $record),
+      ), $record);
+      $this->createPhone(array(
+        'contact_id' => $donor['id'],
+        'phone_type_id' => $config->getMobilePhoneTypeId(),
+        'location_type_id' => $config->getLocationTypeId(),
+        'phone' => CRM_Utils_Array::value('Mobile1', $record),
+      ), $record);
+      $this->createPhone(array(
+        'contact_id' => $donor['id'],
+        'phone_type_id' => $config->getMobilePhoneTypeId(),
+        'location_type_id' => $config->getOtherLocationTypeId(),
+        'phone' => CRM_Utils_Array::value('Mobile2', $record),
+      ), $record);
+
+      // create email
+      $this->createEmail(array(
+        'contact_id' => $donor['id'],
+        'location_type_id' => $config->getLocationTypeId(),
+        'email' => CRM_Utils_Array::value('Email', $record),
+      ), $record);
     }
-    $this->createAddress(array(
-        'contact_id'       => $donor['id'],
-        'location_type_id' => $config->getLocationTypeId(),
-        'street_name'      => CRM_Utils_Array::value('Street Name',         $record),
-        'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
-        'street_unit'      => CRM_Utils_Array::value('Street Unit',         $record),
-        'postal_code'      => CRM_Utils_Array::value('Postal code',         $record),
-        'street_address'   => trim(CRM_Utils_Array::value('Street Name',    $record) . ' ' . CRM_Utils_Array::value('Street Number', $record) . ' ' . CRM_Utils_Array::value('Street Unit',   $record)),
-        'city'             => CRM_Utils_Array::value('City',                $record),
-        'country_id'       => $countryId
-      ), $record);
-
-    // create phones
-    $this->createPhone(array(
-        'contact_id'       => $donor['id'],
-        'phone_type_id'    => $config->getPhonePhoneTypeId(),
-        'location_type_id' => $config->getLocationTypeId(),
-        'phone'            => CRM_Utils_Array::value('Telephone1', $record),
-      ), $record);
-    $this->createPhone(array(
-        'contact_id'       => $donor['id'],
-        'phone_type_id'    => $config->getPhonePhoneTypeId(),
-        'location_type_id' => $config->getOtherLocationTypeId(),
-        'phone'            => CRM_Utils_Array::value('Telephone2', $record),
-      ), $record);
-    $this->createPhone(array(
-        'contact_id'       => $donor['id'],
-        'phone_type_id'    => $config->getMobilePhoneTypeId(),
-        'location_type_id' => $config->getLocationTypeId(),
-        'phone'            => CRM_Utils_Array::value('Mobile1', $record),
-      ), $record);
-    $this->createPhone(array(
-        'contact_id'       => $donor['id'],
-        'phone_type_id'    => $config->getMobilePhoneTypeId(),
-        'location_type_id' => $config->getOtherLocationTypeId(),
-        'phone'            => CRM_Utils_Array::value('Mobile2', $record),
-      ), $record);
-
-    // create email
-    $this->createEmail(array(
-        'contact_id'       => $donor['id'],
-        'location_type_id' => $config->getLocationTypeId(),
-        'email'            => CRM_Utils_Array::value('Email', $record),
-      ), $record);
-    
     return $donor;
   }
   /**
