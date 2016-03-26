@@ -264,6 +264,13 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   protected function extractMandate($record, $donor_id) {
     $config = CRM_Streetimport_Config::singleton();
+    
+    // error if no amount
+    if (empty(trim($record['Amount']))) {
+      $this->logger->logError($config->translate("No amount in SDD data for donor").": " . $donor_id, $record, 
+        $config->translate("No amount in SDD Data"), "Error");
+      return NULL;
+    }
 
     // check values
     $frequency_unit = CRM_Utils_Array::value('Frequency Unit', $record);
@@ -281,17 +288,15 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
     // REMARK 'Frequency Interval' is NOT frequency_interval (see https://github.com/CiviCooP/be.aivl.streetimport/issues/56#issuecomment-119829739)
     $cycle_day_option = (int) CRM_Utils_Array::value('Frequency Interval', $record);
-    // TODO: move to config or get from creditor
     if ($cycle_day_option == 2) {
       $mandate_data['cycle_day'] = 21;
     } else {
       $mandate_data['cycle_day'] = 7;
     }
 
-
     // check if IBAN is given
     $iban = CRM_Utils_Array::value('IBAN', $record);
-    if (empty($iban)) {
+    if (empty(trim($iban))) {
       $this->logger->logError($config->translate("Record with mandate")." ".$record['Mandate Reference']." "
         .$config->translate("has no IBAN"), $record, $config->translate("No IBAN for mandate"), "Error");
       return;
@@ -398,8 +403,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         unset($mandate_data['campaign_id']);
       }
     }
-
-    // TODO: more sanity checks?
+    
 
     try {
       $result = civicrm_api3('SepaMandate', 'createfull', $mandate_data);

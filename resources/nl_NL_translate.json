@@ -176,5 +176,7 @@
   "No IBAN for mandate":"Geen IBAN voor mandaat",
   "has no BIC, and a lookup with IBAN":"heeft geen BIC, en opzoeken met IBAN",
   "failed":"is mislukt",
-  "No BIC for mandate":"Geen BIC voor mandaat"
+  "No BIC for mandate":"Geen BIC voor mandaat",
+  "No amount in SDD data for donor":"Geen bedrag gevonden in SDD data voor donor",
+  "No amount in SDD Data":"Geen bedrag voor SDD"
 }
