@@ -178,5 +178,7 @@
   "failed":"is mislukt",
   "No BIC for mandate":"Geen BIC voor mandaat",
   "No amount in SDD data for donor":"Geen bedrag gevonden in SDD data voor donor",
-  "No amount in SDD Data":"Geen bedrag voor SDD"
+  "No amount in SDD Data":"Geen bedrag voor SDD",
+  "No mandate reference in SDD data for donor","Geen mandaat referentie in SDD data voor donor",
+  "No mandate reference in SDD Data":"Geen mandaat referentie in SDD data"
 }

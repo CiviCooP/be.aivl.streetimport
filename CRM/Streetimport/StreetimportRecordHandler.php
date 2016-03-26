@@ -266,13 +266,20 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $config = CRM_Streetimport_Config::singleton();
     
     // error if no amount
-    if (empty(trim($record['Amount']))) {
+    if (empty(trim(CRM_Utils_Array::value('Amount', $record)))) {
       $this->logger->logError($config->translate("No amount in SDD data for donor").": " . $donor_id, $record, 
         $config->translate("No amount in SDD Data"), "Error");
       return NULL;
     }
 
-    // check values
+    // error if no mandate reference
+    if (empty(trim(CRM_Utils_Array::value('Mandate Reference', $record)))) {
+      $this->logger->logError($config->translate("No mandate reference in SDD data for donor").": " . $donor_id, $record,
+        $config->translate("No mandate reference in SDD Data"), "Error");
+      return NULL;
+    }
+
+    // check frequency unit
     $frequency_unit = CRM_Utils_Array::value('Frequency Unit', $record);
     if (empty($frequency_unit)) {
       $this->logger->logWarning($config->translate("No SDD specified, no mandate created."), $record);
@@ -299,7 +306,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     if (empty(trim($iban))) {
       $this->logger->logError($config->translate("Record with mandate")." ".$record['Mandate Reference']." "
         .$config->translate("has no IBAN"), $record, $config->translate("No IBAN for mandate"), "Error");
-      return;
+      return NULL;
     }
 
     // look up BIC if it doesn't exist   // BE62510007547061
