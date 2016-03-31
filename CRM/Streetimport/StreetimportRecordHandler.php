@@ -119,7 +119,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $allowedLoadingTypes = $config->getLoadingTypes();
       if ($allowedLoadingTypes[$loadingType] == "Street Recruitment") {
         $this->logger->logError($config->translate("Donor with ID")." ".$record['DonorID']." ".$config->translate("for recr. org.")
-            ." ".$recruiting_organisation['id']." ".$config->translate("already exists. No act. or mandate created"), $record);
+            ." ".$recruiting_organisation['id']." ".$config->translate("already exists where new donor expected in StreetRecruitment. 
+            No act. or mandate created"), $record);
         return array();
       } else {
         $donor = $this->updateDonor($record, $donor);
@@ -667,6 +668,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       if (!empty($valueArray['value'])) {
         $setValues[] = $key . ' = %' . $index;
         $setParams[$index] = array($valueArray['value'], $valueArray['type']);
+        if ($key == 'new_sdd_freq_interval') {
+        }
         $index++;
       }
     }

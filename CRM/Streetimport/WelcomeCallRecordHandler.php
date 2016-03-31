@@ -45,76 +45,84 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     }
 
     // STEP 4: issue 86 do not process welcome call if no street recruitment for the contact
-    if (!$this->donorHasStreetRecruitment($donor)) {
+    if (!$this->donorHasActivity($donor, 'StreetRecruitment')) {
       $this->logger->logError("Donor ".$record['DonorID']." /CiviCRM contact id "
         .$donor['id']." ".$config->translate("and name")." ".$donor['sort_name']." "
         .$config->translate("has no Street Recruitment activity.")." "
         .$config->translate("Line in import file for Welcome Call ignored."), $record,
         $config->translate("No previous Street Recruitment when loading WelcomeCall"), "Error");
-    }
+    } else {
+      // STEP 5: issue 264: if contact already has a welcome call do not process
+      if ($this->donorHasActivity($donor, 'WelcomeCall')) {
+        $this->logger->logError("Donor " . $record['DonorID'] . " /CiviCRM contact id "
+          . $donor['id'] . " " . $config->translate("and name") . " " . $donor['sort_name'] . " "
+          . $config->translate("already has a WelcomeCall, no further processing for error line.") . " "
+          . $config->translate("Line in import file for Welcome Call ignored."), $record,
+          $config->translate("Already has WelcomeCall"), "Info");
+      } else {
+        // STEP 6: create activity "WelcomeCall"
+        $campaignId = $this->getCampaignParameter($record);
 
-    // STEP 5: create activity "WelcomeCall"
-    $campaignId = $this->getCampaignParameter($record);
+        $createdActivity = $this->createActivity(array(
+          'activity_type_id' => $config->getWelcomeCallActivityType(),
+          'subject' => $this->concatActivitySubject("Welcome Call", $campaignId),
+          'status_id' => $config->getWelcomeCallActivityStatusId(),
+          'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
+          'location' => $record['Recruitment Location'],
+          'target_contact_id' => (int)$donor['id'],
+          'source_contact_id' => $recruiter['id'],
+          'campaign_id' => $campaignId,
+          //'assignee_contact_id'=> $recruiter['id'],
+          'details' => $this->renderTemplate('activities/WelcomeCall.tpl', $record),
+        ), $record);
+        // add custom data to the created activity
+        $this->createActivityCustomData($createdActivity->id, $config->getWelcomeCallCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
 
-    $createdActivity = $this->createActivity(array(
-      'activity_type_id'   => $config->getWelcomeCallActivityType(),
-      'subject'            => $this->concatActivitySubject("Welcome Call", $campaignId),
-      'status_id'          => $config->getWelcomeCallActivityStatusId(),
-      'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
-      'location'           => $record['Recruitment Location'],
-      'target_contact_id'  => (int) $donor['id'],
-      'source_contact_id'  => $recruiter['id'],
-      'campaign_id'        => $campaignId,
-      //'assignee_contact_id'=> $recruiter['id'],
-      'details'            => $this->renderTemplate('activities/WelcomeCall.tpl', $record),
-    ), $record);
-    // add custom data to the created activity
-    $this->createActivityCustomData($createdActivity->id, $config->getWelcomeCallCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
+        // STEP 7: update SEPA mandate if required
+        $this->processMandate($record, $donor['id']);
 
-    // STEP 6: update SEPA mandate if required
-    $this->processMandate($record, $donor['id']);
+        // STEP 8: add to newsletter group if requested
+        if ($this->isTrue($record, "Newsletter")) {
+          $newsletter_group_id = $config->getNewsletterGroupID();
+          $this->addContactToGroup($donor['id'], $newsletter_group_id, $record);
+        }
 
-    // STEP 7: add to newsletter group if requested
-    if ($this->isTrue($record, "Newsletter")) {
-      $newsletter_group_id = $config->getNewsletterGroupID();
-      $this->addContactToGroup($donor['id'], $newsletter_group_id, $record);
-    }
+        // STEP 9: CHECK membership
+        if ($this->isTrue($record, "Member")) {
+          // check if membership exists
+          $membership_data = array(
+            'contact_id' => $donor['id'],
+            'membership_type_id' => $config->getMembershipTypeID(),
+          );
+          $existing_memberships = civicrm_api3('Membership', 'get', $membership_data);
+          if ($existing_memberships['count'] == 0) {
+            // the contact has no membership yet, create (see https://github.com/CiviCooP/be.aivl.streetimport/issues/49)
+            $membership_data['membership_source'] = $config->translate('Activity') . ' ' . $config->translate('Welcome Call') . ' ' . $createdActivity->id;
+            $this->createMembership($membership_data, $recruiter['id'], $record);
+          }
+        }
 
-    // STEP 8: CHECK membership 
-    if ($this->isTrue($record, "Member")) {
-      // check if membership exists
-      $membership_data = array(
-        'contact_id'         => $donor['id'],
-        'membership_type_id' => $config->getMembershipTypeID(),
-      );
-      $existing_memberships = civicrm_api3('Membership', 'get', $membership_data);
-      if ($existing_memberships['count'] == 0) {
-        // the contact has no membership yet, create (see https://github.com/CiviCooP/be.aivl.streetimport/issues/49)
-        $membership_data['membership_source'] = $config->translate('Activity').' '.$config->translate('Welcome Call').' '.$createdActivity->id;
-        $this->createMembership($membership_data, $recruiter['id'], $record);
+        // STEP 10: create activity 'Opvolgingsgesprek' if requested
+        if ($this->isTrue($record, "Follow Up Call")) {
+          $followUpDateTime = date('YmdHis', strtotime("+" . $config->getFollowUpOffsetDays() . " day"));
+          $this->createActivity(array(
+            'activity_type_id' => $config->getFollowUpCallActivityType(),
+            'subject' => $config->translate("Follow Up Call from") . " " . $config->translate('Welcome Call'),
+            'status_id' => $config->getFollowUpCallActivityStatusId(),
+            'activity_date_time' => $followUpDateTime,
+            'target_contact_id' => (int)$donor['id'],
+            'source_contact_id' => $recruiter['id'],
+            'assignee_contact_id' => $config->getFundraiserContactID(),
+            'campaign_id' => $this->getCampaignParameter($record),
+            'details' => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
+          ), $record);
+        }
       }
-    }
 
-    // STEP 9: create activity 'Opvolgingsgesprek' if requested
-    if ($this->isTrue($record, "Follow Up Call")) {
-      $followUpDateTime = date('YmdHis', strtotime("+".$config->getFollowUpOffsetDays()." day"));
-      $this->createActivity(array(
-        'activity_type_id'   => $config->getFollowUpCallActivityType(),
-        'subject'            => $config->translate("Follow Up Call from")." ".$config->translate('Welcome Call'),
-        'status_id'          => $config->getFollowUpCallActivityStatusId(),
-        'activity_date_time' => $followUpDateTime,
-        'target_contact_id'  => (int) $donor['id'],
-        'source_contact_id'  => $recruiter['id'],
-        'assignee_contact_id'=> $config->getFundraiserContactID(),
-        'campaign_id'        => $this->getCampaignParameter($record),
-        'details'            => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
-      ), $record);
+      // DONE
+      $this->logger->logImport($record, true, $config->translate('WelcomeCall'));
     }
-
-    // DONE
-    $this->logger->logImport($record, true, $config->translate('WelcomeCall'));
   }
-
 
   /**
    * process SDD mandate
@@ -194,7 +202,6 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // filter the changes, some can be safely ignored
     $ignore_changes_for = array('creation_date', 'contact_id');
     foreach ($ignore_changes_for as $field) unset($mandate_diff[$field]);
-    // TODO: can we really ignore changes for contact_id? 
     //  => this should only happen if the donor ID lookup failed...
 
     if (empty($mandate_diff)) {
@@ -326,27 +333,33 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
   }
 
   /**
-   * Method to check if the donor already has a street recruitment activity
+   * Method to check if the donor already has a street recruitment or welcome call activity
    *
    * @param $donor
+   * @param $type
    * @return bool
    * @access protected
    */
-  protected function donorHasStreetRecruitment($donor) {
+  protected function donorHasActivity($donor, $type) {
     $config = CRM_Streetimport_Config::singleton();
-    $query = "SELECT COUNT(*) as countStreetRecruitment
-	    FROM civicrm_activity act JOIN civicrm_activity_contact actcont
-      WHERE actcont.contact_id = %1 AND act.is_current_revision = %2 AND act.is_deleted = %3
-      AND act.is_test = %3 AND actcont.record_type_id = %4 AND act.activity_type_id = %5";
+    if ($type == "StreetRecruitment") {
+      $activityTypeId = $config->getStreetRecruitmentActivityType('value');
+    } else {
+      $activityTypeId = $config->getWelcomeCallActivityType('value');
+    }
+    $query = "SELECT COUNT(*) as countActivities
+      FROM civicrm_activity_contact a JOIN civicrm_activity b ON a.activity_id = b.id
+      WHERE a.record_type_id = %1 and a.contact_id = %2 and b.is_current_revision = %3 and b.activity_type_id = %4
+      AND b.is_test = %5 and b.is_deleted = %5";
     $params = array(
-      1 => array($donor['id'], 'Integer'),
-      2 => array(1, 'Integer'),
-      3 => array(0, 'Integer'),
-      4 => array(3, 'Integer'),
-      5 => array($config->getStreetRecruitmentActivityType('value'), 'Integer')
+      1 => array(3, 'Integer'),
+      2 => array($donor['id'], 'Integer'),
+      3 => array(1, 'Integer'),
+      4 => array($activityTypeId, 'Integer'),
+      5 => array(0, 'Integer')
     );
-    $countStreetRecruitment = CRM_Core_DAO::singleValueQuery($query, $params);
-    if ($countStreetRecruitment > 0) {
+    $countActivity = CRM_Core_DAO::singleValueQuery($query, $params);
+    if ($countActivity > 0) {
       return TRUE;
     } else {
       return FALSE;

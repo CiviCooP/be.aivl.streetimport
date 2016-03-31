@@ -149,7 +149,7 @@
   "An error occurred while saving the bank account":"Er is een fout opgetreden bij het toevoegen van bankrekening",
   "Successfully imported record of type":"Succesvolle import van record met type",
   "Donor with ID":"Donor met ID",
-  "already exists. No act. or mandate created":"Bestaat al, geen act. of mandaat toegevoegd",
+  "already exists where new donor expected in StreetRecruitment.. No act. or mandate created":"bestaat al waar nieuwe donor in straatwerving verwacht wordt, geen act. of mandaat toegevoegd",
   "is not encoded as UTF-8 and can not be processed":"is niet gecodeerd als UTF-8 en kan niet verwerkt worden",
   "Error":"Fout",
   "and name":"en naam",
@@ -180,5 +180,7 @@
   "No amount in SDD data for donor":"Geen bedrag gevonden in SDD data voor donor",
   "No amount in SDD Data":"Geen bedrag voor SDD",
   "No mandate reference in SDD data for donor","Geen mandaat referentie in SDD data voor donor",
-  "No mandate reference in SDD Data":"Geen mandaat referentie in SDD data"
+  "No mandate reference in SDD Data":"Geen mandaat referentie in SDD data",
+  "already has a WelcomeCall, no further processing for error line":"heeft al een Welkomstgesprek, geen verdere verwerking voor import regel",
+  "Already has WelcomeCall":"Heeft al Welkomstgesprek"
 }
