@@ -162,9 +162,13 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       } else {
         $countryId = $config->getDefaultCountryId();
       }
+      $locationTypeId = $config->getLocationTypeId();
+      $phonePhoneTypeId = $config->getPhonePhoneTypeId();
+      $mobilePhoneTypeId = $config->getMobilePhoneTypeId();
+      $otherLocationTypeId = $config->getOtherLocationTypeId();
       $this->createAddress(array(
         'contact_id' => $donor['id'],
-        'location_type_id' => $config->getLocationTypeId(),
+        'location_type_id' => $locationTypeId,
         'street_name' => CRM_Utils_Array::value('Street Name', $record),
         'street_number' => (int)CRM_Utils_Array::value('Street Number', $record),
         'street_unit' => CRM_Utils_Array::value('Street Unit', $record),
@@ -177,33 +181,33 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       // create phones
       $this->createPhone(array(
         'contact_id' => $donor['id'],
-        'phone_type_id' => $config->getPhonePhoneTypeId(),
-        'location_type_id' => $config->getLocationTypeId(),
+        'phone_type_id' => $phonePhoneTypeId,
+        'location_type_id' => $locationTypeId,
         'phone' => CRM_Utils_Array::value('Telephone1', $record),
       ), $record);
       $this->createPhone(array(
         'contact_id' => $donor['id'],
-        'phone_type_id' => $config->getPhonePhoneTypeId(),
-        'location_type_id' => $config->getOtherLocationTypeId(),
+        'phone_type_id' => $phonePhoneTypeId,
+        'location_type_id' => $otherLocationTypeId,
         'phone' => CRM_Utils_Array::value('Telephone2', $record),
       ), $record);
       $this->createPhone(array(
         'contact_id' => $donor['id'],
-        'phone_type_id' => $config->getMobilePhoneTypeId(),
-        'location_type_id' => $config->getLocationTypeId(),
+        'phone_type_id' => $mobilePhoneTypeId,
+        'location_type_id' => $locationTypeId,
         'phone' => CRM_Utils_Array::value('Mobile1', $record),
       ), $record);
       $this->createPhone(array(
         'contact_id' => $donor['id'],
-        'phone_type_id' => $config->getMobilePhoneTypeId(),
-        'location_type_id' => $config->getOtherLocationTypeId(),
+        'phone_type_id' => $mobilePhoneTypeId,
+        'location_type_id' => $otherLocationTypeId,
         'phone' => CRM_Utils_Array::value('Mobile2', $record),
       ), $record);
 
       // create email
       $this->createEmail(array(
         'contact_id' => $donor['id'],
-        'location_type_id' => $config->getLocationTypeId(),
+        'location_type_id' => $locationTypeId,
         'email' => CRM_Utils_Array::value('Email', $record),
       ), $record);
     }
@@ -462,18 +466,20 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
             .$config->translate("already exists with contact")." ".$mandate_data['contact_id'], $record);
       } else {
         // create bank account (using BAOs)
+        $streetRecruitmentSource = $config->translate('Street Recruitment');
         $ba_extra = array(
           'BIC'     => $mandate_data['bic'],
           'country' => substr($mandate_data['iban'], 0, 2),
-          'source'  => $config->translate('Street Recruitment'),
+          'source'  => $streetRecruitmentSource,
         );
         if (!empty($mandate_data['bank_name'])) {
           $ba_extra['bank_name'] = $mandate_data['bank_name'];
         }
 
+        $mandateDescription = $config->translate('Private Account');
         $ba = civicrm_api3('BankingAccount', 'create', array(
           'contact_id'   => $mandate_data['contact_id'],
-          'description'  => $config->translate('Private Account'),
+          'description'  => $mandateDescription,
           'created_date' => date('YmdHis'),
           'data_raw'     => '{}',
           'data_parsed'  => json_encode($ba_extra),
@@ -841,20 +847,21 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $params = array(
         'contact_id' => $contactId,
         'email' => $emailFromRecord);
+      $emailAddress = CRM_Utils_Array::value('Email', $record);
       try {
         $emailCount = civicrm_api3('Email', 'Getcount', $params);
         if ($emailCount == 0) {
           $this->createEmail(array(
             'contact_id'       => $contactId,
             'location_type_id' => $locationTypeId,
-            'email'            => CRM_Utils_Array::value('Email', $record)
+            'email'            => $emailAddress
           ), $record);
         }
       } catch (CiviCRM_API3_Exception $ex) {
         $this->createEmail(array(
           'contact_id'       => $contactId,
           'location_type_id' => $locationTypeId,
-          'email'            => CRM_Utils_Array::value('Email', $record),
+          'email'            => $emailAddress,
         ), $record);
       }
     }
@@ -879,17 +886,19 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     } else {
       $countryId = $config->getDefaultCountryId();
     }
-    $params = array(
-      'contact_id' => $contactId,
-      'street_name' => CRM_Utils_Array::value('Street Name', $record),
-      'street_number' => CRM_Utils_Array::value('Street Number', $record),
-      'postal_code' => CRM_Utils_Array::value('Postal code', $record),
-      'city' => CRM_Utils_Array::value('City', $record),
-      'country_id' => $countryId
-    );
     $streetUnitFromRecord = CRM_Utils_Array::value('Street Unit', $record);
     $streetNameFromRecord = CRM_Utils_Array::value('Street Name', $record);
     $streetNumberFromRecord = CRM_Utils_Array::value('Street Number', $record);
+    $postalCodeFromRecord = CRM_Utils_Array::value('Postal code', $record);
+    $cityFromRecord = CRM_Utils_Array::value('City', $record);
+    $params = array(
+      'contact_id' => $contactId,
+      'street_name' => $streetNameFromRecord,
+      'street_number' => $streetNumberFromRecord,
+      'postal_code' => $postalCodeFromRecord,
+      'city' => $cityFromRecord,
+      'country_id' => $countryId
+    );
     if (!empty($streetUnitFromRecord)) {
       $params['street_unit'] = $streetUnitFromRecord;
     }
@@ -901,12 +910,12 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         $this->createAddress(array(
           'contact_id'       => $contactId,
           'location_type_id' => $locationTypeId,
-          'street_name'      => CRM_Utils_Array::value('Street Name', $record),
-          'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
-          'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
-          'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
+          'street_name'      => $streetNameFromRecord,
+          'street_number'    => (int) $streetNumberFromRecord,
+          'street_unit'      => $streetUnitFromRecord,
+          'postal_code'      => $postalCodeFromRecord,
           'street_address'   => $streetAddress,
-          'city'             => CRM_Utils_Array::value('City', $record),
+          'city'             => $cityFromRecord,
           'is_primary'       => 1,
           'country_id'       => $countryId
         ), $record);
@@ -915,10 +924,10 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $this->createAddress(array(
         'contact_id'       => $contactId,
         'location_type_id' => $locationTypeId,
-        'street_name'      => CRM_Utils_Array::value('Street Name', $record),
-        'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
-        'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
-        'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
+        'street_name'      => $streetNameFromRecord,
+        'street_number'    => (int) $streetNumberFromRecord,
+        'street_unit'      => $streetUnitFromRecord,
+        'postal_code'      => $postalCodeFromRecord,
         'street_address'   => $streetAddress,
         'is_primary'       => 1,
         'country_id'       => $countryId

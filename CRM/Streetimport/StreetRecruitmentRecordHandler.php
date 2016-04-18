@@ -44,21 +44,26 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
       // STEP 5: create activity "Straatwerving"
       $campaignId = $this->getCampaignParameter($record);
+      $streetRecruitmentActivityTypeId = $config->getStreetRecruitmentActivityType();
+      $streetRecruitmentSubject = $this->concatActivitySubject("Street Recruitment", $campaignId);
+      $streetRecruitmentActivityStatusId = $config->getStreetRecruitmentActivityStatusId();
+      $streetRecruitmentActivityDateTime = date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date'])));
+      $streetRecruitmentDetails = $this->renderTemplate('activities/StreetRecruitment.tpl', $record);
       $createdActivity = $this->createActivity(array(
-          'activity_type_id' => $config->getStreetRecruitmentActivityType(),
-          'subject' => $this->concatActivitySubject("Street Recruitment", $campaignId),
-          'status_id' => $config->getStreetRecruitmentActivityStatusId(),
+          'activity_type_id' => $streetRecruitmentActivityTypeId,
+          'subject' => $streetRecruitmentSubject,
+          'status_id' => $streetRecruitmentActivityStatusId,
           'location' => $record['Recruitment Location'],
-          'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
+          'activity_date_time' => $streetRecruitmentActivityDateTime,
           'target_contact_id' => (int)$donor['id'],
           'source_contact_id' => $recruiter['id'],
         //'assignee_contact_id'=> $recruiter['id'],
           'campaign_id' => $campaignId,
-          'details' => $this->renderTemplate('activities/StreetRecruitment.tpl', $record),
+          'details' => $streetRecruitmentDetails,
       ), $record);
       // add custom data to the created activity
       $this->createActivityCustomData($createdActivity->id, $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
-
+      
       // STEP 6: create SEPA mandate
       $mandate_data = $this->extractMandate($record, $donor['id'], $record);
       if (!empty($mandate_data)) {
@@ -77,6 +82,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
       // STEP 8: create membership if requested
       if ($this->isTrue($record, "Member")) {
+        $membershipTypeId = $config->getMembershipTypeID();
         $this->createMembership(array(
             'contact_id' => $donor['id'],
             'membership_type_id' => $config->getMembershipTypeID(),
@@ -87,17 +93,26 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
       // STEP 8: create activity 'Opvolgingsgesprek' if requested
       if ($this->isTrue($record, "Follow Up Call")) {
+        $followUpCallActivityType = $config->getFollowUpCallActivityType();
+        $followUpSubject = $config->translate("Follow Up Call from") . " " . $config->translate('Street Recruitment');
+        $followUpCallStatusId = $config->getFollowUpCallActivityStatusId();
+        $fundraiserContactId = $config->getFundraiserContactID();
+        $followUpCampaignId = $this->getCampaignParameter($record);
+        $followUpDetails = $this->renderTemplate('activities/FollowUpCall.tpl', $record);
+
+
+
         $followUpDateTime = date('YmdHis', strtotime("+" . $config->getFollowUpOffsetDays() . " day"));
         $this->createActivity(array(
-            'activity_type_id' => $config->getFollowUpCallActivityType(),
-            'subject' => $config->translate("Follow Up Call from") . " " . $config->translate('Street Recruitment'),
-            'status_id' => $config->getFollowUpCallActivityStatusId(),
+            'activity_type_id' => $followUpCallActivityType,
+            'subject' => $followUpSubject,
+            'status_id' => $followUpCallStatusId,
             'activity_date_time' => $followUpDateTime,
             'target_contact_id' => (int)$donor['id'],
             'source_contact_id' => $recruiter['id'],
-            'assignee_contact_id' => $config->getFundraiserContactID(),
-            'campaign_id' => $this->getCampaignParameter($record),
-            'details' => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
+            'assignee_contact_id' => $fundraiserContactId,
+            'campaign_id' => $followUpCampaignId,
+            'details' => $followUpDetails,
         ), $record);
       }
     }
@@ -139,7 +154,9 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     } else {
       $customData['new_sdd_cancel'] = array('value' => 0, 'type' => 'Integer');
     }
-    $customData['new_areas_interest'] = array('value' => $this->getAreasOfInterest($record['Interests']), 'type' => 'String');
+    $areasOfInterest = $this->getAreasOfInterest($record['Interests']);
+    $frequencyUnit = $this->getFrequencyUnit($record['Frequency Unit']);
+    $customData['new_areas_interest'] = array('value' => $areasOfInterest, 'type' => 'String');
     $customData['new_remarks'] = array('value' => $record['Notes'], 'type' => 'String');
     $customData['new_sdd_mandate'] = array('value' => $record['Mandate Reference'], 'type' => 'String');
     $customData['new_sdd_iban'] = array('value' => $record['IBAN'], 'type' => 'String');
@@ -148,7 +165,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $fixedAmount = $this->fixImportedAmount($record['Amount']);
     $customData['new_sdd_amount'] = array('value' => $fixedAmount, 'type' => 'Money');
     $customData['new_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
-    $customData['new_sdd_freq_unit'] = array('value' => $this->getFrequencyUnit($record['Frequency Unit']), 'type' => 'Integer');
+    $customData['new_sdd_freq_unit'] = array('value' => $frequencyUnit, 'type' => 'Integer');
     if (!empty($record['Start Date'])) {
       $customData['new_sdd_start_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Start Date']))), 'type' => 'Date');
     }

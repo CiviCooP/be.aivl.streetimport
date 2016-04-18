@@ -63,17 +63,23 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         // STEP 6: create activity "WelcomeCall"
         $campaignId = $this->getCampaignParameter($record);
 
+        $welcomeCallActvityType = $config->getWelcomeCallActivityType();
+        $concatActivitySubject = $this->concatActivitySubject("Welcome Call", $campaignId);
+        $welcomeCallActivityStatusId = $config->getWelcomeCallActivityStatusId();
+        $activityDateTime = date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date'])));
+        $activityDetails = $this->renderTemplate('activities/WelcomeCall.tpl', $record);
+
         $createdActivity = $this->createActivity(array(
-          'activity_type_id' => $config->getWelcomeCallActivityType(),
-          'subject' => $this->concatActivitySubject("Welcome Call", $campaignId),
-          'status_id' => $config->getWelcomeCallActivityStatusId(),
-          'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
+          'activity_type_id' => $welcomeCallActvityType,
+          'subject' => $concatActivitySubject,
+          'status_id' => $welcomeCallActivityStatusId,
+          'activity_date_time' => $activityDateTime,
           'location' => $record['Recruitment Location'],
           'target_contact_id' => (int)$donor['id'],
           'source_contact_id' => $recruiter['id'],
           'campaign_id' => $campaignId,
           //'assignee_contact_id'=> $recruiter['id'],
-          'details' => $this->renderTemplate('activities/WelcomeCall.tpl', $record),
+          'details' => $activityDetails,
         ), $record);
         // add custom data to the created activity
         $this->createActivityCustomData($createdActivity->id, $config->getWelcomeCallCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
@@ -90,9 +96,10 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         // STEP 9: CHECK membership
         if ($this->isTrue($record, "Member")) {
           // check if membership exists
+          $membershipTypeId = $config->getMembershipTypeID();
           $membership_data = array(
             'contact_id' => $donor['id'],
-            'membership_type_id' => $config->getMembershipTypeID(),
+            'membership_type_id' => $membershipTypeId,
           );
           $existing_memberships = civicrm_api3('Membership', 'get', $membership_data);
           if ($existing_memberships['count'] == 0) {
@@ -104,17 +111,24 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
 
         // STEP 10: create activity 'Opvolgingsgesprek' if requested
         if ($this->isTrue($record, "Follow Up Call")) {
+          $followUpCallActivityType = $config->getFollowUpCallActivityType();
+          $followUpSubject = $config->translate("Follow Up Call from") . " " . $config->translate('Welcome Call');
+          $followUpCallStatusId = $config->getFollowUpCallActivityStatusId();
+          $fundraiserContactId = $config->getFundraiserContactID();
+          $followUpCampaignId = $this->getCampaignParameter($record);
+          $followUpDetails = $this->renderTemplate('activities/FollowUpCall.tpl', $record);
+          
           $followUpDateTime = date('YmdHis', strtotime("+" . $config->getFollowUpOffsetDays() . " day"));
           $this->createActivity(array(
-            'activity_type_id' => $config->getFollowUpCallActivityType(),
-            'subject' => $config->translate("Follow Up Call from") . " " . $config->translate('Welcome Call'),
-            'status_id' => $config->getFollowUpCallActivityStatusId(),
+            'activity_type_id' => $followUpCallActivityType,
+            'subject' => $followUpSubject,
+            'status_id' => $followUpCallStatusId,
             'activity_date_time' => $followUpDateTime,
             'target_contact_id' => (int)$donor['id'],
             'source_contact_id' => $recruiter['id'],
-            'assignee_contact_id' => $config->getFundraiserContactID(),
-            'campaign_id' => $this->getCampaignParameter($record),
-            'details' => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
+            'assignee_contact_id' => $fundraiserContactId,
+            'campaign_id' => $followUpCampaignId,
+            'details' => $followUpDetails,
           ), $record);
         }
       }
@@ -313,7 +327,9 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     } else {
       $customData['wc_sdd_cancel'] = array('value' => 0, 'type' => 'Integer');
     }
-    $customData['wc_areas_interest'] = array('value' => $this->getAreasOfInterest($record['Interests']), 'type' => 'String');
+    $areasOfInterest = $this->getAreasOfInterest($record['Interests']);
+    $frequencyUnit = $this->getFrequencyUnit($record['Frequency Unit']);
+    $customData['wc_areas_interest'] = array('value' => $areasOfInterest, 'type' => 'String');
     $customData['wc_remarks'] = array('value' => $record['Notes'], 'type' => 'String');
     $customData['wc_sdd_mandate'] = array('value' => $record['Mandate Reference'], 'type' => 'String');
     $customData['wc_sdd_iban'] = array('value' => $record['IBAN'], 'type' => 'String');
@@ -322,7 +338,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $fixedAmount = $this->fixImportedAmount($record['Amount']);
     $customData['wc_sdd_amount'] = array('value' => $fixedAmount, 'type' => 'Money');
     $customData['wc_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
-    $customData['wc_sdd_freq_unit'] = array('value' => $this->getFrequencyUnit($record['Frequency Unit']), 'type' => 'Integer');
+    $customData['wc_sdd_freq_unit'] = array('value' => $frequencyUnit, 'type' => 'Integer');
     if (!empty($record['Start Date'])) {
       $customData['wc_sdd_start_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Start Date']))), 'type' => 'Date');
     }
