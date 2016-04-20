@@ -44,10 +44,14 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
       // STEP 5: create activity "Straatwerving"
       $campaignId = $this->getCampaignParameter($record);
+      $streetRecruitmentActivityType = $config->getStreetRecruitmentActivityType();
+      $streetRecruitmentSubject = $this->concatActivitySubject("Street Recruitment", $campaignId);
+      $streetRecruitmentActivityStatusId = $config->getStreetRecruitmentActivityStatusId();
+
       $createdActivity = $this->createActivity(array(
-          'activity_type_id' => $config->getStreetRecruitmentActivityType(),
-          'subject' => $this->concatActivitySubject("Street Recruitment", $campaignId),
-          'status_id' => $config->getStreetRecruitmentActivityStatusId(),
+          'activity_type_id' => $streetRecruitmentActivityType,
+          'subject' => $streetRecruitmentSubject,
+          'status_id' => $streetRecruitmentActivityStatusId,
           'location' => $record['Recruitment Location'],
           'activity_date_time' => date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date']))),
           'target_contact_id' => (int)$donor['id'],
@@ -77,10 +81,12 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
 
       // STEP 8: create membership if requested
       if ($this->isTrue($record, "Member")) {
+        $membershipTypeId = $config->getMembershipTypeID();
+        $membershipSource = $config->translate('Activity') . ' ' . $config->translate('Street Recruitment') . ' ' . $createdActivity->id;
         $this->createMembership(array(
             'contact_id' => $donor['id'],
-            'membership_type_id' => $config->getMembershipTypeID(),
-            'membership_source' => $config->translate('Activity') . ' ' . $config->translate('Street Recruitment') . ' ' . $createdActivity->id
+            'membership_type_id' => $membershipTypeId,
+            'membership_source' => $membershipSource
         ), $recruiter['id'], $record);
       }
 
@@ -88,14 +94,19 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       // STEP 8: create activity 'Opvolgingsgesprek' if requested
       if ($this->isTrue($record, "Follow Up Call")) {
         $followUpDateTime = date('YmdHis', strtotime("+" . $config->getFollowUpOffsetDays() . " day"));
+        $followUpActivityType = $config->getFollowUpCallActivityType();
+        $followUpSubject = $config->translate("Follow Up Call from") . " " . $config->translate('Street Recruitment');
+        $followUpActivityStatusId = $config->getFollowUpCallActivityStatusId();
+        $fundraiserContactId = $config->getFundraiserContactID();
+
         $this->createActivity(array(
-            'activity_type_id' => $config->getFollowUpCallActivityType(),
-            'subject' => $config->translate("Follow Up Call from") . " " . $config->translate('Street Recruitment'),
-            'status_id' => $config->getFollowUpCallActivityStatusId(),
+            'activity_type_id' => $followUpActivityType,
+            'subject' => $followUpSubject,
+            'status_id' => $followUpActivityStatusId,
             'activity_date_time' => $followUpDateTime,
             'target_contact_id' => (int)$donor['id'],
             'source_contact_id' => $recruiter['id'],
-            'assignee_contact_id' => $config->getFundraiserContactID(),
+            'assignee_contact_id' => $fundraiserContactId,
             'campaign_id' => $campaignId,
             'details' => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
         ), $record);
@@ -117,6 +128,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
   protected function buildActivityCustomData($record) {
     $config = CRM_Streetimport_Config::singleton();
     $acceptedYesValues = $config->getAcceptedYesValues();
+    $frequencyUnit = $this->getFrequencyUnit($record['Frequency Unit']);
+    $areasOfInterest = $this->getAreasOfInterest($record['Interests']);
     $customData = array();
     $customData['new_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
@@ -139,7 +152,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     } else {
       $customData['new_sdd_cancel'] = array('value' => 0, 'type' => 'Integer');
     }
-    $customData['new_areas_interest'] = array('value' => $this->getAreasOfInterest($record['Interests']), 'type' => 'String');
+    $customData['new_areas_interest'] = array('value' => $areasOfInterest, 'type' => 'String');
     $customData['new_remarks'] = array('value' => $record['Notes'], 'type' => 'String');
     $customData['new_sdd_mandate'] = array('value' => $record['Mandate Reference'], 'type' => 'String');
     $customData['new_sdd_iban'] = array('value' => $record['IBAN'], 'type' => 'String');
@@ -148,7 +161,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $fixedAmount = $this->fixImportedAmount($record['Amount']);
     $customData['new_sdd_amount'] = array('value' => $fixedAmount, 'type' => 'Money');
     $customData['new_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
-    $customData['new_sdd_freq_unit'] = array('value' => $this->getFrequencyUnit($record['Frequency Unit']), 'type' => 'Integer');
+    $customData['new_sdd_freq_unit'] = array('value' => $frequencyUnit, 'type' => 'Integer');
     if (!empty($record['Start Date'])) {
       $customData['new_sdd_start_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Start Date']))), 'type' => 'Date');
     }

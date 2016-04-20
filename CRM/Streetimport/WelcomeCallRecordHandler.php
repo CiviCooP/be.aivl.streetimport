@@ -111,15 +111,20 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         // STEP 10: create activity 'Opvolgingsgesprek' if requested
         if ($this->isTrue($record, "Follow Up Call")) {
           $followUpDateTime = date('YmdHis', strtotime("+" . $config->getFollowUpOffsetDays() . " day"));
+          $followUpActivityType = $config->getFollowUpCallActivityType();
+          $followUpSubject = $config->translate("Follow Up Call from") . " " . $config->translate('Welcome Call');
+          $followUpActivityStatusId = $config->getFollowUpCallActivityStatusId();
+          $fundRaiserId = $config->getFundraiserContactID();
+          
           $this->createActivity(array(
-            'activity_type_id' => $config->getFollowUpCallActivityType(),
-            'subject' => $config->translate("Follow Up Call from") . " " . $config->translate('Welcome Call'),
-            'status_id' => $config->getFollowUpCallActivityStatusId(),
+            'activity_type_id' => $followUpActivityType,
+            'subject' => $followUpSubject,
+            'status_id' => $followUpActivityStatusId,
             'activity_date_time' => $followUpDateTime,
             'target_contact_id' => (int)$donor['id'],
             'source_contact_id' => $recruiter['id'],
-            'assignee_contact_id' => $config->getFundraiserContactID(),
-            'campaign_id' => $this->getCampaignParameter($record),
+            'assignee_contact_id' => $fundRaiserId,
+            'campaign_id' => $campaignId,
             'details' => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
           ), $record);
         }
@@ -297,6 +302,8 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
   protected function buildActivityCustomData($record) {
     $config = CRM_Streetimport_Config::singleton();
     $acceptedYesValues = $config->getAcceptedYesValues();
+    $frequencyUnit = $this->getFrequencyUnit($record['Frequency Unit']);
+    $areasOfInterest = $this->getAreasOfInterest($record['Interests']);
     $customData = array();
     $customData['wc_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
@@ -319,7 +326,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     } else {
       $customData['wc_sdd_cancel'] = array('value' => 0, 'type' => 'Integer');
     }
-    $customData['wc_areas_interest'] = array('value' => $this->getAreasOfInterest($record['Interests']), 'type' => 'String');
+    $customData['wc_areas_interest'] = array('value' => $areasOfInterest, 'type' => 'String');
     $customData['wc_remarks'] = array('value' => $record['Notes'], 'type' => 'String');
     $customData['wc_sdd_mandate'] = array('value' => $record['Mandate Reference'], 'type' => 'String');
     $customData['wc_sdd_iban'] = array('value' => $record['IBAN'], 'type' => 'String');
@@ -328,7 +335,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $fixedAmount = $this->fixImportedAmount($record['Amount']);
     $customData['wc_sdd_amount'] = array('value' => $fixedAmount, 'type' => 'Money');
     $customData['wc_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
-    $customData['wc_sdd_freq_unit'] = array('value' => $this->getFrequencyUnit($record['Frequency Unit']), 'type' => 'Integer');
+    $customData['wc_sdd_freq_unit'] = array('value' => $frequencyUnit, 'type' => 'Integer');
     if (!empty($record['Start Date'])) {
       $customData['wc_sdd_start_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Start Date']))), 'type' => 'Date');
     }

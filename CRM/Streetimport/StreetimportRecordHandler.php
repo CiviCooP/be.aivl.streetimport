@@ -67,9 +67,10 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // CREATE RECRUITER CONTACT
     $this->logger->logDebug($config->translate("Recruiter not found, creating new one..."), $record);
     // "If the contact is not known, a contact of the contact subtype 'Werver' is to be created"
+    $recruiterContactSubType = $config->getRecruiterContactSubType();
     $recruiter_data = array(
       'contact_type'      => 'Individual',
-      'contact_sub_type'  => $config->getRecruiterContactSubType(),
+      'contact_sub_type'  => $recruiterContactSubType,
       'first_name'        => CRM_Utils_Array::value('Recruiter First Name', $record),
       'last_name'         => CRM_Utils_Array::value('Recruiter Last Name',  $record),
       'prefix'            => CRM_Utils_Array::value('Recruiter Prefix', $record),
@@ -92,10 +93,11 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
 
     // ..."with a relationship 'Werver' to the recruiting organization."
+    $recruiterRelationshipType = $config->getRecruiterRelationshipType();
     $relationshipData = array(
       'contact_id_a' => $recruiting_organisation['id'],
       'contact_id_b' => $recruiter['id'],
-      'relationship_type_id' => $config->getRecruiterRelationshipType()
+      'relationship_type_id' => $recruiterRelationshipType
     );
 
     $this->createRelationship($relationshipData, $record);
@@ -133,6 +135,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // create base contact
     $householdPrefixes = $config->getHouseholdPrefixIds();
     $contact_data = array();
+    $prefixId = $this->getPrefixIdWithLabel(CRM_Utils_Array::value('Prefix', $record));
+    $genderId = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
     if ($this->isTrue($record, 'Organization Yes/No')) {
       $contact_data['contact_type']      = 'Organization';
       $contact_data['organization_name'] = CRM_Utils_Array::value('Last Name',  $record);
@@ -143,8 +147,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $contact_data['contact_type']      = 'Individual';
       $contact_data['first_name']        = CRM_Utils_Array::value('First Name', $record);
       $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
-      $contact_data['prefix_id']         = $this->getPrefixIdWithLabel(CRM_Utils_Array::value('Prefix', $record));
-      $contact_data['gender_id']         = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
+      $contact_data['prefix_id']         = $prefixId;
+      $contact_data['gender_id']         = $genderId;
       $contact_data['birth_date']        = $record['Birth date'];
     }
     $donor = $this->createContact($contact_data, $record);
@@ -165,9 +169,13 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $streetName = trim(CRM_Utils_Array::value('Street Name', $record));
       $streetNumber = (int) trim(CRM_Utils_Array::value('Street Number', $record));
       $streetUnit = trim(CRM_Utils_Array::value('Street Unit', $record));
+      $locationTypeId = $config->getLocationTypeId();
+      $phonePhoneTypeId = $config->getPhonePhoneTypeId();
+      $mobilePhoneTypeId = $config->getMobilePhoneTypeId();
+      $otherLocationTypeId = $config->getOtherLocationTypeId();
       $this->createAddress(array(
         'contact_id' => $donor['id'],
-        'location_type_id' => $config->getLocationTypeId(),
+        'location_type_id' => $$locationTypeId,
         'street_name' => $streetName,
         'street_number' => $streetNumber,
         'street_unit' => $streetUnit,
@@ -180,33 +188,33 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       // create phones
       $this->createPhone(array(
         'contact_id' => $donor['id'],
-        'phone_type_id' => $config->getPhonePhoneTypeId(),
-        'location_type_id' => $config->getLocationTypeId(),
+        'phone_type_id' => $phonePhoneTypeId,
+        'location_type_id' => $locationTypeId,
         'phone' => CRM_Utils_Array::value('Telephone1', $record),
       ), $record);
       $this->createPhone(array(
         'contact_id' => $donor['id'],
-        'phone_type_id' => $config->getPhonePhoneTypeId(),
-        'location_type_id' => $config->getOtherLocationTypeId(),
+        'phone_type_id' => $phonePhoneTypeId,
+        'location_type_id' => $otherLocationTypeId,
         'phone' => CRM_Utils_Array::value('Telephone2', $record),
       ), $record);
       $this->createPhone(array(
         'contact_id' => $donor['id'],
-        'phone_type_id' => $config->getMobilePhoneTypeId(),
-        'location_type_id' => $config->getLocationTypeId(),
+        'phone_type_id' => $mobilePhoneTypeId,
+        'location_type_id' => $locationTypeId,
         'phone' => CRM_Utils_Array::value('Mobile1', $record),
       ), $record);
       $this->createPhone(array(
         'contact_id' => $donor['id'],
-        'phone_type_id' => $config->getMobilePhoneTypeId(),
-        'location_type_id' => $config->getOtherLocationTypeId(),
+        'phone_type_id' => $mobilePhoneTypeId,
+        'location_type_id' => $otherLocationTypeId,
         'phone' => CRM_Utils_Array::value('Mobile2', $record),
       ), $record);
 
       // create email
       $this->createEmail(array(
         'contact_id' => $donor['id'],
-        'location_type_id' => $config->getLocationTypeId(),
+        'location_type_id' => $locationTypeId,
         'email' => CRM_Utils_Array::value('Email', $record),
       ), $record);
     }
@@ -467,10 +475,12 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
             .$config->translate("already exists with contact")." ".$mandate_data['contact_id'], $record);
       } else {
         // create bank account (using BAOs)
+        $baExtraSource = $config->translate('Street Recruitment');
+        $baDescription = $config->translate('Private Account');
         $ba_extra = array(
           'BIC'     => $mandate_data['bic'],
           'country' => substr($mandate_data['iban'], 0, 2),
-          'source'  => $config->translate('Street Recruitment'),
+          'source'  => $baExtraSource,
         );
         if (!empty($mandate_data['bank_name'])) {
           $ba_extra['bank_name'] = $mandate_data['bank_name'];
@@ -478,7 +488,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
         $ba = civicrm_api3('BankingAccount', 'create', array(
           'contact_id'   => $mandate_data['contact_id'],
-          'description'  => $config->translate('Private Account'),
+          'description'  => $baDescription,
           'created_date' => date('YmdHis'),
           'data_raw'     => '{}',
           'data_parsed'  => json_encode($ba_extra),
