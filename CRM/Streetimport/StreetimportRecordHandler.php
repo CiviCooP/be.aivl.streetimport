@@ -175,7 +175,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $otherLocationTypeId = $config->getOtherLocationTypeId();
       $this->createAddress(array(
         'contact_id' => $donor['id'],
-        'location_type_id' => $$locationTypeId,
+        'location_type_id' => $locationTypeId,
         'street_name' => $streetName,
         'street_number' => $streetNumber,
         'street_unit' => $streetUnit,
