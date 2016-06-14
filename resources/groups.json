@@ -1,0 +1,23 @@
+{
+  "newsletter": {
+    "name": "aivl_digital_newsletter",
+    "title": "Elektronische Nieuwsbrief",
+    "is_active":1,
+    "is_reserved":1,
+    "description":"Groep voor contacten die de elektronische nieuwsbrief moeten krijgen"
+  },
+  "recruiting_organizations": {
+    "name":"recruiting_organizations",
+    "title": "Wervingsorganisaties",
+    "is_active":1,
+    "is_reserved":1,
+    "description": "Groep voor wervingsorganisaties (nodig voor custom group externe donor identificatie)"
+  },
+  "dedupe_new_contacts": {
+    "name":"dedupe_new_contacts",
+    "title":"Nieuwe contacten nog niet ontdubbeld",
+    "is_active":1,
+    "is_reserved":1,
+    "description":"Groep voor nieuwe (geïmporteerde) contacten die nog niet ontdubbeld zijn"
+  }
+}

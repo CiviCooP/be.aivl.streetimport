@@ -1,0 +1,14 @@
+{
+  "recruitingOrganization":
+    {
+      "name": "recruitingOrganization",
+      "label":"Wervingsorganisatie",
+      "parent_id":3
+    },
+  "recruiter":
+    {
+      "name": "recruiter",
+      "label":"Werver",
+      "parent_id":1
+    }
+}
