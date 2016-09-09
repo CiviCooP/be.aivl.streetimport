@@ -31,31 +31,25 @@ function streetimport_civicrm_install() {
   /*
    * only install if CiviSepa, CiviBanking and Little Bic Extension are installed
    */
-  $sepa = FALSE;
-  $banking = FALSE;
-  $bic = FALSE;
-  $installedExtensions = civicrm_api3('Extension', 'Get', array());
-  foreach ($installedExtensions['values'] as $installedExtension) {
-    switch ($installedExtension['key']) {
-      case "org.project60.sepa":
-        if ($installedExtension['status'] == 'installed') {
-          $sepa = TRUE;
-        }
-      break;
-      case "org.project60.banking":
-        if ($installedExtension['status'] == 'installed') {
-          $banking = TRUE;
-        }
-      break;
-      case "org.project60.bic":
-        if ($installedExtension['status'] == 'installed') {
-          $bic = TRUE;
-        }
-        break;
-    }
+  $installedExtensionsResult = civicrm_api3('Extension', 'Get', array());
+  foreach($installedExtensionsResult['values'] as $value){
+      if ($value['status'] == 'installed') {
+          $installedExtensions[] = $value['key'];
+      }
   }
-  if (!$sepa || !$banking || !$bic) {
-    CRM_Core_Error::fatal('One (or more) of the mandatory extensions SEPA Direct Debit, CiviBanking or Little Bic Extension not found, could not install Street Recruitment Import extension');
+  $requiredExtensions = array(
+      'org.project60.sepa' => 'SEPA direct debit (org.project60.sepa)',
+      'org.project60.banking' => 'CiviBanking (org.project60.banking)',
+      'org.project60.bic' => 'Little Bic Extension (org.project60.bic)'
+  );
+  $missingExtensions = array_diff(array_keys($requiredExtensions), $installedExtensions);
+  if (count($missingExtensions) == 1) {
+    $missingExtensionsText = $missingExtensions[0];
+    CRM_Core_Error::fatal("The Street Recruitment Import extension requires the following extension: '$missingExtensionsText' but it is not currently installed. Please install it before continuing.");
+  }
+  elseif (count($missingExtensions) > 1) {
+    $missingExtensionsText = implode("', '", $missingExtensions);
+    CRM_Core_Error::fatal("The Street Recruitment Import extension requires the following extensions: '$missingExtensionsText' but they are not currently installed. Please install them before continuing.");
   }
   _streetimport_civix_civicrm_install();
   CRM_Streetimport_Config::singleton('install');
