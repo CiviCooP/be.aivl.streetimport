@@ -718,7 +718,7 @@ class CRM_Streetimport_Utils {
     return $inDay.'-'.$inMonth.'-'.$inYear;
   }
 
-  function csvToArray($file, $hasHeaders = true, $delimiter =';'){ // TODO: delimter should be defined in extension config
+  static function csvToArray($file, $hasHeaders = true, $delimiter =';'){ // TODO: delimter should be defined in extension config
     $pointer = fopen ($file , 'r');
     if($hasHeaders){
       $headers = fgetcsv($pointer, 0, $delimiter);
