@@ -1,6 +1,6 @@
 <?php
 
-class CRM_Streetimport_ImportBatch{
+class CRM_Streetimport_ProcessedBatch{
 
     function __construct($importBatchId){
         $config = CRM_Streetimport_Config::singleton();
@@ -9,6 +9,7 @@ class CRM_Streetimport_ImportBatch{
           throw new Exception('Could not find import batch with id: '.$importBatchId);
         }
         $this->importBatchId = $importBatchId;
+        $this->id = $importBatchId;
         $this->importBatchCsvFile = $importBatchCsvFile;
         $this->records = CRM_Streetimport_Utils::csvToArray($importBatchCsvFile);
     }
