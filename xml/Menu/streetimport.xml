@@ -12,7 +12,7 @@
     <access_arguments>access CiviCRM</access_arguments>
   </item>
   <item>
-    <path>civicrm/streetimport/update/import</path>
+    <path>civicrm/streetimport/update/run</path>
     <page_callback>CRM_Streetimport_Update_Controller</page_callback>
     <access_arguments>access CiviCRM</access_arguments>
   </item>

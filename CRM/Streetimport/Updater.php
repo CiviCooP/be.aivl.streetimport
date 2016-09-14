@@ -67,7 +67,13 @@ class CRM_Streetimport_Updater{
     }
   }
 
-  function setUpdate($array){
+  function setEntityIds($entityIds){
+    $this->entityIds = $entityIds;
+
+  }
+
+  function setUpdate($update){
+    $this->update = $update;
   }
 
   function getEntity(){
@@ -134,7 +140,12 @@ class CRM_Streetimport_Updater{
     // Get custom fields that have been defined for specific types of the entity
 
 
-  function runUpdate(){
+  function run(){
+    foreach($this->entityIds as $id){
+      $params = array_merge($this->update, array('id' => $id));
+      var_dump($params);
+      civicrm_api3($this->getEntity(), 'create', $params);
+    }
   }
 
 }

@@ -7,7 +7,8 @@ class CRM_Streetimport_Update_Controller extends CRM_Core_Controller {
     $this->setStateMachine($stateMachine);
     $pages = array(
       'CRM_Streetimport_Update_Form_Define' => NULL,
-      'CRM_Streetimport_Update_Form_PartTwo' => NULL,
+      'CRM_Streetimport_Update_Form_Confirm' => NULL,
+      'CRM_Streetimport_Update_Form_Result' => NULL,
       // 'CRM_Streetimport_Update_Form_PartThree' => NULL,
     );
 

@@ -11,9 +11,9 @@ class CRM_Streetimport_Update_Form_Base extends CRM_Core_Form
 {
     public function buildQuickForm()
     {
-        CRM_Utils_System::setTitle(ts('Updating batch'));
+        CRM_Utils_System::setTitle(ts('Update import'));
         $this->assign('elementNames', $this->getRenderableElementNames());
-        $this->assign('importBatchId', $this->get('importBatchId'));
+        $this->assign('batchId', $this->get('batch')->getId());
 
         parent::buildQuickForm();
     }
@@ -30,13 +30,8 @@ class CRM_Streetimport_Update_Form_Base extends CRM_Core_Form
    */
   public function getRenderableElementNames()
   {
-      // The _elements list includes some items which should not be
-    // auto-rendered in the loop -- such as "qfKey" and "buttons".  These
-    // items don't have labels.  We'll identify renderable by filtering on
-    // the 'label'.
     $elementNames = array();
       foreach ($this->_elements as $element) {
-          /* @var HTML_QuickForm_Element $element */
       $label = $element->getLabel();
           if (!empty($label)) {
               $elementNames[] = $element->getName();
