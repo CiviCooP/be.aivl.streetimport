@@ -38,8 +38,14 @@ class CRM_Streetimport_Update_Form_Define extends CRM_Streetimport_Update_Form_B
             }
           }
         }
-        $old['recruiters'] = civicrm_api3('Contact', 'get', array('id' => array_keys($importedValues['Recruiter_id'])))['values'];
-        $old['recruiters'] = civicrm_api3('Contact', 'get', array('id' => array_keys($importedValues['Recruiter_id'])))['values'];
+        $recruiterFields = civicrm_api3('Contact', 'getfields');
+        foreach($recruiterFields['values'] as $field){
+          if(isset($field['column_name']) && $field['column_name'] == 'external_recruiter_id'){
+            $fieldName = $field['name'];
+            break;
+          }
+        }
+        $old['recruiters'] = civicrm_api3('Contact', 'get', array($fieldName => array_keys($importedValues['Recruiter_id'])))['values'];
         foreach(array_keys($importedValues['campaign_id']) as $id){
             $old['campaigns'][] = civicrm_api3('Campaign', 'getsingle', array('id' => $id));
         }

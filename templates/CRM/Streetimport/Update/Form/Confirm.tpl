@@ -24,7 +24,7 @@
     <tr>
       <td>Recruiter</td>
       <td>
-        {foreach from=$old.recruiters item=contact name=recruiter}
+        {foreach from=$old.recruiters item=contact name=recruiters}
         <a href='{crmURL p="civicrm/contact/view" q="id=reset=1&`$contact.id`"}'>{$contact.display_name}</a>{if !$smarty.foreach.recruiters.last}, {/if} {/foreach}
       </td>
       <td><a href='{crmURL p="civicrm/contact/view" q="id=reset=1&`$new.recruiter.id`"}'>{$new.recruiter.display_name}</a></td>

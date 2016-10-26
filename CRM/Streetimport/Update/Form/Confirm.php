@@ -31,8 +31,6 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
         $campaignId = $this->controller->exportValue('Define', 'campaign_id');
 
         // use the updater to update the four entities
-        //
-// the added by contact for the Activity type streetRecruitment
 
         $contacts = $this->get('contacts');
         $records = $this->get('batch')->getRecords();
@@ -40,9 +38,6 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
         // Get the correct entities to update
         // This process feels quite complex + expensive
         // Might be simpler if we assign a batch to all entities as they get processed
-
-        $recruiterFieldGroup = civicrm_api3('CustomGroup', 'getsingle', array('name' => 'externalDonorId'))['id'];
-        $recruiterField = 'custom_'.civicrm_api3('CustomField', 'getsingle', array('name' => 'recruiter_id', 'custom_group_id' => $recruiterFieldGroup))['id'];
 
         $mandateFieldGroup = civicrm_api3('CustomGroup', 'getsingle', array('name' => 'streetRecruitment'))['id'];
         $mandateField = 'custom_'.civicrm_api3('CustomField', 'getsingle', array('name' => 'new_sdd_mandate', 'custom_group_id' => $mandateFieldGroup))['id'];
@@ -57,6 +52,10 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
               $result = civicrm_api3('Activity', 'get', $params);
               if($result['count']==1){
                 $activityIds[] = $result['id'];
+                $result = civicrm_api3('ActivityContact', 'get', array('record_type_id' => 2, 'activity_id' => $result['id']));
+                if($result['count']==1){
+                  $activityContactIds[] = $result['id'];
+                }
               }
               $result = civicrm_api3('SepaMandate', 'get', array('reference' => $records[$Donor_id]['Mandate_reference']));
               if($result['count']==1){
@@ -66,23 +65,31 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
             }
         }
 
-        $updater = new CRM_Streetimport_Updater();
-        $updater->setEntity('Contact');
-        $updater->setEntityIds($contactIds);
-        $updater->setUpdate(array(
-          $recruiterField => $recruiterId
-        ));
-        $updater->run();
 
         $updater = new CRM_Streetimport_Updater();
         $updater->setEntity('Activity');
         $updater->setEntityIds($activityIds);
+
+        // we use the CRM_Streetimport_StreetRecruitmentRecordHandler method
+        // concatActivitySubject to calculate the Activity subject. It needs a
+        // logger class but it isn't necessary here, so we just give it an empty
+        // object.
+
+        $rh = new CRM_Streetimport_StreetRecruitmentRecordHandler(new stdClass());
         $updater->setUpdate(array(
+          'subject' => $rh->concatActivitySubject("Street Recruitment", $campaignId),
           'campaign_id' => $campaignId
         ));
         $updater->run();
 
-        // civicrm_contribution_recur.campaign_id
+        $updater = new CRM_Streetimport_Updater();
+        $updater->setEntity('ActivityContact');
+        $updater->setEntityIds($activityContactIds);
+        $updater->setUpdate(array(
+          'contact_id' => $recruiterId
+        ));
+        $updater->run();
+
         $updater = new CRM_Streetimport_Updater();
         $updater->setEntity('ContributionRecur');
         $updater->setEntityIds($contributionRecurIds);
