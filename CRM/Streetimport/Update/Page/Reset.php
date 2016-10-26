@@ -28,7 +28,7 @@ class CRM_Streetimport_Update_Page_Reset extends CRM_Core_Page {
     $nullLog ='';
     $handler = new CRM_Streetimport_StreetRecruitmentRecordHandler($nullLog);
     foreach($records as $record){
-      if($contact = $handler->getDonorWithExternalId($record['Donor_id'], $record['Recruiting_organization_id'], $record)){
+      if($contact = $handler->getDonorWithExternalId($record['Donor_id'], $record['Recruiter_id'], $record)){
 
 
 

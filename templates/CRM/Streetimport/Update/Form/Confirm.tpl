@@ -22,12 +22,12 @@
       <td><a href='{crmURL p="civicrm/campaign/add" q="reset=1&action=update&id=`$new.campaign.id`"}'>{$new.campaign.title}</a></td>
     </tr>
     <tr>
-      <td>Recruiting organisation</td>
+      <td>Recruiter</td>
       <td>
-        {foreach from=$old.recruitingOrganizations item=contact name=recruitingOrganizations}
-        <a href='{crmURL p="civicrm/contact/view" q="id=reset=1&`$contact.id`"}'>{$contact.display_name}</a>{if !$smarty.foreach.recruitingOrganizations.last}, {/if} {/foreach}
+        {foreach from=$old.recruiters item=contact name=recruiter}
+        <a href='{crmURL p="civicrm/contact/view" q="id=reset=1&`$contact.id`"}'>{$contact.display_name}</a>{if !$smarty.foreach.recruiters.last}, {/if} {/foreach}
       </td>
-      <td><a href='{crmURL p="civicrm/contact/view" q="id=reset=1&`$new.recruitingOrganization.id`"}'>{$new.recruitingOrganization.display_name}</a></td>
+      <td><a href='{crmURL p="civicrm/contact/view" q="id=reset=1&`$new.recruiter.id`"}'>{$new.recruiter.display_name}</a></td>
     </tr>
   </table>
   <p>Please confirm the details above and click 'update' to run the update.</p>

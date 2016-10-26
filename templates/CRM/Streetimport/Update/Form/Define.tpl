@@ -17,10 +17,10 @@
       </td>
     </tr>
     <tr>
-      <td class="label">Recruiting organization</td>
+      <td class="label">Recruiter</td>
       <td class="view-value">
-        {foreach from=$old.recruitingOrganizations item=contact name=recruitingOrganizations}
-          <a href='{crmURL p="civicrm/contact/view" q="id=reset=1&`$contact.id`"}'>{$contact.display_name}</a>{if !$smarty.foreach.recruitingOrganizations.last}, {/if}
+        {foreach from=$old.recruiters item=contact name=recruiters}
+          <a href='{crmURL p="civicrm/contact/view" q="id=reset=1&`$contact.id`"}'>{$contact.display_name}</a>{if !$smarty.foreach.recruiters.last}, {/if}
         {/foreach}
 
       </td>
@@ -33,8 +33,8 @@
       <td class="view-value">{$form.campaign_id.html}</td>
     </tr>
     <tr>
-      <td class="label">{$form.recruiting_organization_id.label}</td>
-      <td class="view-value">{$form.recruiting_organization_id.html}</td>
+      <td class="label">{$form.recruiter_id.label}</td>
+      <td class="view-value">{$form.recruiter_id.html}</td>
       </td>
     </tr>
   </table>

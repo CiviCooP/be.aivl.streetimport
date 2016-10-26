@@ -27,7 +27,7 @@ class CRM_Streetimport_Update_Form_Define extends CRM_Streetimport_Update_Form_B
             // else complain that this is not a valid import batch id
 
 
-        $importedValues = array('campaign_id'=> null, 'Recruiting_organization_id'=> null);
+        $importedValues = array('campaign_id'=> null, 'Recruiter_id'=> null);
 
         foreach($batch->getRecords() as $record){
           foreach($importedValues as $key => $value){
@@ -38,7 +38,8 @@ class CRM_Streetimport_Update_Form_Define extends CRM_Streetimport_Update_Form_B
             }
           }
         }
-        $old['recruitingOrganizations'] = civicrm_api3('Contact', 'get', array('id' => array_keys($importedValues['Recruiting_organization_id'])))['values'];
+        $old['recruiters'] = civicrm_api3('Contact', 'get', array('id' => array_keys($importedValues['Recruiter_id'])))['values'];
+        $old['recruiters'] = civicrm_api3('Contact', 'get', array('id' => array_keys($importedValues['Recruiter_id'])))['values'];
         foreach(array_keys($importedValues['campaign_id']) as $id){
             $old['campaigns'][] = civicrm_api3('Campaign', 'getsingle', array('id' => $id));
         }
@@ -49,7 +50,7 @@ class CRM_Streetimport_Update_Form_Define extends CRM_Streetimport_Update_Form_B
 
 
         $this->addEntityRef('campaign_id', ts('Campaign'), array('entity' => 'campaign'), true);
-        $this->addEntityRef('recruiting_organization_id', ts('Recruiting organisation'), array('api' => array( 'params' => array('contact_sub_type' => 'recruitingOrganization'))), true);
+        $this->addEntityRef('recruiter_id', ts('Recruiter'), array('api' => array( 'params' => array('contact_sub_type' => 'recruiter'))), true);
 
         // add form elements
         $this->addButtons(array(

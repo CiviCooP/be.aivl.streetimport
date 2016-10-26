@@ -13,7 +13,7 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
     {
         $this->assign('old', $this->get('old'));
         $this->assign('contacts', $this->get('contacts'));
-        $new['recruitingOrganization'] = civicrm_api3('Contact', 'getsingle', array('id' => $this->controller->exportValue('Define', 'recruiting_organization_id')));
+        $new['recruiter'] = civicrm_api3('Contact', 'getsingle', array('id' => $this->controller->exportValue('Define', 'recruiter_id')));
         $new['campaign'] = civicrm_api3('Campaign', 'getsingle', array('id' => $this->controller->exportValue('Define', 'campaign_id')));
         $this->assign('new', $new);
 
@@ -27,7 +27,7 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
 
     public function postProcess()
     {
-        $recruitingOrganizationId = $this->controller->exportValue('Define', 'recruiting_organization_id');
+        $recruiterId = $this->controller->exportValue('Define', 'recruiter_id');
         $campaignId = $this->controller->exportValue('Define', 'campaign_id');
 
         // use the updater to update the four entities
@@ -41,8 +41,8 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
         // This process feels quite complex + expensive
         // Might be simpler if we assign a batch to all entities as they get processed
 
-        $recruitingOrgFieldGroup = civicrm_api3('CustomGroup', 'getsingle', array('name' => 'externalDonorId'))['id'];
-        $recruitingOrgField = 'custom_'.civicrm_api3('CustomField', 'getsingle', array('name' => 'recruiting_organization_id', 'custom_group_id' => $recruitingOrgFieldGroup))['id'];
+        $recruiterFieldGroup = civicrm_api3('CustomGroup', 'getsingle', array('name' => 'externalDonorId'))['id'];
+        $recruiterField = 'custom_'.civicrm_api3('CustomField', 'getsingle', array('name' => 'recruiter_id', 'custom_group_id' => $recruiterFieldGroup))['id'];
 
         $mandateFieldGroup = civicrm_api3('CustomGroup', 'getsingle', array('name' => 'streetRecruitment'))['id'];
         $mandateField = 'custom_'.civicrm_api3('CustomField', 'getsingle', array('name' => 'new_sdd_mandate', 'custom_group_id' => $mandateFieldGroup))['id'];
@@ -70,7 +70,7 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
         $updater->setEntity('Contact');
         $updater->setEntityIds($contactIds);
         $updater->setUpdate(array(
-          $recruitingOrgField => $recruitingOrganizationId
+          $recruiterField => $recruiterId
         ));
         $updater->run();
 
