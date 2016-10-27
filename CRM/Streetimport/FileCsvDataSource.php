@@ -48,6 +48,12 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
       $this->reader = NULL;
       return;
     }
+    else {
+      // validate the header
+      if ($this->validate_header() == FALSE) {
+        return;
+      }
+    }
 
     // prepare the next record
     $this->loadNext();
@@ -136,6 +142,31 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
       $this->logger->abort($config->translate("File")." ".$this->uri." "
         .$config->translate("is not encoded as UTF-8 and can not be processed"));
       $this->reader = NULL;
+    }
+  }
+  
+  function validate_header() {    
+    $wrongColumnNames = array();    
+    
+    foreach ($this->header as $columnName) {
+      // check if this is an expected column name
+      if (!array_key_exists($columnName, $this->mapping)) {
+        // nope
+        $wrongColumnNames[] = $columnName;
+      }
+    }
+
+    // check if we have wrong column names    
+    if (count($wrongColumnNames) > 0) {
+      $config = CRM_Streetimport_Config::singleton();
+      $this->logger->abort($config->translate("File")." ".$this->uri." "
+        .$config->translate("contains unexpected column name(s): ")
+        .implode(', ', $wrongColumnNames));
+      $this->reader = NULL;      
+      return FALSE;
+    }
+    else {
+      return TRUE;
     }
   }
 }
