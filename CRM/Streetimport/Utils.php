@@ -493,12 +493,12 @@ class CRM_Streetimport_Utils {
     }
     return $contactName;
   }
-  
+
   /**
    * Function to get the contact id for a donor without error logging.
    * However, exceptions are thrown if needed.
    * Can be safely used in error logging.
-   * 
+   *
    * @param int donorId
    * @param int recruitingOrganizationId
    */
@@ -522,7 +522,7 @@ class CRM_Streetimport_Utils {
     if ($dao->N > 1) {
       throw new Exception($config->translate('More than one contact found for donor ID').': '.$donorId);
     }
-     
+
     if ($dao->fetch()) {
       return $dao->entity_id;
     }
@@ -716,5 +716,16 @@ class CRM_Streetimport_Utils {
       break;
     }
     return $inDay.'-'.$inMonth.'-'.$inYear;
+  }
+
+  static function csvToArray($file, $hasHeaders = true, $delimiter =';'){ // TODO: delimter should be defined in extension config
+    $pointer = fopen ($file , 'r');
+    if($hasHeaders){
+      $headers = fgetcsv($pointer, 0, $delimiter);
+    }
+    while ($record = fgetcsv($pointer, 0, $delimiter)){
+      $records[] = $hasHeaders ? array_combine($headers, $record) : $record;
+    }
+    return $records;
   }
 }

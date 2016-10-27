@@ -8,8 +8,8 @@ class CRM_Streetimport_Update_Page_Update extends CRM_Core_Page {
     CRM_Utils_System::setTitle(ts('Update a street import'));
 
     //Get all processed imports
-    $ibr = new CRM_Streetimport_ImportBatchRepo;
-    $imports = $ibr->getAllProcessedImports();
+    $pbr = new CRM_Streetimport_ProcessedBatchRepo;
+    $imports = $pbr->getAll();
     $this->assign('imports', $imports);
 
     parent::run();
