@@ -30,6 +30,7 @@ class CRM_Streetimport_Update_Form_Define extends CRM_Streetimport_Update_Form_B
         $importedValues = array('campaign_id'=> null, 'Recruiter_id'=> null);
 
         foreach($batch->getRecords() as $record){
+
           foreach($importedValues as $key => $value){
             if(isset($importedValues[$key][$record[$key]])){
               $importedValues[$key][$record[$key]]++;
@@ -38,14 +39,16 @@ class CRM_Streetimport_Update_Form_Define extends CRM_Streetimport_Update_Form_B
             }
           }
         }
-        $recruiterFields = civicrm_api3('Contact', 'getfields');
-        foreach($recruiterFields['values'] as $field){
-          if(isset($field['column_name']) && $field['column_name'] == 'external_recruiter_id'){
-            $fieldName = $field['name'];
-            break;
-          }
+        // retrieve external recruiter id custom field id
+        try {
+          $externalRecruiterIdCustomId = civicrm_api3('CustomField', 'getvalue', array('name' => 'external_recruiter_id', 'return' => 'id'));
+        } catch (CiviCRM_API3_Exception $ex) {
+          throw new Exception(ts('Could not find a custom field with the name external_recruiter_id, contact your system administrator'));
         }
+        $fieldName = 'custom_'.$externalRecruiterIdCustomId;
+
         $old['recruiters'] = civicrm_api3('Contact', 'get', array($fieldName => array_keys($importedValues['Recruiter_id'])))['values'];
+
         foreach(array_keys($importedValues['campaign_id']) as $id){
             $old['campaigns'][] = civicrm_api3('Campaign', 'getsingle', array('id' => $id));
         }
