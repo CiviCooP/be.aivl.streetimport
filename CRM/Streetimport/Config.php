@@ -51,7 +51,7 @@ class CRM_Streetimport_Config {
     $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
     $this->streetRecruitmentImportType = 1;
     $this->welcomeCallImportType = 2;
-    $this->acceptedYesValues = array('J', 'j', 'Ja', 'ja', 'true', 'waar', 'yes', 'Yes', 1);
+    $this->acceptedYesValues = array('J', 'j', 'Ja', 'ja', 'true', 'waar', 'Y', 'y', 'Yes', 'yes', 1);
     $this->loadingTypes = array(1 => 'Street Recruitment', 2 => 'Welcome Call');
 
     $this->setContactSubTypes();
@@ -536,7 +536,7 @@ class CRM_Streetimport_Config {
   }
 
   /**
-   * Method to retrieve a list of values, 
+   * Method to retrieve a list of values,
    * that will be interpreted as TRUE/POSITIVE/YES
    *
    * @return array
@@ -555,7 +555,7 @@ class CRM_Streetimport_Config {
    */
   public function extractSDDtype($unit_ln10) {
     $unit_ln10 = strtolower(trim($unit_ln10));
-    
+
     if ($unit_ln10 == 'maand') {
       $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 1);
     } elseif ($unit_ln10 == 'kwartaal') {
@@ -571,9 +571,9 @@ class CRM_Streetimport_Config {
     }
     return $sdd_type;
   }
-  
+
   /**
-   * Method to retrieve the default fundraiser contact 
+   * Method to retrieve the default fundraiser contact
    * (assignee of activities)
    *
    * @return integer
@@ -641,7 +641,7 @@ class CRM_Streetimport_Config {
       foreach ($this->externalDonorIdCustomFields as $field_id => $customField) {
         if ($customField['name'] == $key || $field_id==$key) {
           return $customField;
-        } 
+        }
       }
       // no such field
       return NULL;
@@ -699,7 +699,7 @@ class CRM_Streetimport_Config {
       foreach ($this->recruiterInformationCustomFields as $field_id => $customField) {
         if ($customField['name'] == $key || $field_id==$key) {
           return $customField;
-        } 
+        }
       }
       // no such field
       return NULL;
