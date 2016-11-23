@@ -185,3 +185,23 @@ function streetimport_civicrm_navigationMenu(&$params) {
     CRM_Streetimport_Utils::addNavigationMenuEntry($params[$administerMenuId]['child'][$administerCiviContributeMenuId], $importSettingsMenu);
   }
 }
+
+function streetimport_civicrm_buildForm($formName, &$form) {
+  if($formName =='CRM_Activity_Form_Activity'){
+    //check if the activity type is 'streetRecruitment' or 'welcomeCall'
+    foreach(civicrm_api3('OptionValue', 'get', array(
+      'option_group_id' => 'activity_type',
+      'name' => array('IN' => array("welcomeCall", "streetRecruitment")),
+      'return' => 'value'
+    ))['values'] as $value){
+      $actvityTypeIds[]=$value['value'];
+    }
+    if(in_array($form->_activityTypeId, $actvityTypeIds) && $form->urlPath === array('civicrm', 'activity')){
+      _streetimport_civicrm_addCreateMandateButton($form);
+    }
+  }
+}
+
+function _streetimport_civicrm_addCreateMandateButton(&$form){
+	CRM_Core_Resources::singleton()->addScriptFile('be.aivl.streetimport', 'resources/js/activity-form-create-mandate-button.js');
+}
