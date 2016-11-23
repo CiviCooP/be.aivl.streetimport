@@ -418,7 +418,7 @@ abstract class CRM_Streetimport_RecordHandler {
     $contactASubTypes = civicrm_api3('Contact', 'Getvalue', $contactAParams);
     if (empty($contactASubTypes) || !in_array($relationShipType['contact_sub_type_a'], $contactASubTypes)) {
       $this->logger->logError($config->translate('Relationship not created between contact')
-        .' '.$relationshipData['contact_id_a'].$config->translate('and contact').' '.$relationshipData['contact_id_b']
+        .' '.$relationshipData['contact_id_a'].$config->translate(' and contact').' '.$relationshipData['contact_id_b']
         .', '.$config->translate('contact sub type of contact').' '.$relationshipData['contact_id_a']
         .' '.$config->translate('conflicts with relationship type set up'), $record,
         $config->translate('Relationship not created'));
