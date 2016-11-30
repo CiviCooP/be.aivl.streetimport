@@ -203,5 +203,25 @@ function streetimport_civicrm_buildForm($formName, &$form) {
 }
 
 function _streetimport_civicrm_addCreateMandateButton(&$form){
-	CRM_Core_Resources::singleton()->addScriptFile('be.aivl.streetimport', 'resources/js/activity-form-create-mandate-button.js');
+    $activityType = civicrm_api3('OptionValue', 'getsingle', array('option_group_id' => 'activity_type', 'value' => $form->_activityTypeId));
+    if ($activityType['name'] == 'streetRecruitment') {
+        $fieldPrefix = 'new_';
+    } elseif ($activityType['name'] == 'welcomeCall') {
+        $fieldPrefix = 'wc_';
+    }
+
+    // only show if there is not already a mandate in existence with this rererence
+    $cfr = civicrm_api3('CustomField', 'getsingle', array('name' => $fieldPrefix.'sdd_mandate'));
+    $ar = civicrm_api3('Activity', 'getsingle', array('id' => $form->_activityId));
+
+    $form->_activityId;
+    $smr = civicrm_api3('SepaMandate', 'get', array(
+      'reference' => $ar['custom_'.$cfr['id']],
+    ));
+
+    if(!$smr['count']){
+      CRM_Core_Region::instance('page-body')->add(array(
+        'template' => 'CRM/Streetimport/Extras/ActivityFormCreateMandateButton.tpl',
+      ));
+    }
 }
