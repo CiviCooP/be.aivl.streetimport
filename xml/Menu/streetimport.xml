@@ -18,8 +18,8 @@
   </item>
   <item>
     <path>civicrm/streetimport/createmandate</path>
-    <page_callback>CRM_Streetimport_Page_CreateMandate</page_callback>
-    <title>CreateMandate</title>
+    <page_callback>CRM_Streetimport_Form_CreateMandate</page_callback>
+    <title>Create Mandate</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
 </menu>
