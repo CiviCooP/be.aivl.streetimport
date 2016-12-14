@@ -152,7 +152,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * Function to validate the import settings
    *
    * @param array $fields
-   * @return array $errors or TRUE
+   * @return array|bool $errors or TRUE
    * @access public
    * @static
    */
@@ -201,10 +201,28 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     if (!ctype_digit($fields['follow_up_offset_days'])) {
       $errors['follow_up_offset_days'] = $config->translate('This field can only contain numbers!');
     }
+    self::validateFolders($fields, $errors);
     if (empty($errors)) {
       return TRUE;
     } else {
       return $errors;
+    }
+  }
+
+  /**
+   * Method to check if all of the folders specified actually exist and have enough permissions
+   * (should be writable)
+   *
+   * @param $fields
+   * @param $errors
+   */
+  private static function validateFolders($fields, &$errors) {
+    $config = CRM_Streetimport_Config::singleton();
+    $folderElements = array('import_location', 'processed_location', 'failed_location');
+    foreach ($folderElements as $folderElement) {
+      if (!is_writable($fields[$folderElement])) {
+        $errors[$folderElement] = $config->translate('This folder does not exists or you do not have sufficient permissions to write to the folder');
+      }
     }
   }
 

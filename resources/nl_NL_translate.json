@@ -182,5 +182,6 @@
   "No mandate reference in SDD data for donor","Geen mandaat referentie in SDD data voor donor",
   "No mandate reference in SDD Data":"Geen mandaat referentie in SDD data",
   "already has a WelcomeCall, no further processing for error line":"heeft al een Welkomstgesprek, geen verdere verwerking voor import regel",
-  "Already has WelcomeCall":"Heeft al Welkomstgesprek"
+  "Already has WelcomeCall":"Heeft al Welkomstgesprek",
+  "This folder does not exists or you do not have sufficient permissions to write to the folder":"De map die u opgegeven heeft bestaat niet of u heeft onvoldoende rechten op deze map"
 }
