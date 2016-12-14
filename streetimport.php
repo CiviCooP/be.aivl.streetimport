@@ -70,6 +70,23 @@ function streetimport_civicrm_uninstall() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
 function streetimport_civicrm_enable() {
+  // check if extension de.systopia.identitytracker is installed as it is required
+  $identityTrackerActive = FALSE;
+  try {
+    $extensions = civicrm_api3('Extension', 'get', array());
+    foreach ($extensions['values'] as $extension) {
+      if ($extension['key'] == "de.systopia.identitytracker" && $extension['status'] == "installed") {
+        $identityTrackerActive = TRUE;
+
+      }
+    }
+  } catch (CiviCRM_API3_Exception $ex) {
+    throw new Exception('Could not get the extensions for a dependency check in '.__METHOD__
+      .', contact your system administrator. Error from API Extension get: '.$ex->getMessage());
+  }
+  if (!$identityTrackerActive) {
+    throw new Exception('Could not find an active installation of the required extension de.systopia.indentitytracker, install first and then try to install be.aivl.streetimport again');
+  }
   _streetimport_civix_civicrm_enable();
 }
 

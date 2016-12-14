@@ -55,7 +55,10 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       // LOOK UP RECRUITER
       $recruiter_id = $record['Recruiter ID'];
       try {
-        $recruiter = civicrm_api3('Contact', 'getsingle', array($recruiter_id_field => $recruiter_id));
+        // issue 710: retrieve recruiter based on identity tracker
+        $identifier = civicrm_api3('Contact', 'identify', array('identifier' => $recruiter_id, 'identifier_type' => 'recruiter_id'));
+        $recruiterContactId = $identifier['id'];
+        $recruiter = civicrm_api3('Contact', 'getsingle', array('id' => $recruiterContactId));
         $this->logger->logDebug($config->translate("Recruiter with external ID")." ".$recruiter_id." "
             .$config->translate("identified as CiviCRM contact")." ".$recruiter['id'], $record);
         return $recruiter;

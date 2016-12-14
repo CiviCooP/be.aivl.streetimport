@@ -61,8 +61,8 @@ Daily they will put a csv file with either street recruitment data or welcome ca
 * SEPA mandate data (bank account, frequency, amount, mandate reference, start date, end date)
 
 Depending on the configuration the **street recruitment** record import will automatically do the following:
-* a new contact for the recruiter if it does not exist yet with the contact sub type 'recruiter' and an active relationship 'recruiter for' with the recruiting organziation
-* a new contact created for the donor, also storing the donorID at the recruitment organization in a custom group
+* a new contact for the recruiter if it does not exist yet with the contact sub type 'recruiter' and an active relationship 'recruiter for' with the recruiting organization
+* a new contact created for the donor, also storing the donorID at the recruitment organization in a custom group. The recrutier contact id will be found with the API Contact Identify, which is part of the extension **de.systopia.identitytracker**, so you will need that extension to be able to run the streetimport extension. This dependency will be checked when you install the streetimport extension.
 * the contact will be added to the newsletter group if appropriate
 * a membership will be created for the contact if appropriate
 * an activity of the type 'Street Recruitment' will be added, with the recruiter as the activity source and the donor as the target contact with status scheduled. In a custom group linked to this activity type all the imported data will be recorded as a snapshot of the street recruitment.
