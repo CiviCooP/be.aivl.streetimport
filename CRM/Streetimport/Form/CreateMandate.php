@@ -67,7 +67,7 @@ class CRM_Streetimport_Form_CreateMandate extends CRM_Core_Form
     }
     public function postProcess()
     {
-      // saveBankAccount
+        // collect valid params submitted info, form vars, and sensible defaults
         $validKeys = array(
           'amount' => null,
           'reference' => null,
@@ -76,20 +76,60 @@ class CRM_Streetimport_Form_CreateMandate extends CRM_Core_Form
           'bic' => null,
           'bank_name' => null
         );
+
         $params = array_intersect_key($this->getSubmitValues(), $validKeys);
 
-        $params['type'] = 'RCUR'; // how do I know how to set this? Should it always be recur?
+        $params['type'] = 'RCUR'; // Should always be recur
         $params['contact_id'] = $this->get('contact_id');
+
+        $mandate_data = array(
+          'contact_id' => $params['contact_id'],
+          'iban' => $params['iban'],
+          'bic' => $params['bic'],
+          'bank_name' => $params['bank_name']
+        );
+
+        // use the already existing saveBankAccount method to save bank account details
+
+        // create a simple logger that will be useful if we need to display any of
+        // the logged messages that ::saveBankAccountgenerates to the user, and also
+        // keeps tracks of whether any errors have occured.
+
+        $logger = new onScreenLogger();
+        $rh = new CRM_Streetimport_StreetRecruitmentRecordHandler($logger);
+        $record = '';
+        $rh->saveBankAccount($mandate_data, $record);
         try{
           $result = civicrm_api3('SepaMandate', 'createfull', $params);
         }catch(Exception $e){
           CRM_Core_Session::setStatus($e->getMessage(), 'Could not create mandate', 'alert');
           $result = array('is_error' => 1);
         }
-        if(!$result['is_error']){
+        if(!$result['is_error'] && !$logger->error){
             CRM_Core_Session::setStatus('All is well', 'Mandate created', 'info');
             CRM_Utils_System::redirect('/civicrm/activity?atype='.$this->get('activity_type_id').'&action=view&reset=1&id='.$this->get('activity_id').'&cid='.$this->get('contact_id').'&context=activity&searchContext=activity');
         } else {
         }
     }
+}
+
+class onScreenLogger{
+
+  function __construct(){
+    $this->error = 0;
+  }
+
+  function abort($message, $record){
+    $this->error = 1;
+    $this->messages[]=$message;
+  }
+
+  function logDebug($message, $record){
+    $this->messages[]=$message;
+  }
+
+  function logError($message, $record){
+    $this->error = 1;
+    $this->messages[]=$message;
+  }
 }
