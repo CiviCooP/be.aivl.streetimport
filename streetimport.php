@@ -189,11 +189,12 @@ function streetimport_civicrm_navigationMenu(&$params) {
 function streetimport_civicrm_buildForm($formName, &$form) {
   if($formName =='CRM_Activity_Form_Activity'){
     //check if the activity type is 'streetRecruitment' or 'welcomeCall'
-    foreach(civicrm_api3('OptionValue', 'get', array(
+    $result = civicrm_api3('OptionValue', 'get', array(
       'option_group_id' => 'activity_type',
       'name' => array('IN' => array("welcomeCall", "streetRecruitment")),
       'return' => 'value'
-    ))['values'] as $value){
+    ));
+    foreach($result['values'] as $value){
       $actvityTypeIds[]=$value['value'];
     }
     if(in_array($form->_activityTypeId, $actvityTypeIds) && $form->urlPath === array('civicrm', 'activity')){
