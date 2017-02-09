@@ -45,8 +45,7 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   public static function getDefaultHandlers($logger) {
     return array(
-      new CRM_Streetimport_StreetRecruitmentRecordHandler($logger),
-      new CRM_Streetimport_WelcomeCallRecordHandler($logger),
+      new CRM_Streetimport_Handler_TEDIRecordHandler($logger),
     );
   }
 
