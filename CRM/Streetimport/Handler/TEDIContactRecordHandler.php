@@ -1,4 +1,13 @@
 <?php
+/*-------------------------------------------------------------+
+| GP StreetImporter Record Handlers                            |
+| Copyright (C) 2017 SYSTOPIA                                  |
+| Author: M. McAndrew (michaelmcandrew@thirdsectordesign.org)  |
+|         B. Endres (endres -at- systopia.de)                  |
+| http://www.systopia.de/                                      |
++--------------------------------------------------------------*/
+
+
 /**
  * GP TEDI Handler
  *

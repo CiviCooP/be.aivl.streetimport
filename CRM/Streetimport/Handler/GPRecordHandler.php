@@ -1,4 +1,12 @@
 <?php
+/*-------------------------------------------------------------+
+| GP StreetImporter Record Handlers                            |
+| Copyright (C) 2017 SYSTOPIA                                  |
+| Author: M. McAndrew (michaelmcandrew@thirdsectordesign.org)  |
+|         B. Endres (endres -at- systopia.de)                  |
+| http://www.systopia.de/                                      |
++--------------------------------------------------------------*/
+
 /**
  * Abstract class bundle common GP importer functions
  *
@@ -7,18 +15,25 @@
  */
 abstract class CRM_Streetimport_Handler_GPRecordHandler extends CRM_Streetimport_RecordHandler {
 
-  // TODO
-  
 
   /**
-   * look up contact with GP ID
+   * look up contact id with CiviCRM ID
    */
-  protected function getContactIDbyGPID($gp_id) {
-    if (empty($gp_id)) return NULL;
+  protected function getContactIDbyCiviCRMID($contact_id) {
+    // TODO: use identity tracker!
+    return $contact_id;
+  }
 
-    $external_identifier = 'IMB-' . trim($gp_id);
+  /**
+   * look up contact id with external ID
+   */
+  protected function getContactIDbyExternalID($external_identifier) {
+    if (empty($external_identifier)) return NULL;
+
+    return $contact_id;
 
     // look up contact via external_identifier
+    // TODO: use identity tracker!
     $contacts = civicrm_api3('Contact', 'get', array(
       'external_identifier' => $external_identifier,
       'return'              => 'id'));
