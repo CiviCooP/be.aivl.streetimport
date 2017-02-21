@@ -24,7 +24,7 @@ class CRM_Streetimport_Handler_TEDIContactRecordHandler extends CRM_Streetimport
    */
   public function canProcessRecord($record, $sourceURI) {
     $parsedFileName = $this->parseTmFile($sourceURI);
-    return ($parsedFileName && $parsedFileName['file_type'] == 'Kontakte');
+    return ($parsedFileName && $parsedFileName['file_type'] == 'Kontakte' && $parsedFileName['tm_company'] == 'tedi');
   }
 
   /** 

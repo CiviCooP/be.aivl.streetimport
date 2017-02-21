@@ -31,7 +31,7 @@ class CRM_Streetimport_Handler_TEDITelephoneRecordHandler extends CRM_Streetimpo
    */
   public function canProcessRecord($record, $sourceURI) {
     $parsedFileName = $this->parseTmFile($sourceURI);
-    return ($parsedFileName && $parsedFileName['file_type'] == 'Telefon');
+    return ($parsedFileName && $parsedFileName['file_type'] == 'Telefon' && $parsedFileName['tm_company'] == 'tedi');
   }
 
   /** 
@@ -75,6 +75,16 @@ class CRM_Streetimport_Handler_TEDITelephoneRecordHandler extends CRM_Streetimpo
     }
   }
 
+
+  protected function getPhoneNumber($record) {
+    return "+{$record['TelLand']} {$record['TelVorwahl']} {$record['TelNummer']}";
+  }
+
+  protected function getPhoneType($record) {
+    // TODO: deduce from area code ($record['TelVorwahl'])
+    // TODO: what's the default?
+    return NULL;
+  }
 
   /**
    * Will resolve the phone number
