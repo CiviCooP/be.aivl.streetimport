@@ -5,7 +5,7 @@
  * @author Björn Endres (SYSTOPIA) <endres@systopia.de>
  * @license AGPL-3.0
  */
-class CRM_Streetimport_Handler_TEDIRecordHandler extends CRM_Streetimport_Handler_GPRecordHandler {
+class CRM_Streetimport_Handler_TEDIContactRecordHandler extends CRM_Streetimport_Handler_TMRecordHandler {
 
   /** 
    * Check if the given handler implementation can process the record
@@ -14,7 +14,8 @@ class CRM_Streetimport_Handler_TEDIRecordHandler extends CRM_Streetimport_Handle
    * @return true or false
    */
   public function canProcessRecord($record, $sourceURI) {
-    // TODO
+    $parsedFileName = $this->parseTmFile($sourceURI);
+    return ($parsedFileName && $parsedFileName['file_type'] == 'Kontakte');
   }
 
   /** 
@@ -25,6 +26,7 @@ class CRM_Streetimport_Handler_TEDIRecordHandler extends CRM_Streetimport_Handle
    * @throws exception if failed
    */
   public function processRecord($record, $sourceURI) {
+    $parsedFileName = $this->parseTmFile($sourceURI);
     // TODO
   }
 
