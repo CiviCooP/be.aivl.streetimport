@@ -24,19 +24,23 @@ abstract class CRM_Streetimport_RecordHandler {
   /** 
    * Check if the given handler implementation can process the record
    *
-   * @param $record  an array of key=>value pairs
+   * @param $record array   of key=>value pairs
+   * @param $source string  source identifier, e.g. file name
+   *
    * @return true or false
    */
-  public abstract function canProcessRecord($record);
+  public abstract function canProcessRecord($record, $sourceURI);
 
   /** 
    * process the given record
    *
-   * @param $record  an array of key=>value pairs
+   * @param $record array   of key=>value pairs
+   * @param $source string  source identifier, e.g. file name
+   *
    * @return true
    * @throws exception if failed
    */
-  public abstract function processRecord($record);
+  public abstract function processRecord($record, $sourceURI);
 
   /**
    * get the default set of handlers
@@ -63,13 +67,14 @@ abstract class CRM_Streetimport_RecordHandler {
 
     $dataSource->reset();
     $counter = 0;
+    $sourceURI = $dataSource->getURI();
     while ($dataSource->hasNext()) {
       $record = $dataSource->next();
       $counter += 1;
       $record_processed = FALSE;
       foreach ($handlers as $handler) {
-        if ($handler->canProcessRecord($record)) {
-          $handler->processRecord($record);
+        if ($handler->canProcessRecord($record, $sourceURI)) {
+          $handler->processRecord($record, $sourceURI);
           $record_processed = TRUE;
 
           // TODO: if we want to allow multiple processing, this needs to be commented out:

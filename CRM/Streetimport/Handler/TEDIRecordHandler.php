@@ -13,7 +13,7 @@ class CRM_Streetimport_Handler_TEDIRecordHandler extends CRM_Streetimport_Handle
    * @param $record  an array of key=>value pairs
    * @return true or false
    */
-  public function canProcessRecord($record) {
+  public function canProcessRecord($record, $sourceURI) {
     // TODO
   }
 
@@ -24,7 +24,7 @@ class CRM_Streetimport_Handler_TEDIRecordHandler extends CRM_Streetimport_Handle
    * @return true
    * @throws exception if failed
    */
-  public function processRecord($record) {
+  public function processRecord($record, $sourceURI) {
     // TODO
   }
 

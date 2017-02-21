@@ -13,7 +13,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    * @param $record  an array of key=>value pairs
    * @return true or false
    */
-  public function canProcessRecord($record) {
+  public function canProcessRecord($record, $sourceURI) {
     $config = CRM_Streetimport_Config::singleton();
     return isset($record['Loading type']) && $record['Loading type'] == $config->getStreetRecruitmentImportType();
   }
@@ -25,7 +25,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    * @return true
    * @throws exception if failed
    */
-  public function processRecord($record) {
+  public function processRecord($record, $sourceURI) {
     $config = CRM_Streetimport_Config::singleton();
     $this->logger->logDebug($config->translate("Processing StreetRecruitment record")."...", $record);
 

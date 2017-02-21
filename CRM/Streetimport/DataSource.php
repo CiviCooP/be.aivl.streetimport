@@ -56,6 +56,16 @@ abstract class CRM_Streetimport_DataSource {
    */
   public abstract function next();
 
+  
+  /**
+   * Get the next record
+   *
+   * @return string  URI identifying the source, e.g. file name
+   */
+  public function getURI() {
+    return $this->uri;
+  }
+
   /**
    * transforms the given record's keys accorting to $this->mapping
    * missing keys in the mapping will be treated according to the $restrict parameter
