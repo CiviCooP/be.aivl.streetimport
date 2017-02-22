@@ -197,7 +197,7 @@ function streetimport_civicrm_buildForm($formName, &$form) {
     foreach($result['values'] as $value){
       $actvityTypeIds[]=$value['value'];
     }
-    if(in_array($form->_activityTypeId, $actvityTypeIds) && $form->urlPath === array('civicrm', 'activity')){
+    if(in_array($form->_activityTypeId, $actvityTypeIds) && $form->getAction() == 4){
       _streetimport_civicrm_addCreateMandateButton($form);
     }
   }
