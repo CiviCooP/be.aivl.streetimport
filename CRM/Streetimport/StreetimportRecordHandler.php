@@ -449,7 +449,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    *
    * @param $mandate_data   mandate entity data
    */
-  public function saveBankAccount($mandate_data, $record) {
+  protected function saveBankAccount($mandate_data, $record) {
     $config = CRM_Streetimport_Config::singleton();
     $type_id_IBAN = (int) CRM_Core_OptionGroup::getValue('civicrm_banking.reference_types', 'IBAN', 'name', 'String', 'id');
     if (empty($type_id_IBAN)) {
