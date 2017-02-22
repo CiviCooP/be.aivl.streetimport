@@ -954,6 +954,15 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * @access public
    */
   public function getPrefixIdWithLabel($prefix) {
+    // temporary hack to move meneer to Mijnheer and mevrouw to Mevrouw (issue 955)
+    switch ($prefix) {
+      case "meneer":
+        $prefix = 'Mijnheer';
+        break;
+      case "mevrouw":
+        $prefix = "Mevrouw";
+        break;
+    }
     $prefixOptionGroup = CRM_Streetimport_Utils::getOptionGroupWithName("individual_prefix");
     $params = array(
       'option_group_id' => $prefixOptionGroup['id'],
