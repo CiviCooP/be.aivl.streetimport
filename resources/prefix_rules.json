@@ -1,0 +1,27 @@
+{
+    "1": {
+        "gender": "2",
+        "import_prefix": "meneer",
+        "civicrm_prefix": "2"
+    },
+    "2": {
+        "gender": "2",
+        "import_prefix": "Meneer",
+        "civicrm_prefix": "2"
+    },
+    "3": {
+        "gender": "1",
+        "import_prefix": "mevrouw",
+        "civicrm_prefix": "1"
+    },
+    "4": {
+        "gender": "1",
+        "import_prefix": "Mevrouw",
+        "civicrm_prefix": "1"
+    },
+    "5": {
+        "import_prefix": "test",
+        "civicrm_prefix": "5",
+        "gender": "3"
+    }
+}

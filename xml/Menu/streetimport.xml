@@ -16,4 +16,10 @@
     <page_callback>CRM_Streetimport_Update_Controller</page_callback>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/streetimport/form/prefixrule</path>
+    <page_callback>CRM_Streetimport_Form_PrefixRule</page_callback>
+    <title>PrefixRule</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>
