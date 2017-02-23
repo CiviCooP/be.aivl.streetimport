@@ -202,3 +202,44 @@ function streetimport_civicrm_navigationMenu(&$params) {
     CRM_Streetimport_Utils::addNavigationMenuEntry($params[$administerMenuId]['child'][$administerCiviContributeMenuId], $importSettingsMenu);
   }
 }
+
+function streetimport_civicrm_buildForm($formName, &$form) {
+  if($formName =='CRM_Activity_Form_Activity'){
+    //check if the activity type is 'streetRecruitment' or 'welcomeCall'
+    $result = civicrm_api3('OptionValue', 'get', array(
+      'option_group_id' => 'activity_type',
+      'name' => array('IN' => array("welcomeCall", "streetRecruitment")),
+      'return' => 'value'
+    ));
+    foreach($result['values'] as $value){
+      $actvityTypeIds[]=$value['value'];
+    }
+    if(in_array($form->_activityTypeId, $actvityTypeIds) && $form->getAction() == 4){
+      _streetimport_civicrm_addCreateMandateButton($form);
+    }
+  }
+}
+
+function _streetimport_civicrm_addCreateMandateButton(&$form){
+    $activityType = civicrm_api3('OptionValue', 'getsingle', array('option_group_id' => 'activity_type', 'value' => $form->_activityTypeId));
+    if ($activityType['name'] == 'streetRecruitment') {
+        $fieldPrefix = 'new_';
+    } elseif ($activityType['name'] == 'welcomeCall') {
+        $fieldPrefix = 'wc_';
+    }
+
+    // only show if there is not already a mandate in existence with this rererence
+    $cfr = civicrm_api3('CustomField', 'getsingle', array('name' => $fieldPrefix.'sdd_mandate'));
+    $ar = civicrm_api3('Activity', 'getsingle', array('id' => $form->_activityId));
+
+    $form->_activityId;
+    $smr = civicrm_api3('SepaMandate', 'get', array(
+      'reference' => $ar['custom_'.$cfr['id']],
+    ));
+
+    if(!$smr['count']){
+      CRM_Core_Region::instance('page-body')->add(array(
+        'template' => 'CRM/Streetimport/Extras/ActivityFormCreateMandateButton.tpl',
+      ));
+    }
+}
