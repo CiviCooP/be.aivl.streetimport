@@ -20,6 +20,11 @@
     <path>civicrm/streetimport/createmandate</path>
     <page_callback>CRM_Streetimport_Form_CreateMandate</page_callback>
     <title>Create Mandate</title>
+  </item>
+  <item>
+    <path>civicrm/streetimport/form/prefixrule</path>
+    <page_callback>CRM_Streetimport_Form_PrefixRule</page_callback>
+    <title>PrefixRule</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
 </menu>

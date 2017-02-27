@@ -18,6 +18,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @access public
    */
   public function buildQuickForm() {
+
     $config = CRM_Streetimport_Config::singleton();
     $this->getImportSettings();
     $employeeList = $this->getEmployeeList();
@@ -96,6 +97,8 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           break;
       }
     }
+    // add the prefix rules (see issue 955 <https://civicoop.plan.io/issues/955>)
+    $this->addPrefixRules();
     $this->addButtons(array(
       array(
         'type' => 'next',
@@ -111,6 +114,41 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     // export form elements
     $this->assign('elementNames', $this->getRenderableElementNames());
     parent::buildQuickForm();
+  }
+
+  /**
+   * Method to get the prefix rules, put them in array and assign to form
+   */
+  private function addPrefixRules() {
+    $result = array();
+    $prefixRule = new CRM_Streetimport_PrefixRule();
+    $rules = $prefixRule->get();
+    foreach ($rules as $ruleId => $rule) {
+      try {
+        $result[$ruleId]['gender'] = civicrm_api3('OptionValue', 'getvalue', array(
+          'option_group_id' => 'gender',
+          'value' => $rule['gender'],
+          'return' => 'label'
+        ));
+      } catch (CiviCRM_API3_Exception $ex) {
+        $result[$ruleId]['gender'] = '';
+      }
+      $result[$ruleId]['import_prefix'] = $rule['import_prefix'];
+      try {
+        $result[$ruleId]['civicrm_prefix'] = civicrm_api3('OptionValue', 'getvalue', array(
+          'option_group_id' => 'individual_prefix',
+          'value' => $rule['civicrm_prefix'],
+          'return' => 'label'
+        ));
+      } catch (CiviCRM_API3_Exception $ex) {
+        $result[$ruleId]['civicrm_prefix'] = '';
+      }
+      $deleteUrl = CRM_Utils_System::url('civicrm/streetimport/form/prefixrule', 'reset=1&action=delete&id='.
+        $ruleId);
+      $result[$ruleId]['actionLink'] = '<a class="action-item" title="Delete" href="'.$deleteUrl.'">'.ts('Delete').'</a>';
+    }
+    $this->assign('prefixRules', $result);
+    $this->assign('addUrl', CRM_Utils_System::url('civicrm/streetimport/form/prefixrule', 'reset=1&action=add'));
   }
 
   /**

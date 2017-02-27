@@ -554,28 +554,6 @@ class CRM_Streetimport_Utils {
   }
 
   /**
-   * Method to determine gender with prefix
-   *
-   * @param $prefix
-   * @return int
-   */
-  public static function determineGenderWithPrefix($prefix) {
-    $config = CRM_Streetimport_Config::singleton();
-    $prefix = strtolower($prefix);
-    switch ($prefix) {
-      case 'meneer':
-        return $config->getMaleGenderId();
-      break;
-      case 'mevrouw':
-        return $config->getFemaleGenderId();
-      break;
-      default:
-        return $config->getUnknownGenderId();
-      break;
-    }
-  }
-
-  /**
    * Method to get list of active option values for select lists
    *
    * @param string $optionGroupName
