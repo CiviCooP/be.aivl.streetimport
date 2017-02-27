@@ -18,10 +18,5 @@
         "gender": "1",
         "import_prefix": "Mevrouw",
         "civicrm_prefix": "1"
-    },
-    "5": {
-        "import_prefix": "test",
-        "civicrm_prefix": "5",
-        "gender": "3"
     }
 }

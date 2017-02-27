@@ -73,6 +73,22 @@ class CRM_Streetimport_PrefixRule {
   }
 
   /**
+   * Method to get the prefix rule with the civicrm prefix
+   *
+   * @param $civicrmPrefix
+   * @return array|mixed
+   */
+  public function getWithCiviCRMPrefix($civicrmPrefix) {
+    $result = array();
+    foreach ($this->_prefixRules as $prefixRuleId => $prefixRule) {
+      if ($prefixRule['civicrm_prefix'] == $civicrmPrefix) {
+        $result = $prefixRule;
+      }
+    }
+    return $result;
+  }
+
+  /**
    * Method to get all the prefix rules
    * @return array
    */
@@ -186,7 +202,7 @@ class CRM_Streetimport_PrefixRule {
   /**
    * Method to check if there is already a prefix rule for the import prefix
    *
-   * @param sring $importPrefix
+   * @param string $importPrefix
    * @return bool
    */
   public function importPrefixExists($importPrefix) {

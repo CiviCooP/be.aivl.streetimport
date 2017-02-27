@@ -7,6 +7,9 @@
  * @see https://wiki.civicrm.org/confluence/display/CRMDOC/QuickForm+Reference
  */
 class CRM_Streetimport_Form_PrefixRule extends CRM_Core_Form {
+  /**
+   * Overridden parent method to build the form
+   */
   public function buildQuickForm() {
     CRM_Utils_System::setTitle('New AIVL Import Settings Prefix Rule');
 
@@ -23,9 +26,23 @@ class CRM_Streetimport_Form_PrefixRule extends CRM_Core_Form {
     $this->assign('elementNames', $this->getRenderableElementNames());
     parent::buildQuickForm();
   }
+
+  /**
+   * Overridden parent method to initiate form
+   */
   public function preProcess() {
     $session = CRM_Core_Session::singleton();
     $session->pushUserContext(CRM_Utils_System::url('civicrm/admin/setting/aivl_import_settings', 'reset=1', true));
+    // if action is delete, process immediately and return
+    if ($this->_action == CRM_Core_Action::DELETE) {
+      $requestValues = CRM_Utils_Request::exportValues();
+      if (isset($requestValues['id'])) {
+        $prefixRule = new CRM_Streetimport_PrefixRule();
+        $prefixRule->deleteById($requestValues['id']);
+        $session->setStatus(ts('Deleted Prefix Rule from the database'), ts('Deleted Prefix Rule'), 'success');
+        CRM_Utils_System::redirect($session->readUserContext());
+      }
+    }
     parent::preProcess();
   }
 
@@ -67,6 +84,9 @@ class CRM_Streetimport_Form_PrefixRule extends CRM_Core_Form {
     return $result;
   }
 
+  /**
+   * Overridden parent method to process the form after submit
+   */
   public function postProcess() {
     $values = $this->exportValues();
     $prefixRule = new CRM_Streetimport_PrefixRule();
@@ -116,6 +136,5 @@ class CRM_Streetimport_Form_PrefixRule extends CRM_Core_Form {
       }
       return TRUE;
     }
-
   }
 }

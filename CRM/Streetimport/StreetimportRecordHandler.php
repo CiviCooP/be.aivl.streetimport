@@ -70,6 +70,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
 
     // CREATE RECRUITER CONTACT
+    $prefixId = $this->getPrefixIdWithImportPrefix(CRM_Utils_Array::value('Recruiter Prefix', $record));
+    $genderId = $this->getGenderWithImportPrefix(CRM_Utils_Array::value('Recruiter Prefix', $record));
     $this->logger->logDebug($config->translate("Recruiter not found, creating new one..."), $record);
     // "If the contact is not known, a contact of the contact subtype 'Werver' is to be created"
     $recruiterContactSubType = $config->getRecruiterContactSubType();
@@ -78,7 +80,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       'contact_sub_type'  => $recruiterContactSubType,
       'first_name'        => CRM_Utils_Array::value('Recruiter First Name', $record),
       'last_name'         => CRM_Utils_Array::value('Recruiter Last Name',  $record),
-      'prefix'            => CRM_Utils_Array::value('Recruiter Prefix', $record),
+      'prefix_id'            => $prefixId,
+      'gender_id'            => $genderId,
       $recruiter_id_field => CRM_Utils_Array::value('Recruiter ID', $record),
     );
 
@@ -140,8 +143,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // create base contact
     $householdPrefixes = $config->getHouseholdPrefixIds();
     $contact_data = array();
-    $prefixId = $this->getPrefixIdWithLabel(CRM_Utils_Array::value('Prefix', $record));
-    $genderId = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
+    $prefixId = $this->getPrefixIdWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
+    $genderId = $this->getGenderWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
     if ($this->isTrue($record, 'Organization Yes/No')) {
       $contact_data['contact_type']      = 'Organization';
       $contact_data['organization_name'] = CRM_Utils_Array::value('Last Name',  $record);
@@ -744,7 +747,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     if ($donorBirthDate != $recordBirthDate) {
       return TRUE;
     }
-    $donorPrefix = $this->getPrefixWithId($donor['prefix_id']);
+    $donorPrefix = $this->getImportPrefixWithPrefixId($donor['prefix_id']);
     if ($donorPrefix != $record['Prefix']) {
       return TRUE;
     }
@@ -771,10 +774,10 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     if ($recordBirthDate != $donorBirthDate) {
       $params['birth_date'] = $recordBirthDate;
     }
-    $donorPrefix = $this->getPrefixWithId($donor['prefix_id']);
+    $donorPrefix = $this->getImportPrefixWithPrefixId($donor['prefix_id']);
     if ($record['Prefix'] != $donorPrefix) {
-      $params['prefix_id'] = $this->getPrefixIdWithLabel(strtolower($record['Prefix']));
-      $params['gender_id'] = CRM_Streetimport_Utils::determineGenderWithPrefix($record['Prefix']);
+      $params['prefix_id'] = $this->getPrefixIdWithImportPrefix(strtolower($record['Prefix']));
+      $params['gender_id'] = $this->getGenderWithImportPrefix($record['Prefix']);
     }
     if (!empty($params)) {
       $params['id'] = $donor['id'];
@@ -947,34 +950,41 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
   }
 
   /**
-   * Method to get the prefix value with label
+   * Method to get the prefix value with import prefix
    *
-   * @param string $prefix
+   * @param string $importPrefix
    * @return array|bool
    * @access public
    */
-  public function getPrefixIdWithLabel($prefix) {
-    // temporary hack to move meneer to Mijnheer and mevrouw to Mevrouw (issue 955)
-    switch ($prefix) {
-      case "meneer":
-        $prefix = 'Mijnheer';
-        break;
-      case "mevrouw":
-        $prefix = "Mevrouw";
-        break;
+  public function getPrefixIdWithImportPrefix($importPrefix) {
+    if (!empty($importPrefix)) {
+      $prefixRule = new CRM_Streetimport_PrefixRule();
+      $prefix = $prefixRule->getWithImportPrefix($importPrefix);
+      if (isset($prefix['civicrm_prefix'])) {
+        return $prefix['civicrm_prefix'];
+      }
     }
-    $prefixOptionGroup = CRM_Streetimport_Utils::getOptionGroupWithName("individual_prefix");
-    $params = array(
-      'option_group_id' => $prefixOptionGroup['id'],
-      'label' => $prefix,
-      'return' => 'value'
-    );
-    try {
-      return civicrm_api3('OptionValue', 'Getvalue', $params);
-    } catch (CiviCRM_API3_Exception $ex) {
-      return FALSE;
-    }
+    return FALSE;
   }
+
+  /**
+   * Method to get the gender id with import prefix
+   *
+   * @param string $importPrefix
+   * @return array|bool
+   * @access public
+   */
+  public function getGenderWithImportPrefix($importPrefix) {
+    if (!empty($importPrefix)) {
+      $prefixRule = new CRM_Streetimport_PrefixRule();
+      $prefix = $prefixRule->getWithImportPrefix($importPrefix);
+      if (isset($prefix['gender'])) {
+        return $prefix['gender'];
+      }
+    }
+    return FALSE;
+  }
+
 
   /**
    * Method to get the prefix label with value
@@ -983,17 +993,13 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * @return array|bool
    * @access public
    */
-  public function getPrefixWithId($prefixId) {
-    $prefixOptionGroup = CRM_Streetimport_Utils::getOptionGroupWithName("individual_prefix");
-    $params = array(
-      'option_group_id' => $prefixOptionGroup['id'],
-      'value' => $prefixId,
-      'return' => 'label'
-    );
-    try {
-      return civicrm_api3('OptionValue', 'Getvalue', $params);
-    } catch (CiviCRM_API3_Exception $ex) {
-      return FALSE;
+  public function getImportPrefixWithPrefixId($prefixId) {
+    if (!empty($importPrefix)) {
+      $prefixRule = new CRM_Streetimport_PrefixRule();
+      $prefix = $prefixRule->getWithCiviCRMPrefix($prefixId);
+      if (Isset($prefix['import_prefix'])) {
+        return $prefix['import_prefix'];
+      }
     }
   }
 
