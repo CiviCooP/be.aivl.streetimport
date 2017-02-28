@@ -39,6 +39,8 @@ class CRM_Streetimport_Config {
   protected $areasOfInterestOptionGroup = null;
   protected $translatedStrings = array();
   protected $loadingTypes = array();
+  protected $defaultPhoneTypeId = NULL;
+  protected $defaultLocationTypeId = NULL;
   /**
    * Constructor method
    *
@@ -53,7 +55,22 @@ class CRM_Streetimport_Config {
     $this->welcomeCallImportType = 2;
     $this->acceptedYesValues = array('J', 'j', 'Ja', 'ja', 'true', 'waar', 'Y', 'y', 'Yes', 'yes', 1);
     $this->loadingTypes = array(1 => 'Street Recruitment', 2 => 'Welcome Call');
-
+    $this->defaultLocationTypeId = civicrm_api3('LocationType', 'getvalue', array('is_default' => 1, 'return' => 'id'));
+    // set default phone type to phone or first one active if not found
+    try {
+      $this->defaultPhoneTypeId = civicrm_api3('OptionValue', 'getvalue', array(
+        'option_group_id' => "phone_type",
+        'name' => "phone",
+        'return' => 'value'
+      ));
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->defaultPhoneTypeId = civicrm_api3('OptionValue', 'getvalue', array(
+        'option_group_id' => "phone_type",
+        'is_active' => 1,
+        'return' => 'value',
+        'options' => array('limit' => 1),
+      ));
+    }
     $this->setContactSubTypes();
     $this->setRelationshipTypes();
     $this->setActivityTypes();
@@ -65,6 +82,20 @@ class CRM_Streetimport_Config {
     }
     $this->setGroups();
     $this->setTranslationFile();
+  }
+
+  /**
+   * Getter for default phone type id
+   */
+  public function getDefaultPhoneTypeId() {
+    return $this->defaultPhoneTypeId;
+  }
+
+  /**
+   * Getter for default location type id
+   */
+  public function getDefaultLocationTypeId() {
+    return $this->defaultLocationTypeId;
   }
 
   /**

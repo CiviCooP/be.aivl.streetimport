@@ -105,36 +105,32 @@ abstract class CRM_Streetimport_RecordHandler {
   /**
    * look up contact
    *
-   * @param int $contact_id
+   * @param int $contactId
+   * @param array $importRecord
    * @param bool $cached  if true, the contact will be kept on cache
    * @return mixed
    */
 
-  protected function getContact($contact_id, $record, $cached = true) {
-    if (empty($contact_id) || ((int)  $contact_id)==0) {
+  protected function getContact($contactId, $importRecord, $cached = true) {
+    if (empty($contactId) || ((int) $contactId) == 0) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logWarning($config->translate("Invalid ID for contact lookup").": ".$contact_id, $record);
+      $this->logger->logWarning($config->translate("Invalid ID for contact lookup").": ".$contactId, $importRecord);
       return NULL;
     }
-
-    $contact_id = (int) $contact_id;
-    if ($cached && isset(self::$contact_cache[$contact_id])) {
-      return self::$contact_cache[$contact_id];
+    $contactId = (int) $contactId;
+    if ($cached && isset(self::$contact_cache[$contactId])) {
+      return self::$contact_cache[$contactId];
     }
-
     try {
-      $contact = civicrm_api3('Contact', 'getsingle', array('id' => $contact_id));
-
+      $contact = civicrm_api3('Contact', 'getsingle', array('id' => $contactId));
       if ($cached) {
-        self::$contact_cache[$contact_id] = $contact;
+        self::$contact_cache[$contactId] = $contact;
       }
       return $contact;
-
     } catch (CiviCRM_API3_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
-      $this->logger->logWarning($config->translate("Contact lookup failed").": ".$contact_id, $record);
+      $this->logger->logWarning($config->translate("Contact lookup failed").": ".$contactId, $importRecord);
     }
-
     return NULL;
   }
 
@@ -142,57 +138,26 @@ abstract class CRM_Streetimport_RecordHandler {
   /**
    * Create a new contact with the give data
    *
+   * @param array $contactData
+   * @param array $importRecord
    * @return array with contact entity
    */
-  protected function createContact($contact_data, $record) {
-    $config= CRM_Streetimport_Config::singleton();
-    // verify data
-    if (empty($contact_data['contact_type'])) {
-      $this->logger->logError($config->translate("Contact missing contact_type"), $record, $config->translate("Create Contact Error"), "Error");
+  protected function createContact($contactData, $importRecord) {
+    $config = CRM_Streetimport_Config::singleton();
+    $contact = new CRM_Streetimport_Contact();
+    // validate contact data
+    $valid = $contact->validateContactData($contactData);
+    if (!$valid) {
+      $this->logger->logError($config->translate($valid), $importRecord, $config->translate("Create Contact Error"), "Error");
       return NULL;
     }
-    if ($contact_data['contact_type'] == 'Organization') {
-      if (empty($contact_data['organization_name'])) {
-        $this->logger->logError($config->translate("Contact missing organization_name"), $record, $config->translate("Create Contact Error"), "Error", 'Error');
-        return NULL;
-      }
-    } elseif ($contact_data['contact_type'] == 'Household') {
-      if (empty($contact_data['household_name'])) {
-        $this->logger->logError($config->translate("Contact missing household_name"), $record, $config->translate("Create Contact Error"), "Error");
-        return NULL;
-      }
+    $newContact = $contact->createFromImportData($contactData);
+    if (isset($newContact['id'])) {
+      $this->addContactToGroup($newContact['id'], $config->getDedupeContactsGroupID(), $importRecord);
+      $this->logger->logDebug($config->translate("Contact created").": ".$newContact['id'], $importRecord);
+      return $newContact;
     } else {
-      $firstName = trim($contact_data['first_name']);
-      $lastName = trim($contact_data['last_name']);
-      if (empty($firstName) && empty($lastName)) {
-        $this->logger->logError($config->translate("Donor missing first_name and last_name").": ".$record['DonorID'],
-          $record, $config->translate("Create Contact Error"), "Error");
-        return NULL;
-      }
-      if (empty($firstName)) {
-        $this->logger->logError($config->translate("Donor missing first_name, contact created without first name")
-          .": donor ".$record['DonorID'], $record, $config->translate("Missing Data For Donor"), "Info");
-      }
-      if (empty($lastName)) {
-        $this->logger->logError($config->translate("Donor missing last_name, contact created without last name")
-          .": donor ".$record['DonorID'], $record, $config->translate("Missing Data For Donor"), "Info");
-      }
-    }
-
-    // format birth date (issue #39)
-    if (isset($contact_data['birth_date'])) {
-      $contact_data['birth_date'] = $this->formatBirthDate($contact_data['birth_date']);
-    }
-
-    // create via API
-    try {
-      $result  = civicrm_api3('Contact', 'create', $contact_data);
-      $contact = $result['values'][$result['id']];
-      $this->addContactToGroup($contact['id'], $config->getDedupeContactsGroupID(), $record);
-      $this->logger->logDebug($config->translate("Contact created").": ".$contact['id'], $record);
-      return $contact;
-    } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Contact Error"), "Error");
+      $this->logger->logError($newContact, $importRecord, $config->translate("Create Contact Error"), "Error");
       return NULL;
     }
   }
@@ -469,18 +434,6 @@ abstract class CRM_Streetimport_RecordHandler {
     }
 
     return $result;
-  }
-
-  /**
-   * Method to format the birth date
-   *
-   * @param mixed $birthDate
-   * @return string
-   * $access protected
-   */
-  protected function formatBirthDate($birthDate) {
-    $correctDate = new DateTime(CRM_Streetimport_Utils::formatCsvDate($birthDate));
-    return $correctDate->format('d-m-Y');
   }
 
   /**

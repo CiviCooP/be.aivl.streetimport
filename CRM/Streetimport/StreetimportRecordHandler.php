@@ -92,7 +92,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     if (empty($testFirst) && empty($testLast)) {
       $recruiter_data['first_name'] = $record['Recruiter ID'];
       $recruiter_data['last_name']  = CRM_Utils_Array::value('organization_name', $recruiting_organisation);
-      $recruiter_data['prefix']     = '';
+      unset($recruiter_data['prefix_id']);
+      unset($recruiter_data['gender_id']);
     }
     $recruiter = $this->createContact($recruiter_data, $record);
     if (!$recruiter) {
@@ -145,10 +146,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $contact_data = array();
     $prefixId = $this->getPrefixIdWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
     $genderId = $this->getGenderWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
-    if ($this->isTrue($record, 'Organization Yes/No')) {
-      $contact_data['contact_type']      = 'Organization';
-      $contact_data['organization_name'] = CRM_Utils_Array::value('Last Name',  $record);
-    } elseif (in_array($record['Prefix'], $householdPrefixes)) {
+    if (in_array($record['Prefix'], $householdPrefixes)) {
       $contact_data['contact_type']      = 'Household';
       $contact_data['household_name']    = CRM_Utils_Array::value('Last Name',  $record);
     } else {
@@ -162,6 +160,15 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $donor = $this->createContact($contact_data, $record);
     if (!empty($donor)) {
       $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id'], $record);
+
+      // issue 677 - add organization details if required
+      if (in_array(CRM_Utils_Array::value('Organization Yes/No', $record), $config->getAcceptedYesValues())) {
+        $organization = new CRM_Streetimport_Contact();
+        $newOrganization = $organization->createOrganizationFromImportData($donor['id'], CRM_Utils_Array::value('Notes', $record));
+        if (!isset($newOrganization['id'])) {
+          $this->logger->logError($newOrganization, $record, $config->translate("Create Organization for Donor Error"), "Warning");
+        }
+      }
 
       // create address
       if (!empty($record['Country'])) {
