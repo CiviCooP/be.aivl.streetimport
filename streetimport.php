@@ -71,6 +71,7 @@ function streetimport_civicrm_uninstall() {
  */
 function streetimport_civicrm_enable() {
   // check if extension de.systopia.identitytracker is installed as it is required
+  // TODO Merge this check with above.
   $identityTrackerActive = FALSE;
   try {
     $extensions = civicrm_api3('Extension', 'get', array());
