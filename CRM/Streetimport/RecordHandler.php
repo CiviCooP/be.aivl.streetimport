@@ -49,7 +49,9 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   public static function getDefaultHandlers($logger) {
     return array(
-      new CRM_Streetimport_Handler_TEDIRecordHandler($logger),
+      // TODO this needs to happen somewhere much more configurable
+      new CRM_Streetimport_Handler_TEDITelephoneRecordHandler($logger),
+      new CRM_Streetimport_Handler_TEDIContactRecordHandler($logger),
     );
   }
 
@@ -66,10 +68,12 @@ abstract class CRM_Streetimport_RecordHandler {
     }
 
     $dataSource->reset();
+    // exit;
     $counter = 0;
     $sourceURI = $dataSource->getURI();
     while ($dataSource->hasNext()) {
       $record = $dataSource->next();
+      // var_dump($record);
       $counter += 1;
       $record_processed = FALSE;
       foreach ($handlers as $handler) {
