@@ -8,7 +8,7 @@
 
 /**
  * import a CSV file, either by name, or from a given path
- * 
+ *
  * @param $params['filepath']       local CSV file to import
  * @param $params['source_folder']  local file path where to look for the next file
  *                                   if $params['filepath'] is set, this will be ignored
@@ -54,7 +54,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
     // NO filepath given, get one from the directory
     $files = glob($source_folder . DIRECTORY_SEPARATOR . "*.csv");
     // make sure it's sorted
-    sort($files);    
+    sort($files);
   }
 
   // now run the actual import
@@ -98,7 +98,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
         if ($success) {
           $result->logMessage($config->translate("Moved failed file")." ".$source_file." ".$config->translate("to")." ".$failed_file);
 
-          // move the log file to the same location        
+          // move the log file to the same location
           $log_file_path = $result->getLogFile();
           $log_file_new  = $failed_folder . DIRECTORY_SEPARATOR . basename($log_file_path);
           $result->setLogFile(NULL); // do we need to close the log file before moving?
@@ -119,4 +119,3 @@ function civicrm_api3_streetimport_importcsvfile($params) {
 function _civicrm_api3_streetimport_importcsvfile(&$params) {
   $params['filepath']['api.required'] = 1;
 }
-
