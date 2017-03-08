@@ -9,7 +9,7 @@ abstract class CRM_Streetimport_RecordHandler {
 
   /**
    * stores the result/logging object
-   */ 
+   */
   protected $logger = NULL;
 
   /** for cached contact lookup **/
@@ -21,7 +21,7 @@ abstract class CRM_Streetimport_RecordHandler {
     $this->logger = $logger;
   }
 
-  /** 
+  /**
    * Check if the given handler implementation can process the record
    *
    * @param $record array   of key=>value pairs
@@ -31,7 +31,7 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   public abstract function canProcessRecord($record, $sourceURI);
 
-  /** 
+  /**
    * process the given record
    *
    * @param $record array   of key=>value pairs
@@ -53,7 +53,7 @@ abstract class CRM_Streetimport_RecordHandler {
     );
   }
 
-  /** 
+  /**
    * process all records of the given data source
    *
    * @param $dataSource  a CRM_Streetimport_DataSource object
@@ -89,7 +89,7 @@ abstract class CRM_Streetimport_RecordHandler {
       }
     }
   }
-  
+
   /**
    * Check, if $data[$key] is set and true wrt the configuration
    */
@@ -138,12 +138,12 @@ abstract class CRM_Streetimport_RecordHandler {
       $config = CRM_Streetimport_Config::singleton();
       $this->logger->logWarning($config->translate("Contact lookup failed").": ".$contact_id, $record);
     }
-    
+
     return NULL;
   }
 
 
-  /** 
+  /**
    * Create a new contact with the give data
    *
    * @return array with contact entity
@@ -159,7 +159,7 @@ abstract class CRM_Streetimport_RecordHandler {
       if (empty($contact_data['organization_name'])) {
         $this->logger->logError($config->translate("Contact missing organization_name"), $record, $config->translate("Create Contact Error"), "Error", 'Error');
         return NULL;
-      }      
+      }
     } elseif ($contact_data['contact_type'] == 'Household') {
       if (empty($contact_data['household_name'])) {
         $this->logger->logError($config->translate("Contact missing household_name"), $record, $config->translate("Create Contact Error"), "Error");
@@ -201,7 +201,7 @@ abstract class CRM_Streetimport_RecordHandler {
     }
   }
 
-  /** 
+  /**
    * Create an activity with the given data
    *
    * @return activity BAO object
@@ -223,7 +223,7 @@ abstract class CRM_Streetimport_RecordHandler {
           'contact_id'     => $contact_id,
           'record_type_id' => 1  // ASSIGNEE
         );
-        CRM_Activity_BAO_ActivityContact::create($assignment_parameters);        
+        CRM_Activity_BAO_ActivityContact::create($assignment_parameters);
       }
     }
 
@@ -231,7 +231,7 @@ abstract class CRM_Streetimport_RecordHandler {
     return $activity;
   }
 
-  /** 
+  /**
    * Create an email entity with the given data
    *
    * @return array with email entity
@@ -253,7 +253,7 @@ abstract class CRM_Streetimport_RecordHandler {
     }
   }
 
-  /** 
+  /**
    * Create an address entity with the given data
    *
    * @return array with address entity
@@ -280,7 +280,7 @@ abstract class CRM_Streetimport_RecordHandler {
     }
   }
 
-  /** 
+  /**
    * Create an phone entity with the given data
    *
    * @return array with phone entity
@@ -444,7 +444,7 @@ abstract class CRM_Streetimport_RecordHandler {
   /**
    * uses SMARTY to render a template
    *
-   * @return string 
+   * @return string
    */
   public function renderTemplate($template_path, $vars) {
     $smarty = CRM_Core_Smarty::singleton();
