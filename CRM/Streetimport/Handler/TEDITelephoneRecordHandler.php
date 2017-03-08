@@ -23,7 +23,7 @@ define('TM_PHONE_NEW',        4);
 class CRM_Streetimport_Handler_TEDITelephoneRecordHandler extends CRM_Streetimport_Handler_TMRecordHandler {
 
 
-  /** 
+  /**
    * Check if the given handler implementation can process the record
    *
    * @param $record  an array of key=>value pairs
@@ -34,7 +34,7 @@ class CRM_Streetimport_Handler_TEDITelephoneRecordHandler extends CRM_Streetimpo
     return ($parsedFileName && $parsedFileName['file_type'] == 'Telefon' && $parsedFileName['tm_company'] == 'tedi');
   }
 
-  /** 
+  /**
    * process the given record
    *
    * @param $record  an array of key=>value pairs
@@ -99,7 +99,7 @@ class CRM_Streetimport_Handler_TEDITelephoneRecordHandler extends CRM_Streetimpo
         $search_result = civicrm_api3('Phone', 'get', array(
           'phone_numeric' => $phone_numeric,
           'contact_id'    => $contact_id,
-          'return'        => 'id';
+          'return'        => 'id'
           ));
         foreach ($search_result['values'] as $phone) {
           $phone_ids[] = $phone['id'];
