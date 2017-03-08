@@ -137,6 +137,9 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
    *
    */
   function validate_encoding() {
+    // skip this check for now since it didn't seem to be working for the csv we were supplied with
+    // TODO: re-instate?
+    return;
     $config = CRM_Streetimport_Config::singleton();
     if (!mb_check_encoding(file_get_contents($this->uri), "UTF-8")) {
       $this->logger->abort($config->translate("File")." ".$this->uri." "
