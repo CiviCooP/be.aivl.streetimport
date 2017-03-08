@@ -44,7 +44,7 @@ function streetimport_civicrm_install() {
   );
   $missingExtensions = array_diff(array_keys($requiredExtensions), $installedExtensions);
   if (count($missingExtensions) == 1) {
-    $missingExtensionsText = $missingExtensions[0];
+    $missingExtensionsText = current($missingExtensions);
     CRM_Core_Error::fatal("The Street Recruitment Import extension requires the following extension: '$missingExtensionsText' but it is not currently installed. Please install it before continuing.");
   }
   elseif (count($missingExtensions) > 1) {
