@@ -317,7 +317,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
   protected function getEmployeeList() {
     $employeeList = array();
     $extensionConfig = CRM_Streetimport_Config::singleton();
-    $legalName = $extensionConfig->getAivlLegalName();
+    $legalName = $extensionConfig->getOrgLegalName();
     $relationshipTypes = $extensionConfig->getEmployeeRelationshipTypeIds();
     $aivlParams = array(
       'legal_name' => $legalName,

@@ -11,7 +11,7 @@ class CRM_Streetimport_Config {
   private static $_singleton;
 
   protected $resourcesPath = null;
-  protected $aivlLegalName = null;
+  protected $orgLegalName = null;
   protected $importSettings = array();
   protected $recruiterContactSubType = array();
   protected $recruitingOrganizationContactSubType = array();
@@ -48,7 +48,7 @@ class CRM_Streetimport_Config {
 
     $settings = civicrm_api3('Setting', 'Getsingle', array());
     $this->resourcesPath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
-    $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
+    $this->orgLegalName = 'Default Organization'; //TODO extract to config - we should not die if this is not defined.
     $this->streetRecruitmentImportType = 1;
     $this->welcomeCallImportType = 2;
     $this->acceptedYesValues = array('J', 'j', 'Ja', 'ja', 'true', 'waar', 'Y', 'y', 'Yes', 'yes', 1);
@@ -178,8 +178,8 @@ class CRM_Streetimport_Config {
    * @return string
    * @access public
    */
-  public function getAivlLegalName() {
-    return $this->aivlLegalName;
+  public function getOrgLegalName() {
+    return $this->orgLegalName;
   }
 
   /**
