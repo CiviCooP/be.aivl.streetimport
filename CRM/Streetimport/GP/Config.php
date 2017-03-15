@@ -23,8 +23,30 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
    */
   function __construct() {
     CRM_Streetimport_Config::__construct();
-
   }
+
+
+  /**
+   * get a list (id => name) of the relevant employees
+   */
+  public function getEmployeeList() {
+    // get user list
+    $employees = parent::getEmployeeList();
+
+    // currently, everybody with an external ID starting with 'USER-' is a user
+    //  so we want to add those
+    $result = civicrm_api3('Contact', 'get', array(
+      'return'              => 'display_name,id',
+      'external_identifier' => array('LIKE' => "USER-%"),
+      'options'             => array('limit' => 0),
+    ));
+    foreach ($result['values'] as $contact_id => $contact) {
+      $employees[$contact['id']] = $contact['display_name'];
+    }
+
+    return $employees;
+  }
+
 
   /**
    * get the default set of handlers

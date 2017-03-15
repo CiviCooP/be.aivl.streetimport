@@ -218,8 +218,21 @@ class CRM_Streetimport_Config {
    * get a list (id => name) of the relevant employees
    */
   public function getEmployeeList() {
-    // TODO: overwrite
-    return array(2 => "Me");
+    // default implementation: every contact with a user account
+    $employees = array();
+    $query = CRM_Core_DAO::executeQuery("
+        SELECT
+          civicrm_contact.id AS contact_id,
+          civicrm_contact.display_name AS display_name
+        FROM civicrm_contact
+        LEFT JOIN civicrm_uf_match ON civicrm_uf_match.contact_id = civicrm_contact.id
+        WHERE civicrm_contact.is_deleted = 0
+          AND civicrm_uf_match.uf_id IS NOT NULL;");
+    while ($query->fetch()) {
+      $employees[$query->contact_id] = $query->display_name;
+    }
+
+    return $employees;
   }
 
 
