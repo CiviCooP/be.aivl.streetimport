@@ -728,4 +728,64 @@ class CRM_Streetimport_Utils {
     }
     return $records;
   }
+
+  /**
+   * render a given template with the given variables
+   */
+  public static function renderTemplate($template_path, $vars) {
+    $smarty = CRM_Core_Smarty::singleton();
+
+    // first backup original variables, since smarty instance is a singleton
+    $oldVars = $smarty->get_template_vars();
+    $backupFrame = array();
+    foreach ($vars as $key => $value) {
+      $key = str_replace(' ', '_', $key);
+      $backupFrame[$key] = isset($oldVars[$key]) ? $oldVars[$key] : NULL;
+    }
+
+    // then assign new variables
+    foreach ($vars as $key => $value) {
+      $key = str_replace(' ', '_', $key);
+      $smarty->assign($key, $value);
+    }
+
+    // create result
+    $result =  $smarty->fetch($template_path);
+
+    // reset smarty variables
+    foreach ($backupFrame as $key => $value) {
+      $key = str_replace(' ', '_', $key);
+      $smarty->assign($key, $value);
+    }
+
+    return $result;
+  }
+
+
+  /**
+   * Create an activity with the given data
+   *
+   * @return activity BAO object
+   */
+  public function createActivity($data, $record, $assigned_contact_ids=NULL) {
+    $activity = CRM_Activity_BAO_Activity::create($data);
+    if (empty($activity->id)) {
+      return NULL;
+    }
+
+    // create assignments
+    if (!empty($assigned_contact_ids) && is_array($assigned_contact_ids)) {
+      foreach ($assigned_contact_ids as $contact_id) {
+        $assignment_parameters = array(
+          'activity_id'    => $activity->id,
+          'contact_id'     => $contact_id,
+          'record_type_id' => 1  // ASSIGNEE
+        );
+        CRM_Activity_BAO_ActivityContact::create($assignment_parameters);
+      }
+    }
+
+    return $activity;
+  }
+
 }

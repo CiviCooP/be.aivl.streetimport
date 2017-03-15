@@ -12,7 +12,7 @@ define('CONSOLE_THRESHOLD',  BE_AIVL_STREETIMPORT_INFO  );
 
 
 /**
- * This class will collect import data, such as 
+ * This class will collect import data, such as
  * - log messages
  * - error messages
  * - statistics
@@ -51,21 +51,24 @@ class CRM_Streetimport_ImportResult {
    * log the import of an individual record
    *
    * @param $record   the whole record
-   * @param $success  true if successfully processed 
+   * @param $success  true if successfully processed
    * @param $type     optional string representing the type of record
    * @param $message  optional additional message
    */
   public function logImport($record, $success, $type = 'UNKNOWN', $message = '') {
-    $id = $this->getIDforRecord($record);
+    $record_id = $this->getIDforRecord($record);
     if ($success) {
-      if (!isset($this->import_success[$id])) $this->import_success[$id] = NULL;
+      $this->import_success[$record_id] = NULL;
       $this->logMessage(
         $this->config->translate("Successfully imported record of type")." ". $type,
         $record,
         BE_AIVL_STREETIMPORT_DEBUG);
     } else {
-      if (!isset($this->import_fail[$id])) $this->import_fail[$id] = NULL;
-      if (isset($this->import_success[$id])) unset($this->import_success[$id]);
+      $this->import_fail[$record_id] = NULL;
+      if (isset($this->import_success[$record_id])) {
+        unserialize($this->import_success[$record_id]);
+      }
+
       $this->logMessage(
         $this->config->translate("Failed to import record") . " [$type]: $message",
         $record,
@@ -86,7 +89,7 @@ class CRM_Streetimport_ImportResult {
         'id'        => $record_id,
         'log_level' => $log_level,
         'message'   => $message,
-        );      
+        );
     }
 
     // keep track of the 'worst' message so far
@@ -173,7 +176,7 @@ class CRM_Streetimport_ImportResult {
     foreach ($this->log_entries as $log_entry) {
       if ($log_entry['log_level'] >= $log_level) {
         if ($only_messages) {
-          $entries[] = $log_entry['message'];  
+          $entries[] = $log_entry['message'];
         } else {
           $entries[] = $log_entry;
         }
@@ -208,9 +211,6 @@ class CRM_Streetimport_ImportResult {
   protected function createErrorActivity($message, $record, $title = "Import Error", $errorType) {
     try {  // AVOID raising another exception leading to this very handler
 
-      // TODO: replace this ugly workaround:
-      $handler = new CRM_Streetimport_StreetRecruitmentRecordHandler($this);
-
       // create the activity
       $activity_info = array(
         'message' => $this->config->translate($message),
@@ -225,22 +225,27 @@ class CRM_Streetimport_ImportResult {
         'activity_date_time' => date('YmdHis'),
         'source_contact_id'  => (int) $this->config->getAdminContactID(),
         'assignee_contact_id'=> (int) $this->config->getAdminContactID(),
-        'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
+        'details'            => CRM_Streetimport_Utils::renderTemplate('activities/ImportError.tpl', $activity_info),
       );
 
-      try {
-        $donorContactId = CRM_Streetimport_Utils::getContactIdFromDonorId($record['DonorID'], $record['Recruiting organization ID']);
-        if (!empty($donorContactId)) {
-          $activityParams['target_contact_id'] = $donorContactId;
-        }
-      } catch (Exception $e) {
-		  // ignore the error;		  
+
+    // TODO: 'hook' needed
+    //   try {
+    //     $donorContactId = CRM_Streetimport_Utils::getContactIdFromDonorId($record['DonorID'], $record['Recruiting organization ID']);
+    //     if (!empty($donorContactId)) {
+    //       $activityParams['target_contact_id'] = $donorContactId;
+    //     }
+    //   } catch (Exception $e) {
+		  // // ignore the error;
+    //   }
+      $errorActivity = CRM_Streetimport_Utils::createActivity($activityParams, $record);
+      if ($errorActivity == NULL) {
+        error_log($this->config->translate("Error while creating an activity to report another error"));
       }
-      
-      $errorActivity = $handler->createActivity($activityParams, $record);
-      $this->setCustomErrorType($errorActivity->id, $errorType);
+      // TODO: set custom fields in activity
+      // $this->setCustomErrorType($errorActivity->id, $errorType);
     } catch (Exception $e) {
-      error_log($this->config->translate("Error while creating an activity to report another error").": " . $e->getMessage());
+      error_log($this->config->translate("Exception while creating an activity to report another error").": " . $e->getMessage());
     }
   }
 
@@ -281,11 +286,13 @@ class CRM_Streetimport_ImportResult {
   /**
    * generate a descriptive ID for the given record
    */
-  public function getIDforRecord(&$record) {
-    if (empty($record['source']) && empty($record['id'])) {
-      return 'NO_REF';
-    } else {
+  public function getIDforRecord($record) {
+    if (!empty($record['source']) && !empty($record['line_nr'])) {
+      return $record['source'] . ', on line ' . $record['line_nr'];
+    } elseif (!empty($record['source']) && !empty($record['id'])) {
       return $record['source'] . ', on line ' . $record['id'];
+    } else {
+      return 'NO_REF';
     }
   }
 
@@ -328,7 +335,7 @@ class CRM_Streetimport_ImportResult {
       if (!$this->log_file) {
         $this->logFatal("Cannot open log file '$file'.", NULL);
         $this->log_file_path = NULL;
-      }      
+      }
     }
   }
 

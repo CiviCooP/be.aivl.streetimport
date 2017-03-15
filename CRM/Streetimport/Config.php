@@ -22,6 +22,9 @@ class CRM_Streetimport_Config {
   /** will store strings for translation */
   protected $translatedStrings;
 
+  /** will store strings for translation */
+  private $error_activity_id = NULL;
+
   /**
    * Singleton method
    *
@@ -275,6 +278,19 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get the default activity status for import error
+   *
+   * @return int
+   * @access public
+   */
+  public function getActivityCompleteStatusId() {
+    if ($this->_activityCompleteStatusId == NULL) {
+      $this->_activityCompleteStatusId = CRM_Streetimport_Utils::getActivityStatusIdWithName('complete');
+    }
+    return $this->_activityCompleteStatusId;
+  }
+
+  /**
    * Method to retrieve import error activity type data
    *
    * @param string $key
@@ -282,7 +298,20 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getImportErrorActivityType() {
-    return $this->importErrorActivityType[$key];
+    if ($this->error_activity_id == NULL) {
+      $this->error_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'streetimport_error', 'name');
+      if (empty($this->error_activity_id)) {
+        // couldn't be found => create
+        $activity = civicrm_api3('OptionValue', 'create', array(
+          'option_group_id' => 'activity_type',
+          'name'            => 'streetimport_error',
+          'label'           => $this->translate('Import Error'),
+          'is_active'       => 1
+          ));
+        $this->error_activity_id = $activity['id'];
+      }
+    }
+    return $this->error_activity_id;
   }
 
   /**
