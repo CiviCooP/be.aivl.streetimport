@@ -14,7 +14,7 @@
  * @author Björn Endres (SYSTOPIA) <endres@systopia.de>
  * @license AGPL-3.0
  */
-class CRM_Streetimport_Handler_GP_TEDIContactRecordHandler extends CRM_Streetimport_Handler_TMRecordHandler {
+class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimport_GP_Handler_TMRecordHandler {
 
   /**
    * Check if the given handler implementation can process the record

@@ -58,7 +58,6 @@ class CRM_Streetimport_Config {
       $domain = civicrm_api3('Setting', 'getvalue', array(
         'name'  => 'streetimporter_domain',
         'group' => 'StreetImporter'));
-      error_log('DOMAIN IS ' . json_encode($domain));
       self::$_domain = $domain;
     }
     return self::$_domain;
@@ -128,7 +127,7 @@ class CRM_Streetimport_Config {
    */
   public function storeSettings() {
     civicrm_api3('Setting', 'create', array(
-      'streetimporter_settings' => $this->settings
+      'streetimporter_settings' => $this->settings,
       'group' => 'StreetImporter'));
   }
 
