@@ -1,10 +1,14 @@
 <?xml version="1.0"?>
 <menu>
   <item>
-    <path>civicrm/admin/setting/aivl_import_settings</path>
+    <path>civicrm/admin/setting/streetimport_settings</path>
     <page_callback>CRM_Streetimport_Form_ImportSettings</page_callback>
-    <title>ImportSettings</title>
+    <title>StreetImporter Settings</title>
     <access_arguments>administer CiviCRM</access_arguments>
+    <desc>Settings for the "StreetImporter" bulk processing tool</desc>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <adminGroup>CiviContribute</adminGroup>
+    <icon>admin/import_export_map.png</icon>
   </item>
   <item>
     <path>civicrm/streetimport/update</path>

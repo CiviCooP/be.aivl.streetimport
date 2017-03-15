@@ -8,10 +8,9 @@ require_once 'CRM/Core/Form.php';
  *
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC43/QuickForm+Reference
  */
-class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
+class CRM_Streetimport_AIVL_Form_ImportSettings extends CRM_Core_Form {
 
-  /** a list of processed settings */
-  protected $settings_list = array();
+  protected $importSettings = array();
 
   /**
    * Overridden parent method to build the form
@@ -19,58 +18,85 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @access public
    */
   public function buildQuickForm() {
-    $this->settings_list = array('admin_id', 'fundraiser_id', 'phone_phone_type_id', 'mobile_phone_type_id','location_type_id','other_location_type_id','default_country_id','default_financial_type_id','female_gender_id', 'male_gender_id','unknown_gender_id','import_encoding','date_format','import_location', 'processed_location', 'failed_location');
     $config = CRM_Streetimport_Config::singleton();
-
-    // $groupList = $this->getGroupList();
-    // $prefixList = CRM_Streetimport_Utils::getOptionGroupList('individual_prefix');
-    // $membershipTypeList = $this->getMembershipTypeList();
-    // $relationshipTypeList = $this->getRelationshipTypeList();
-
-    // contacts
-    $employeeList = $config->getEmployeeList();
-    $this->add('select', 'admin_id', $config->translate('Admin'), $employeeList, TRUE);
-    $this->add('select', 'fundraiser_id', $config->translate('Fundraiser'), $employeeList, TRUE);
-
-    // phone types
+    $this->getImportSettings();
+    error_log(json_encode($this->importSettings));
+    $employeeList = $this->getEmployeeList();
+    $groupList = $this->getGroupList();
+    $membershipTypeList = $this->getMembershipTypeList();
     $phoneTypeList = CRM_Streetimport_Utils::getOptionGroupList('phone_type');
-    $this->add('select', 'phone_phone_type_id', $config->translate('Landline Phone Type'), $phoneTypeList, TRUE);
-    $this->add('select', 'mobile_phone_type_id', $config->translate('Mobile Phone Type'), $phoneTypeList, TRUE);
-
-    // address types
     $locationTypeList = $this->getLocationTypeList();
-    $this->add('select', 'location_type_id', $config->translate('Main Address Type'), $locationTypeList, TRUE);
-    $this->add('select', 'other_location_type_id', $config->translate('Secondary Address Type'), $locationTypeList, TRUE);
-
-    // default country
     $countryList = $this->getCountryList();
-    $this->add('select', 'default_country_id', $config->translate('Default Country'), $countryList, TRUE);
-
-    // default financial types
     $financialTypeList = $this->getFinancialTypeList();
-    $this->add('select', 'default_financial_type_id', $config->translate('Default Financial Type'), $financialTypeList, TRUE);
-
-    // gender settings
+    $prefixList = CRM_Streetimport_Utils::getOptionGroupList('individual_prefix');
     $genderList = CRM_Streetimport_Utils::getOptionGroupList('gender');
-    $this->add('select', 'female_gender_id', $config->translate('Female Gender'), $genderList, TRUE);
-    $this->add('select', 'male_gender_id', $config->translate('Male Gender'), $genderList, TRUE);
-    $this->add('select', 'unknown_gender_id', $config->translate('Other Gender'), $genderList, TRUE);
-
-    // import file settings
-    $encodingList = $this->getEncodingList();
+    $relationshipTypeList = $this->getRelationshipTypeList();
     $dateFormatList = CRM_Streetimport_Utils::getDateFormatList();
-    $this->add('select', 'import_encoding', $config->translate('Default Encoding'), $encodingList, TRUE);
-    $this->add('select', 'date_format', $config->translate('Default Date Format'), $dateFormatList, TRUE);
-    $this->add('text', 'import_location', $config->translate('Import File Location'), array('size' => 50), TRUE);
-    $this->add('text', 'processed_location', $config->translate('Processed File Location'), array('size' => 50), TRUE);
-    $this->add('text', 'failed_location', $config->translate('Failed File Location'), array('size' => 50), TRUE);
 
-    // add domain settings
-    $more_settings = $config->buildQuickFormSettings($this);
-    $this->settings_list = array_merge($this->settings_list, $more_settings);
-    $this->assign('domain_template', $config->getDomainSettingTemplate($this));
-
-    // finally: add the buttons
+    foreach ($this->importSettings as $settingName => $settingValues) {
+      switch($settingName) {
+        case 'admin_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $employeeList, TRUE);
+          break;
+        case 'fundraiser_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $employeeList, TRUE);
+          break;
+        case 'newsletter_group_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $groupList, TRUE);
+          break;
+        case 'dedupe_group_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $groupList, TRUE);
+          break;
+        case 'membership_type_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $membershipTypeList, TRUE);
+          break;
+        case 'phone_phone_type_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $phoneTypeList, TRUE);
+          break;
+        case 'mobile_phone_type_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $phoneTypeList, TRUE);
+          break;
+        case 'location_type_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $locationTypeList, TRUE);
+          break;
+        case 'other_location_type_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $locationTypeList, TRUE);
+          break;
+        case 'default_country_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $countryList, TRUE);
+          break;
+        case 'default_financial_type_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $financialTypeList, TRUE);
+          break;
+        case 'female_gender_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $genderList, TRUE);
+          break;
+        case 'male_gender_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $genderList, TRUE);
+          break;
+        case 'unknown_gender_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $genderList, TRUE);
+          break;
+        case 'date_format':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $dateFormatList, TRUE);
+          break;
+        case 'household_prefix_id':
+          $prefixSelect = $this->addElement('advmultiselect', $settingName, $config->translate($settingValues['label']), $prefixList,
+            array('size' => 5, 'style' => 'width:300px', 'class' => 'advmultselect'),TRUE);
+          $prefixSelect->setButtonAttributes('add', array('value' => $config->translate('Household')." >>"));
+          $prefixSelect->setButtonAttributes('remove', array('value' => '<< '.$config->translate('Individual')));
+          break;
+        case 'employee_type_id':
+          $employeeTypeSelect = $this->addElement('advmultiselect', $settingName, $config->translate($settingValues['label']), $relationshipTypeList,
+            array('size' => 5, 'style' => 'width:300px', 'class' => 'advmultselect'),TRUE);
+          $employeeTypeSelect->setButtonAttributes('add', array('value' => $config->translate('Employee')." >>"));
+          $employeeTypeSelect->setButtonAttributes('remove', array('value' => "<< ".$config->translate('Other')));
+          break;
+        default:
+          $this->add('text', $settingName, $config->translate($settingValues['label']), array('size' => 50), TRUE);
+          break;
+      }
+    }
     $this->addButtons(array(
       array(
         'type' => 'next',
@@ -93,10 +119,9 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @return array
    */
   function setDefaultValues() {
-    $config = CRM_Streetimport_Config::singleton();
     $defaults = array();
-    foreach ($this->settings_list as $settingName) {
-      $defaults[$settingName] = $config->getSetting($settingName);
+    foreach ($this->importSettings as $settingName => $settingValues) {
+      $defaults[$settingName] = $settingValues['value'];
     }
     return $defaults;
   }
@@ -107,22 +132,14 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @access public
    */
   public function postProcess() {
+    $this->saveImportSettings($this->_submitValues);
     $config = CRM_Streetimport_Config::singleton();
-
-    // store the settings
-    foreach ($this->_submitValues as $key => $value) {
-      if (in_array($key, $this->settings_list)) {
-        $config->setSetting($key, $value);
-      }
-    }
-    $config->storeSettings();
-
     $userContext = CRM_Core_Session::USER_CONTEXT;
     if (empty($userContext) || $userContext == 'userContext') {
       $session = CRM_Core_Session::singleton();
       $session->pushUserContext(CRM_Utils_System::url('civicrm', '', true));
     }
-    CRM_Core_Session::setStatus($config->translate('Settings saved'), 'Saved', 'success');
+    CRM_Core_Session::setStatus($config->translate('AIVL Import Settings saved'), 'Saved', 'success');
   }
 
   /**
@@ -147,6 +164,12 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     }
     if (!isset($fields['fundraiser_id']) || empty($fields['fundraiser_id'])) {
       $errors['fundraiser_id'] = $config->translate('This field can not be empty, you have to select a contact!');
+    }
+    if (!isset($fields['newsletter_group_id']) || empty($fields['newsletter_group_id'])) {
+      $errors['newsletter_group_id'] = $config->translate('This field can not be empty, you have to select a group!');
+    }
+    if (!isset($fields['membership_type_id']) || empty($fields['membership_type_id'])) {
+      $errors['membership_type_id'] = $config->translate('This field can not be empty, you have to select a membership type!');
     }
     if (!isset($fields['phone_phone_type_id']) || empty($fields['phone_phone_type_id'])) {
       $errors['phone_phone_type_id'] = $config->translate('This field can not be empty, you have to select a phone type!');
@@ -173,19 +196,34 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
         $errors['other_location_type_id'] = $config->translate('Other location type can not be the same as the main one');
       }
     }
+    if (!ctype_digit($fields['offset_days'])) {
+      $errors['offset_days'] = $config->translate('This field can only contain numbers!');
+    }
+    if (!ctype_digit($fields['follow_up_offset_days'])) {
+      $errors['follow_up_offset_days'] = $config->translate('This field can only contain numbers!');
+    }
+    self::validateFolders($fields, $errors);
+    if (empty($errors)) {
+      return TRUE;
+    } else {
+      return $errors;
+    }
+  }
 
-    // validate folders
+  /**
+   * Method to check if all of the folders specified actually exist and have enough permissions
+   * (should be writable)
+   *
+   * @param $fields
+   * @param $errors
+   */
+  private static function validateFolders($fields, &$errors) {
+    $config = CRM_Streetimport_Config::singleton();
     $folderElements = array('import_location', 'processed_location', 'failed_location');
     foreach ($folderElements as $folderElement) {
       if (!is_writable($fields[$folderElement])) {
         $errors[$folderElement] = $config->translate('This folder does not exists or you do not have sufficient permissions to write to the folder');
       }
-    }
-
-    if (empty($errors)) {
-      return TRUE;
-    } else {
-      return $errors;
     }
   }
 
@@ -228,27 +266,27 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     return $groupList;
   }
 
-  // /**
-  //  * Method to get list of active membership types
-  //  *
-  //  * @return array
-  //  * @access protected
-  //  */
-  // protected function getMembershipTypeList() {
-  //   $membershipTypeList = array();
-  //   $params = array(
-  //     'is_active' => 1,
-  //     'options' => array('limit' => 99999));
-  //   try {
-  //     $activeMembershipTypes = civicrm_api3('MembershipType', 'Get', $params);
-  //   } catch (CiviCRM_API3_Exception $ex) {}
-  //   foreach ($activeMembershipTypes['values'] as $activeMembershipType) {
-  //     $membershipTypeList[$activeMembershipType['id']] = $activeMembershipType['name'];
-  //   }
-  //   $membershipTypeList[0] = ts('- select -');
-  //   asort($membershipTypeList);
-  //   return $membershipTypeList;
-  // }
+  /**
+   * Method to get list of active membership types
+   *
+   * @return array
+   * @access protected
+   */
+  protected function getMembershipTypeList() {
+    $membershipTypeList = array();
+    $params = array(
+      'is_active' => 1,
+      'options' => array('limit' => 99999));
+    try {
+      $activeMembershipTypes = civicrm_api3('MembershipType', 'Get', $params);
+    } catch (CiviCRM_API3_Exception $ex) {}
+    foreach ($activeMembershipTypes['values'] as $activeMembershipType) {
+      $membershipTypeList[$activeMembershipType['id']] = $activeMembershipType['name'];
+    }
+    $membershipTypeList[0] = ts('- select -');
+    asort($membershipTypeList);
+    return $membershipTypeList;
+  }
 
   /**
    * Method to get list of active location types
@@ -370,10 +408,29 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
   }
 
   /**
-   * get a list of all relevant file encodings
+   * Method to get the import settings from the config
+   *
+   * @access protected
    */
-  protected function getEncodingList() {
-    // TODO: implement
-    return array('UTF8' => 'UTF8');
+  protected function getImportSettings() {
+    $extensionConfig = CRM_Streetimport_Config::singleton();
+    $this->importSettings = $extensionConfig->getImportSettings();
+  }
+
+  /**
+   * Method to save the import settings
+   *
+   * @param array $formValues
+   */
+  protected function saveImportSettings($formValues) {
+    $saveValues = array();
+
+    foreach ($formValues as $key => $value) {
+      if ($key != 'qfKey' && $key != 'entryURL' && substr($key,0,3) != '_qf') {
+        $saveValues[$key] = $value;
+      }
+    }
+    $extensionConfig = CRM_Streetimport_Config::singleton();
+    $extensionConfig->saveImportSettings($saveValues);
   }
 }

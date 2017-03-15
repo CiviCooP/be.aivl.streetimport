@@ -42,18 +42,6 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   public abstract function processRecord($record, $sourceURI);
 
-  /**
-   * get the default set of handlers
-   *
-   * @return an array of handler instances
-   */
-  public static function getDefaultHandlers($logger) {
-    return array(
-      // TODO this needs to happen somewhere much more configurable
-      new CRM_Streetimport_Handler_TEDITelephoneRecordHandler($logger),
-      new CRM_Streetimport_Handler_TEDIContactRecordHandler($logger),
-    );
-  }
 
   /**
    * process all records of the given data source
@@ -63,8 +51,9 @@ abstract class CRM_Streetimport_RecordHandler {
    *                       will default to a stanard handler set (getDefaultHandlers)
    */
   public static function processDataSource($dataSource, $handlers = NULL) {
+    $config = CRM_Streetimport_Config::singleton();
     if ($handlers==NULL) {
-      $handlers = CRM_Streetimport_RecordHandler::getDefaultHandlers($dataSource->logger);
+      $handlers = $config->getHandlers($dataSource->logger);
     }
 
     $dataSource->reset();
@@ -87,7 +76,6 @@ abstract class CRM_Streetimport_RecordHandler {
       }
 
       if (!$record_processed) {
-        $config = CRM_Streetimport_Config::singleton();
         // no handlers found.
         $dataSource->logger->logImport($record, false, '', $config->translate('No handlers found'));
       }

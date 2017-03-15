@@ -1,0 +1,46 @@
+{
+  "import_location": {
+    "name": "import_location",
+    "label": "Folder to get CSV files from",
+    "value": ""
+  },
+  "processed_location": {
+    "name": "processed_location",
+    "label": "Folder to move processed CSV files to",
+    "value": ""
+  },
+  "failed_location": {
+    "name": "failed_location",
+    "label": "Folder to move failed CSV files to",
+    "value": ""
+  },
+  "csv_separator": ";",
+  "file_encoding": "UTF-8",
+  "date_format": "dd-mm-jjjj",
+  "yes_values": ["J", "j", "Ja", "ja", "JA", "YES", "yes", "Yes", "y", "1", "WAAR", "Waar", "waar"],
+  "no_values": ["N", "n", "Nee", "nee", "NEE", "NO", "no", "No", "0", "ONWAAR", "Onwaar", "onwaar"],
+  "gender_settings": {
+    "1": {
+      "value": "Meneer",
+      "gender": "1"
+    },
+    "2": {
+      "value": "Mevrouw",
+      "gender": "2"
+    },
+    "3": {
+      "value": "Other",
+      "gender": "3"
+    }
+  },
+  "location_types": {
+    "1": "1",
+    "2": "2"
+  },
+  "phone_types": {
+    "mobile": "2",
+    "other": "1"
+  },
+  "household_prefix_ids": ["3", "4", "5", "6"],
+  "employee_relationship_type_ids": ["5", "6", "12"]
+}

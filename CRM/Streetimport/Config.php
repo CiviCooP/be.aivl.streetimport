@@ -1,185 +1,236 @@
 <?php
 /**
- * Class following Singleton pattern for specific extension configuration
+ * Generic configuration class
+ *  following Singleton pattern for specific extension configuration
  *
- * @author Erik Hommel (CiviCooP) <erik.hommel@civicoop.org>
+ * @author B. Endres (SYSTOPIA)
  * @date 30 April 2015
  * @license AGPL-3.0
  */
 class CRM_Streetimport_Config {
 
-  private static $_singleton;
+  /** singleton instance for config */
+  private static $_singleton = NULL;
+  private static $_domain = NULL;
 
-  protected $resourcesPath = null;
-  protected $orgLegalName = null;
-  protected $importSettings = array();
-  protected $recruiterContactSubType = array();
-  protected $recruitingOrganizationContactSubType = array();
-  protected $recruiterRelationshipType = array();
-  protected $streetRecruitmentActivityType = array();
-  protected $welcomeCallActivityType = array();
-  protected $followUpCallActivityType= array();
-  protected $importErrorActivityType = array();
-  protected $streetRecruitmentCustomGroup = array();
-  protected $streetRecruitmentCustomFields = array();
-  protected $welcomeCallCustomGroup = array();
-  protected $welcomeCallCustomFields = array();
-  protected $importErrorCustomGroup = array();
-  protected $importErrorCustomFields = array();
-  protected $externalDonorIdCustomGroup = array();
-  protected $externalDonorIdCustomFields = array();
-  protected $recruiterInformationCustomGroup = array();
-  protected $recruiterInformationCustomFields = array();
-  protected $streetRecruitmentImportType = null;
-  protected $welcomeCallImportType = null;
-  protected $acceptedYesValues = array();
-  protected $membershipTypeId = null;
-  protected $recruitingOrganizationsGroupId = null;
-  protected $frequencyUnitOptionGroup = null;
-  protected $areasOfInterestOptionGroup = null;
-  protected $translatedStrings = array();
-  protected $loadingTypes = array();
+  /** the setting domain */
+  private $domain = NULL;
+
+  /** this will be loading the domain specific settings */
+  protected $settings = NULL;
+
+  /** will store strings for translation */
+  protected $translatedStrings;
+
+  /**
+   * Singleton method
+   *
+   * @param string $context to determine if triggered from install hook
+   * @return CRM_Streetimport_Config
+   * @access public
+   * @static
+   */
+  public static function singleton() {
+    if (!self::$_singleton) {
+      $config_class = self::getClassPrefix() . 'Config';
+      if (class_exists($config_class)) {
+        // class exists, use that
+        self::$_singleton = new $config_class();
+      } else {
+        // custom config class doesn't exist, use this one
+        self::$_singleton = new CRM_Streetimport_Config();
+      }
+    }
+    return self::$_singleton;
+  }
+
+  /**
+   * returns the mode/domain this extension is running in.
+   * In order to allow different organisations to use this extension, each
+   * will have to define their respective subsets of specifications and
+   * Settings.
+   *
+   * @return the currently set domain
+   */
+  public static function getDomain() {
+    if (self::$_domain == NULL) {
+      // query domain
+      $domain = civicrm_api3('Setting', 'getvalue', array(
+        'name'  => 'streetimporter_domain',
+        'group' => 'StreetImporter'));
+      error_log('DOMAIN IS ' . json_encode($domain));
+      self::$_domain = $domain;
+    }
+    return self::$_domain;
+  }
+
+  /**
+   * returns the mode/domain this extension is running in.
+   * In order to allow different organisations to use this extension, each
+   * will have to define their respective subsets of specifications and
+   * Settings.
+   *
+   */
+  public static function setDomain($domain) {
+    $current_domain = self::getDomain();
+    if ($domain != $current_domain) {
+      $query = civicrm_api3('Setting', 'create', array(
+        'streetimporter_domain' => $domain,
+        'group'                 => 'StreetImporter'));
+      self::$_singleton = NULL; // drop singleton
+      self::$_domain = $domain; // drop domain
+    }
+  }
+
+  /**
+   * returns the mode/domain this extension is running in.
+   * In order to allow different organisations to use this extension, each
+   * will have to define their respective subsets of specifications and
+   * Settings.
+   *
+   * @return the
+   */
+  public static function getClassPrefix() {
+    return 'CRM_Streetimport_' . self::getDomain() . '_';
+  }
+
+
+
+
+
+
+
+
   /**
    * Constructor method
    *
    * @param string $context
    */
-  function __construct($context) {
-
-    $settings = civicrm_api3('Setting', 'Getsingle', array());
-    $this->resourcesPath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
-    $this->orgLegalName = 'Default Organization'; //TODO extract to config - we should not die if this is not defined.
-    $this->streetRecruitmentImportType = 1;
-    $this->welcomeCallImportType = 2;
-    $this->acceptedYesValues = array('J', 'j', 'Ja', 'ja', 'true', 'waar', 'Y', 'y', 'Yes', 'yes', 1);
-    $this->loadingTypes = array(1 => 'Street Recruitment', 2 => 'Welcome Call');
-
-    $this->setContactSubTypes();
-    $this->setRelationshipTypes();
-    $this->setActivityTypes();
-    $this->setOptionGroups();
-    $this->setCustomData();
-    $this->setImportSettings();
-    if ($context == 'install') {
-      $this->setDefaultEmployeeTypes();
+  function __construct() {
+    // load core data
+    $this->domain = self::getDomain();
+    $this->settings = civicrm_api3('Setting', 'getvalue', array(
+      'name'  => 'streetimporter_settings',
+      'group' => 'StreetImporter'));
+    if (!is_array($this->settings)) {
+      // make sure it exists
+      $this->settings = array();
     }
-    $this->setGroups();
-    $this->setTranslationFile();
+    if (!isset($this->settings[$this->domain])) {
+      // make sure it exists for the current domain
+      $this->settings[$this->domain] = array();
+    }
+    // error_log("SETTINGS AFTER INIT: " . json_encode($this->settings));
   }
 
   /**
-   * Method to get option group for loading types
-   *
-   * @return mixed
-   * @access public
+   * save the current settings to the DB
    */
-  public function getLoadingTypes() {
-    return $this->loadingTypes;
+  public function storeSettings() {
+    civicrm_api3('Setting', 'create', array('streetimporter_settings' => $this->settings));
   }
 
-
   /**
-   * Method to get option group for areas of interest
+   * Read a certain setting value
    *
-   * @param string $key
-   * @return mixed
-   * @access public
+   * @param $setting_name    setting name as a string, or an array of strings as a path
+   * @param $default_value   default value to be returned if setting not found
+   * @param $settings        only for internal recursive use
    */
-  public function getAreasOfInterestOptionGroup($key = 'id') {
-    return $this->areasOfInterestOptionGroup[$key];
+  public function getSetting($setting_name, $default_value = NULL, $settings = NULL) {
+    if ($settings == NULL) $settings = $this->settings[$this->domain];
+
+    if (is_string($setting_name) && isset($settings[$setting_name])) {
+      return $settings[$setting_name];
+    } elseif (is_array($setting_name) && !empty($setting_name)) {
+      $key = array_shift($setting_name);
+      $value = $this->getSetting($key, $default_value, $settings);
+      if (count($setting_name) <= 0) {
+        return $value;
+      } else {
+        return $this->getSetting($setting_name, $default_value, $value);
+      }
+    } else {
+      return $default_value;
+    }
   }
 
   /**
-   * Method to get option group for frequency unit
+   * Write a setting value
+   *  Don't forget to call storeSettings() after!
    *
-   * @param string $key
-   * @return mixed
-   * @access public
+   * @param $setting_name    setting name as a string, or an array of strings as a path
+   * @param $value           value, can be anything (serialisable)
+   * @param $settings        only for internal recursive use
    */
-  public function getFrequencyUnitOptionGroup($key = 'id') {
-    return $this->frequencyUnitOptionGroup[$key];
+  public function setSetting($setting_name, $value, &$settings = NULL) {
+    if ($settings == NULL) $settings = &$this->settings[$this->domain];
+    // error_log("SETTING {$setting_name} TO: " . json_encode($value));
+
+    if (is_string($setting_name)) {
+      $settings[$setting_name] = $value;
+      // TODO: store HERE
+    } elseif (is_array($setting_name) && !empty($setting_name)) {
+      $key = array_shift($setting_name);
+      if (count($setting_name) <= 0) {
+        return $this->setSetting($key, $value, $settings);
+      } else {
+        if (!isset($settings[$key])) {
+          $settings[$key] = array();
+        }
+        $sub_settings = &$settings[$key];
+        return $this->setSetting($setting_name, $value, $sub_settings);
+      }
+    }
   }
 
   /**
-   * Method to retrieve import settings
+   * get the default set of handlers
    *
-   * @return array
-   * @access public
+   * @return an array of handler instances
    */
-  public function getImportSettings() {
-    return $this->importSettings;
+  public function getHandlers($logger) {
+    // this should be overwritten
+    return array();
   }
 
   /**
-   * Method to get the street recruitment custom group
+   * This allows you to add extra settings to the
+   * settings form.
    *
-   * @param string $key
-   * @return mixed
-   * @access public
+   * @return an array of the settings keys to be processed
    */
-  public function getStreetRecruitmentCustomGroup($key = 'id') {
-    return $this->streetRecruitmentCustomGroup[$key];
+  public function buildQuickFormSettings($form) {
+    // this should be overwritten
+    return array();
   }
 
   /**
-   * Method to get the street recruitment custom fields
-   *
-   * @return mixed
-   * @access public
+   * You can return a .tpl file path to include that into the
+   * settings panel
    */
-  public function getStreetRecruitmentCustomFields() {
-    return $this->streetRecruitmentCustomFields;
+  public function getDomainSettingTemplate($form) {
+    // this should be overwritten
+    return NULL;
   }
 
   /**
-   * Method to get the welcome call custom fields
-   *
-   * @return mixed
-   * @access public
+   * get a list (id => name) of the relevant employees
    */
-  public function getWelcomeCallCustomFields() {
-    return $this->welcomeCallCustomFields;
+  public function getEmployeeList() {
+    // TODO: overwrite
+    return array(2 => "Me");
   }
 
-  /**
-   * Method to get the welcome call group
-   *
-   * @param string $key
-   * @return mixed
-   * @access public
-   */
-  public function getWelcomeCallCustomGroup($key = 'id') {
-    return $this->welcomeCallCustomGroup[$key];
-  }
 
   /**
-   * Method to get the street recruitment import type
-   *
-   * @return int
-   * @access public
-   */
-  public function getStreetRecruitmentImportType() {
-    return $this->streetRecruitmentImportType;
-  }
-
-  /**
-   * Method to get the welcome call import type
-   *
-   * @return int
-   * @access public
-   */
-  public function getWelcomeCallImportType() {
-    return $this->welcomeCallImportType;
-  }
-
-  /**
-   * Method to retrieve legal name AIVL
+   * Method to retrieve legal name
    *
    * @return string
    * @access public
    */
   public function getOrgLegalName() {
-    return $this->orgLegalName;
+    return $this->getSetting('organisations_legal_name');
   }
 
   /**
@@ -200,25 +251,6 @@ class CRM_Streetimport_Config {
   }
 
   /**
-   * Method to get the default activity status for street recruitment
-   *
-   * @return mixed
-   */
-  public function getStreetRecruitmentActivityStatusId() {
-    return CRM_Streetimport_Utils::getActivityStatusIdWithName('completed');
-  }
-
-  /**
-   * Method to get the default activity status for welcome call
-   *
-   * @return int
-   * @access public
-   */
-  public function getWelcomeCallActivityStatusId() {
-    return CRM_Streetimport_Utils::getActivityStatusIdWithName('completed');
-  }
-
-  /**
    * Method to get the default activity status for import error
    *
    * @return int
@@ -229,112 +261,14 @@ class CRM_Streetimport_Config {
   }
 
   /**
-   * Method to get the default activity status for follow up call
-   *
-   * @return int
-   * @access public
-   */
-  public function getFollowUpCallActivityStatusId() {
-    return CRM_Streetimport_Utils::getActivityStatusIdWithName('scheduled');
-  }
-
-  /**
    * Method to retrieve import error activity type data
    *
    * @param string $key
    * @return mixed
    * @access public
    */
-  public function getImportErrorActivityType($key= 'value' ) {
+  public function getImportErrorActivityType() {
     return $this->importErrorActivityType[$key];
-  }
-
-  /**
-   * Method to retrieve follow up call activity type data
-   *
-   * @param string $key
-   * @return mixed
-   * @access public
-   */
-  public function getFollowUpCallActivityType($key= 'value' ) {
-    return $this->followUpCallActivityType[$key];
-  }
-
-  /**
-   * Method to retrieve welcome call activity type data
-   *
-   * @param string $key
-   * @return mixed
-   * @access public
-   */
-  public function getWelcomeCallActivityType($key= 'value' ) {
-    return $this->welcomeCallActivityType[$key];
-  }
-
-  /**
-   * Method to retrieve street recruitment activity type data
-   *
-   * @param string $key
-   * @return mixed
-   * @access public
-   */
-  public function getStreetRecruitmentActivityType($key= 'value' ) {
-    return $this->streetRecruitmentActivityType[$key];
-  }
-
-  /**
-   * Method to retrieve recruiter relationship type data
-   *
-   * @param string $key
-   * @return mixed
-   * @access public
-   */
-  public function getRecruiterRelationshipType($key= 'id' ) {
-    return $this->recruiterRelationshipType[$key];
-  }
-
-  /**
-   * Method to retrieve recruting organization contact sub type data
-   *
-   * @param string $key
-   * @return mixed
-   * @access public
-   */
-  public function getRecruitingOrganizationContactSubType($key= 'name' ) {
-    return $this->recruitingOrganizationContactSubType[$key];
-  }
-
-  /**
-   * Method to retrieve recruiter contact sub type data
-   *
-   * @param string $key
-   * @return mixed
-   * @access public
-   */
-  public function getRecruiterContactSubType($key= 'name' ) {
-    return $this->recruiterContactSubType[$key];
-  }
-
-  /**
-   * Method to retrieve the newsletter group id
-   *
-   * @return int
-   * @access public
-   */
-  public function getNewsletterGroupID() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['newsletter_group_id']['value'];
-  }
-
-  /**
-   * Method to retrieve the dedupe contacts group id
-   *
-   * @return int
-   * @access public
-   */
-  public function getDedupeContactsGroupID() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['dedupe_group_id']['value'];
   }
 
   /**
@@ -344,19 +278,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getCsvDateFormat() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['date_format']['value'];
-  }
-
-  /**
-   * Method to retrieve the membership type ID
-   *
-   * @return integer
-   * @access public
-   */
-  public function getMembershipTypeID() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['membership_type_id']['value'];
+    return $this->getSetting('csv_date_format', '');
   }
 
   /**
@@ -366,8 +288,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getImportFileLocation() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['import_location']['value'];
+    return $this->getSetting('import_location');
   }
 
   /**
@@ -377,8 +298,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getProcessedFileLocation() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['processed_location']['value'];
+    return $this->getSetting('processed_location');
   }
 
   /**
@@ -388,30 +308,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getFailFileLocation() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['failed_location']['value'];
-  }
-
-  /**
-   * Method to get the follow up offset days
-   *
-   * @return int
-   * @access public
-   */
-  public function getFollowUpOffsetDays() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['follow_up_offset_days']['value'];
-  }
-
-  /**
-   * Method to get the offset days
-   *
-   * @return int
-   * @access public
-   */
-  public function getOffsetDays() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['offset_days']['value'];
+    return $this->getSetting('processed_location');
   }
 
   /**
@@ -421,8 +318,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getLocationTypeId() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['location_type_id']['value'];
+    return $this->getSetting('location_type_id');
   }
 
   /**
@@ -432,8 +328,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getOtherLocationTypeId() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['other_location_type_id']['value'];
+    return $this->getSetting('other_location_type_id');
   }
 
   /**
@@ -443,8 +338,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getDefaultCountryId() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['default_country_id']['value'];
+    return $this->getSetting('default_country_id');
   }
 
   /**
@@ -454,8 +348,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getDefaultFinancialTypeId() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['default_financial_type_id']['value'];
+    return $this->getSetting('default_financial_type_id');
   }
 
   /**
@@ -465,8 +358,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getMaleGenderId() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['male_gender_id']['value'];
+    return $this->getSetting('male_gender_id');
   }
 
   /**
@@ -476,8 +368,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getFemaleGenderId() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['female_gender_id']['value'];
+    return $this->getSetting('female_gender_id');
   }
 
   /**
@@ -487,8 +378,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getUnknownGenderId() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['unknown_gender_id']['value'];
+    return $this->getSetting('unknown_gender_id');
   }
 
   /**
@@ -498,19 +388,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getHouseholdPrefixIds() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['household_prefix_id']['value'];
-  }
-
-  /**
-   * Method to get relationship types for employee
-   *
-   * @return array
-   * @access public
-   */
-  public function getEmployeeRelationshipTypeIds() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['employee_type_id']['value'];
+    return $this->getSetting('household_prefix_id');
   }
 
   /**
@@ -520,8 +398,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getPhonePhoneTypeId() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['phone_phone_type_id']['value'];
+    return $this->getSetting('phone_phone_type_id');
   }
 
   /**
@@ -531,8 +408,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getMobilePhoneTypeId() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['mobile_phone_type_id']['value'];
+    return $this->getSetting('mobile_phone_type_id');
   }
 
   /**
@@ -543,33 +419,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getAcceptedYesValues() {
-    return $this->acceptedYesValues;
-  }
-
-  /**
-   * extract the SDD parameters type, frequency_unit, frequency_interval
-   *  from the given, localised parameter
-   *
-   * @param $unit_ln10  the localised unit string
-   * @return array with the given values or NULL if failed
-   */
-  public function extractSDDtype($unit_ln10) {
-    $unit_ln10 = strtolower(trim($unit_ln10));
-
-    if ($unit_ln10 == 'maand') {
-      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 1);
-    } elseif ($unit_ln10 == 'kwartaal') {
-      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 3);
-    } elseif ($unit_ln10 == 'half jaar') {
-      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 6);
-    } elseif ($unit_ln10 == 'jaar') {
-      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'year', 'frequency_interval' => 1);
-    } elseif ($unit_ln10 == 'eenmalig') {
-      $sdd_type = array('type' => 'OOFF', 'frequency_unit' => NULL, 'frequency_interval' => NULL);
-    } else {
-      $sdd_type = NULL;
-    }
-    return $sdd_type;
+    return $this->getSetting('accepted_yes_values', array('1', 'yes', 'y'));
   }
 
   /**
@@ -580,8 +430,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getFundraiserContactID() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['fundraiser_id']['value'];
+    return $this->getSetting('fundraiser_id');
   }
 
   /**
@@ -592,8 +441,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getAdminContactID() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['admin_id']['value'];
+    return $this->getSetting('admin_id');
   }
 
   /**
@@ -604,47 +452,11 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getImportErrorCustomGroup($key = null) {
+    // TODO
     if (empty($key)) {
       return $this->importErrorCustomGroup;
     } else {
       return $this->importErrorCustomGroup[$key];
-    }
-  }
-
-  /**
-   * Method to get the external donor id custom group (whole array or specific element)
-   *
-   * @param null $key
-   * @return mixed
-   * @access public
-   */
-  public function getExternalDonorIdCustomGroup($key = null) {
-    if (empty($key)) {
-      return $this->externalDonorIdCustomGroup;
-    } else {
-      return $this->externalDonorIdCustomGroup[$key];
-    }
-  }
-
-  /**
-   * Method to get the custom fields for external donor id (whole array or specific field array)
-   *
-   * @param null $key
-   * @return array
-   * @access public
-   */
-  public function getExternalDonorIdCustomFields($key = null) {
-    if (empty($key)) {
-      return $this->externalDonorIdCustomFields;
-    } else {
-      // find field by name or ID
-      foreach ($this->externalDonorIdCustomFields as $field_id => $customField) {
-        if ($customField['name'] == $key || $field_id==$key) {
-          return $customField;
-        }
-      }
-      // no such field
-      return NULL;
     }
   }
 
@@ -656,6 +468,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getImportErrorCustomFields($key = null) {
+    // TODO
     if (empty($key)) {
       return $this->importErrorCustomFields;
     } else {
@@ -669,344 +482,4 @@ class CRM_Streetimport_Config {
     }
   }
 
-  /**
-   * Method to get the external donor id custom group (whole array or specific element)
-   *
-   * @param null $key
-   * @return mixed
-   * @access public
-   */
-  public function getRecruiterInformationCustomGroup($key = null) {
-    if (empty($key)) {
-      return $this->recruiterInformationCustomGroup;
-    } else {
-      return $this->recruiterInformationCustomGroup[$key];
-    }
-  }
-
-  /**
-   * Method to get the custom fields for external donor id (whole array or specific field array)
-   *
-   * @param null $key
-   * @return array
-   * @access public
-   */
-  public function getRecruiterInformationCustomFields($key = null) {
-    if (empty($key)) {
-      return $this->recruiterInformationCustomFields;
-    } else {
-      // find field by name or ID
-      foreach ($this->recruiterInformationCustomFields as $field_id => $customField) {
-        if ($customField['name'] == $key || $field_id==$key) {
-          return $customField;
-        }
-      }
-      // no such field
-      return NULL;
-    }
-  }
-
-  /**
-   * Singleton method
-   *
-   * @param string $context to determine if triggered from install hook
-   * @return CRM_Streetimport_Config
-   * @access public
-   * @static
-   */
-  public static function singleton($context = null) {
-    if (!self::$_singleton) {
-      self::$_singleton = new CRM_Streetimport_Config($context);
-    }
-    return self::$_singleton;
-  }
-
-  /**
-   * Method to save the import settings
-   *
-   * @param array $params
-   * @throws Exception when json file could not be opened
-   * @access public
-   */
-  public function saveImportSettings($params) {
-    if (!empty($params)) {
-      foreach ($params as $key => $value) {
-        if (isset($this->importSettings[$key])) {
-          $this->importSettings[$key]['value'] = $value;
-        }
-      }
-      $fileName = $this->resourcesPath . 'import_settings.json';
-      try {
-        $fh = fopen($fileName, 'w');
-        fwrite($fh, json_encode($this->importSettings));
-        fclose($fh);
-      } catch (Exception $ex) {
-        throw new Exception('Could not open import_settings.json, contact your system administrator. Error reported: ' . $ex->getMessage());
-      }
-    }
-  }
-
-  /**
-   * Method to create or get activity types
-   *
-   * @throws Exception when resource file could not be loaded
-   */
-  protected function setActivityTypes() {
-    $jsonFile = $this->resourcesPath.'activity_types.json';
-    if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load activity types configuration file for extension,
-      contact your system administrator!');
-    }
-    $activityTypesJson = file_get_contents($jsonFile);
-    $activityTypes = json_decode($activityTypesJson, true);
-    foreach ($activityTypes as $activityTypeName => $activityTypeLabel) {
-      $propertyName = $activityTypeName.'ActivityType';
-      $activityType = CRM_Streetimport_Utils::getActivityTypeWithName($activityTypeName);
-      if (!$activityType) {
-        $params = array(
-          'name' => $activityTypeName,
-          'label' => $activityTypeLabel,
-          'is_active' => 1,
-          'is_reserved' => 1);
-        $activityType = CRM_Streetimport_Utils::createActivityType($params);
-      }
-      $this->$propertyName = $activityType;
-    }
-  }
-
-  /**
-   * Method to create or get relationship types
-   *
-   * @throws Exception when resource file could not be loaded
-   */
-  protected function setRelationshipTypes() {
-    $jsonFile = $this->resourcesPath.'relationship_types.json';
-    if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load relationship types configuration file for extension,
-      contact your system administrator!');
-    }
-    $relationshipTypesJson = file_get_contents($jsonFile);
-    $relationshipTypes = json_decode($relationshipTypesJson, true);
-    foreach ($relationshipTypes as $relationName => $params) {
-      $propertyName = $relationName.'RelationshipType';
-      $relationshipType = CRM_Streetimport_Utils::getRelationshipTypeWithName($params['name_a_b']);
-      if (!$relationshipType) {
-        $relationshipType = CRM_Streetimport_Utils::createRelationshipType($params);
-      }
-      $this->$propertyName = $relationshipType;
-    }
-  }
-
-  /**
-   * Method to create or get contact sub types
-   *
-   * @throws Exception when resource file could not be loaded
-   */
-  protected function setContactSubTypes()
-  {
-    $jsonFile = $this->resourcesPath . 'contact_sub_types.json';
-    if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load contact sub types configuration file for extension,
-      contact your system administrator!');
-    }
-    $contactTypesJson = file_get_contents($jsonFile);
-    $contactSubTypes = json_decode($contactTypesJson, true);
-    foreach ($contactSubTypes as $params) {
-      $propertyName = $params['name'] . 'ContactSubType';
-      $contactSubType = CRM_Streetimport_Utils::getContactSubTypeWithName($params['name']);
-      if (!$contactSubType) {
-        $contactSubType = CRM_Streetimport_Utils::createContactSubType($params);
-      }
-      $this->$propertyName = $contactSubType;
-    }
-  }
-
-  /**
-   * Method to create option groups
-   *
-   * @throws Exception when resource file not found
-   * @access protected
-   */
-  protected function setOptionGroups() {
-    $jsonFile = $this->resourcesPath.'option_groups.json';
-    if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load option_groups configuration file for extension,
-      contact your system administrator!');
-    }
-    $optionGroupsJson = file_get_contents($jsonFile);
-    $optionGroups = json_decode($optionGroupsJson, true);
-    foreach ($optionGroups as $name => $title) {
-      $propertyName = $name.'OptionGroup';
-      $optionGroup = CRM_Streetimport_Utils::getOptionGroupWithName($name);
-      if (empty($optionGroup)) {
-        $optionGroup = CRM_Streetimport_Utils::createOptionGroup(array('name' => $name, 'title' => $title));
-      }
-      $this->$propertyName = $optionGroup;
-    }
-  }
-
-  /**
-   * Method to create or get groups
-   *
-   * @throws Exception when resource file could not be loaded
-   */
-  protected function setGroups() {
-    $jsonFile = $this->resourcesPath . 'groups.json';
-    if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load groups configuration file for extension,
-      contact your system administrator!');
-    }
-    $groupJson = file_get_contents($jsonFile);
-    $groups = json_decode($groupJson, true);
-    foreach ($groups as $params) {
-      $group = CRM_Streetimport_Utils::getGroupWithName($params['name']);
-      if (!$group) {
-        CRM_Streetimport_Utils::createGroup($params);
-      }
-      if ($params['name'] == "recruiting_organizations") {
-        $this->recruitingOrganizationsGroupId = $group['id'];
-      }
-    }
-  }
-
-  /**
-   * Method to set the custom data groups and fields
-   *
-   * @throws Exception when config json could not be loaded
-   * @access protected
-   */
-  protected function setCustomData() {
-    $jsonFile = $this->resourcesPath.'custom_data.json';
-    if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load custom data configuration file for extension, contact your system administrator!');
-    }
-    $customDataJson = file_get_contents($jsonFile);
-    $customData = json_decode($customDataJson, true);
-
-    foreach ($customData as $customGroupName => $customGroupData) {
-      $propertyCustomGroup = $customGroupName.'CustomGroup';
-      $customGroup = CRM_Streetimport_Utils::getCustomGroupWithName($customGroupName);
-      if (!$customGroup) {
-        $customGroupParams = $this->buildCustomGroupParams($customGroupData);
-        $customGroup = CRM_Streetimport_Utils::createCustomGroup($customGroupParams);
-      }
-      $this->$propertyCustomGroup = $customGroup;
-      $propertyCustomFields = $customGroupName.'CustomFields';
-      $createdCustomFields = array();
-      foreach ($customGroupData['fields'] as $customFieldName => $customFieldData) {
-        $customField = CRM_Streetimport_Utils::getCustomFieldWithNameCustomGroupId($customFieldName, $customGroup['id']);
-        if (!$customField) {
-          $customFieldData['custom_group_id'] = $customGroup['id'];
-          if ($customFieldName = 'recruiting_organization_id') {
-            $customFieldData['filter'] = 'action=lookup&group='.$this->recruitingOrganizationsGroupId;
-          }
-          $customFieldParams = $customFieldData;
-          $customField = CRM_Streetimport_Utils::createCustomField($customFieldParams);
-        }
-        $customFieldId = $customField['id'];
-        $createdCustomFields[$customFieldId] = $customField;
-      }
-      $this->$propertyCustomFields = $createdCustomFields;
-    }
-  }
-
-  /**
-   * Method to build param list for custom group creation
-   *
-   * @param array $customGroupData
-   * @return array $customGroupParams
-   * @access protected
-   */
-  protected function buildCustomGroupParams($customGroupData) {
-    $customGroupParams = array();
-    foreach ($customGroupData as $name => $value) {
-      if ($name != 'fields') {
-        $customGroupParams[$name] = $value;
-      }
-    }
-    if ($customGroupParams['extends'] == 'Activity') {
-      $extendsActivity = CRM_Streetimport_Utils::getActivityTypeWithName($customGroupData['extends_entity_column_value']);
-      $customGroupParams['extends_entity_column_value'] = CRM_Core_DAO::VALUE_SEPARATOR.$extendsActivity['value'];
-    }
-    return $customGroupParams;
-  }
-
-  /**
-   * Method to build param list for custom field creation
-   *
-   * @param array $customFieldData
-   * @return array $customFieldParams
-   * @access protected
-   */
-  protected function buildCustomFieldParams($customFieldData) {
-    $customFieldParams = array();
-    foreach ($customFieldData as $name => $value) {
-      if ($name == "option_group") {
-        $optionGroup = CRM_Streetimport_Utils::getOptionGroupWithName($value);
-        if (empty($optionGroup)) {
-          $optionGroup = CRM_Streetimport_Utils::createOptionGroup(array('name' => $value));
-        }
-        $customFieldParams['option_group_id'] = $optionGroup['id'];
-      } else {
-        $customFieldParams[$name] = $value;
-      }
-    }
-    return $customFieldParams;
-  }
-
-  /**
-   * Method to set the Import Settings property
-   *
-   * @throws Exception when file not found
-   * @access protected
-   */
-  protected function setImportSettings() {
-    $jsonFile = $this->resourcesPath.'import_settings.json';
-    if (!file_exists($jsonFile)) {
-      throw new Exception('Could not load import_settings configuration file for extension, contact your system administrator!');
-    }
-    $importSettingsJson = file_get_contents($jsonFile);
-    $this->importSettings = json_decode($importSettingsJson, true);
-  }
-
-  /**
-   * Protected function to load translation json based on local language
-   *
-   * @access protected
-   */
-  protected function setTranslationFile() {
-    $config = CRM_Core_Config::singleton();
-    $jsonFile = $this->resourcesPath.$config->lcMessages.'_translate.json';
-    if (file_exists($jsonFile)) {
-      $translateJson = file_get_contents($jsonFile);
-      $this->translatedStrings = json_decode($translateJson, true);
-
-    } else {
-      $this->translatedStrings = array();
-    }
-  }
-
-  /**
-   * Method to set all relationship types as employee types at start up to
-   * avoid not being able to set the admin and fundraiser id
-   *
-   * @link https://github.com/CiviCooP/be.aivl.streetimport/issues/36
-   */
-  protected function setDefaultEmployeeTypes() {
-    $relationshipTypes = array();
-    $relationshipTypeParams = array(
-      'is_active' => 1,
-      'return' => 'id',
-      'options' => array('limit' => 999));
-    $apiTypes = civicrm_api3('RelationshipType', 'Get', $relationshipTypeParams);
-    foreach ($apiTypes['values'] as $apiType) {
-      $relationshipTypes[] = $apiType['id'];
-    }
-    $this->importSettings['employee_type_id']['value'] = $relationshipTypes;
-    $params = array();
-    foreach ($this->importSettings as $settingName => $settingValue) {
-      $params[$settingValue['name']] = $settingValue['value'];
-    }
-    $this->saveImportSettings($params);
-  }
 }

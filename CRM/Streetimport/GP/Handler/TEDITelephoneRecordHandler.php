@@ -20,7 +20,7 @@ define('TM_PHONE_NEW',        4);
  * @author Björn Endres (SYSTOPIA) <endres@systopia.de>
  * @license AGPL-3.0
  */
-class CRM_Streetimport_Handler_TEDITelephoneRecordHandler extends CRM_Streetimport_Handler_TMRecordHandler {
+class CRM_Streetimport_Handler_GP_TEDITelephoneRecordHandler extends CRM_Streetimport_Handler_TMRecordHandler {
 
 
   /**

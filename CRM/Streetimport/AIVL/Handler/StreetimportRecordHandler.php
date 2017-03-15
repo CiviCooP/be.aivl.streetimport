@@ -5,14 +5,14 @@
  * @author Björn Endres (SYSTOPIA) <endres@systopia.de>
  * @license AGPL-3.0
  */
-abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimport_RecordHandler {
+abstract class CRM_Streetimport_AIVL_Handler_StreetimportRecordHandler extends CRM_Streetimport_RecordHandler {
 
-  /** 
+  /**
    * look up the recruiting organisation
    *
    * From the process description:
    * "For first record of file: check if recruiting organization exists.
-   * If it does not, create activity of type ‘Foutieve data import’ with 
+   * If it does not, create activity of type ‘Foutieve data import’ with
    * relevant error message in subject and details. No further processing of file possible."
    */
   protected function getRecruitingOrganisation($record) {
@@ -34,8 +34,8 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * this method will lookup or create the recruiter
    *
    * From the process description:
-   * "check if recruiter exists. If not, create recruiter (see CSV description) 
-   * and create activity of type ‘Foutieve data import’ 
+   * "check if recruiter exists. If not, create recruiter (see CSV description)
+   * and create activity of type ‘Foutieve data import’
    * with relevant error message in subject and details"
    *
    * @param array $record
@@ -126,7 +126,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $allowedLoadingTypes = $config->getLoadingTypes();
       if ($allowedLoadingTypes[$loadingType] == "Street Recruitment") {
         $this->logger->logError($config->translate("Donor with ID")." ".$record['DonorID']." ".$config->translate("for recr. org.")
-            ." ".$recruiting_organisation['id']." ".$config->translate("already exists where new donor expected in StreetRecruitment. 
+            ." ".$recruiting_organisation['id']." ".$config->translate("already exists where new donor expected in StreetRecruitment.
             No act. or mandate created"), $record);
         return array();
       } else {
@@ -259,39 +259,39 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    *
    * @param int $donorId
    * @param int $recruitingOrganizationId
-   * 
+   *
    * @return mixed contact_id or NULL if not found
    */
   protected function getContactForDonorID($donorId, $recruitingOrganizationId, $record) {
 	try {
-      $contactId = CRM_Streetimport_Utils::getContactIdFromDonorId($donorId, $recruitingOrganizationId);		
+      $contactId = CRM_Streetimport_Utils::getContactIdFromDonorId($donorId, $recruitingOrganizationId);
 	}
 	catch (Exception $e) {
       $this->logger->logError($e->getMessage(), $record);
-      return NULL;		
+      return NULL;
 	}
-	
+
 	return $contactId;
   }
 
   /**
-   * will extract the required information for a SEPA mandate 
+   * will extract the required information for a SEPA mandate
    *
    * @return array with mandate data as provided by the record
    */
   protected function extractMandate($record, $donor_id) {
     $config = CRM_Streetimport_Config::singleton();
-    
+
     // error if no amount
     $mandateAmount = trim(CRM_Utils_Array::value('Amount', $record));
     if (empty($mandateAmount)) {
-      $this->logger->logError($config->translate("No amount in SDD data for donor").": " . $donor_id, $record, 
+      $this->logger->logError($config->translate("No amount in SDD data for donor").": " . $donor_id, $record,
         $config->translate("No amount in SDD Data"), "Error");
       return NULL;
     }
 
     // error if no mandate reference
-    $mandateReference = trim(CRM_Utils_Array::value('Mandate Reference', $record)); 
+    $mandateReference = trim(CRM_Utils_Array::value('Mandate Reference', $record));
     if (empty($mandateReference)) {
       $this->logger->logError($config->translate("No mandate reference in SDD data for donor").": " . $donor_id, $record,
         $config->translate("No mandate reference in SDD Data"), "Error");
@@ -429,7 +429,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         unset($mandate_data['campaign_id']);
       }
     }
-    
+
 
     try {
       $result = civicrm_api3('SepaMandate', 'createfull', $mandate_data);
@@ -454,7 +454,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    */
   public function saveBankAccount($mandate_data, $record) {
     $config = CRM_Streetimport_Config::singleton();
-    $type_id_IBAN = (int) CRM_Core_OptionGroup::getValue('civicrm_banking.reference_types', 'IBAN', 'name', 'String', 'id'); 
+    $type_id_IBAN = (int) CRM_Core_OptionGroup::getValue('civicrm_banking.reference_types', 'IBAN', 'name', 'String', 'id');
     if (empty($type_id_IBAN)) {
       $this->logger->abort("Could't find 'IBAN' reference type. Maybe CiviBanking is not installed?", $record);
       return;

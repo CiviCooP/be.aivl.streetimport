@@ -5,9 +5,9 @@
  * @author Björn Endres (SYSTOPIA) <endres@systopia.de>
  * @license AGPL-3.0
  */
-class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_StreetimportRecordHandler {
+class CRM_Streetimport_AIVL_Handler_StreetRecruitmentRecordHandler extends CRM_Streetimport_AIVL_Handler_StreetimportRecordHandler {
 
-  /** 
+  /**
    * Check if the given handler implementation can process the record
    *
    * @param $record  an array of key=>value pairs
@@ -17,8 +17,8 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $config = CRM_Streetimport_Config::singleton();
     return isset($record['Loading type']) && $record['Loading type'] == $config->getStreetRecruitmentImportType();
   }
-  
-  /** 
+
+  /**
    * process the given record
    *
    * @param array $record array of key=>value pairs
