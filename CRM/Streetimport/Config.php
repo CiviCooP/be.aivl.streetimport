@@ -127,7 +127,9 @@ class CRM_Streetimport_Config {
    * save the current settings to the DB
    */
   public function storeSettings() {
-    civicrm_api3('Setting', 'create', array('streetimporter_settings' => $this->settings));
+    civicrm_api3('Setting', 'create', array(
+      'streetimporter_settings' => $this->settings
+      'group' => 'StreetImporter'));
   }
 
   /**

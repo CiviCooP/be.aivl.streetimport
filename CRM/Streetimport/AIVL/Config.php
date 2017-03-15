@@ -992,4 +992,43 @@ class CRM_Streetimport_AIVL_Config extends CRM_Streetimport_Config {
     }
     $this->saveImportSettings($params);
   }
+
+
+  /**
+   * Method to get AIVL employees
+   * @return array
+   * @throws Exception
+   */
+  protected function getEmployeeList() {
+    $employeeList = array();
+    $extensionConfig = CRM_Streetimport_Config::singleton();
+    $legalName = $extensionConfig->getOrgLegalName();
+    $relationshipTypes = $extensionConfig->getEmployeeRelationshipTypeIds();
+    $aivlParams = array(
+      'legal_name' => $legalName,
+      'return' => 'id');
+    try {
+      $aivlContactId = civicrm_api3('Contact', 'Getvalue', $aivlParams);
+      foreach ($relationshipTypes as $relationshipTypeId) {
+        $relationshipParams = array(
+          'is_active' => 1,
+          'contact_id_b' => $aivlContactId,
+          'relationship_type_id' => $relationshipTypeId,
+          'options' => array('limit' => 9999));
+        try {
+          $foundRelationships = civicrm_api3('Relationship', 'Get', $relationshipParams);
+          foreach ($foundRelationships['values'] as $foundRelation) {
+            $employeeList[$foundRelation['contact_id_a']] = CRM_Streetimport_Utils::getContactName($foundRelation['contact_id_a']);
+          }
+        } catch (CiviCRM_API3_Exception $ex) {}
+      }
+      array_unique($employeeList);
+      $employeeList[0] = ts('- select -');
+      asort($employeeList);
+    } catch (CiviCRM_API3_Exception $ex) {
+      throw new Exception('Error retrieving contact with legal name '.$legalName
+        .', error from API Contact Getsingle: '.$ex->getMessage());
+    }
+    return $employeeList;
+  }
 }

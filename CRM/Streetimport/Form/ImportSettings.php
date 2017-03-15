@@ -1,4 +1,11 @@
 <?php
+/*-------------------------------------------------------------+
+| StreetImporter Record Handlers                               |
+| Copyright (C) 2017 SYSTOPIA / CiviCooP                       |
+| Author: Erik Hommel (CiviCooP) <erik.hommel@civicoop.org>    |
+|         B. Endres (SYSTOPIA) <endres@systopia.de>            |
+| http://www.systopia.de/                                      |
++--------------------------------------------------------------*/
 
 require_once 'CRM/Core/Form.php';
 
@@ -21,11 +28,6 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
   public function buildQuickForm() {
     $this->settings_list = array('admin_id', 'fundraiser_id', 'phone_phone_type_id', 'mobile_phone_type_id','location_type_id','other_location_type_id','default_country_id','default_financial_type_id','female_gender_id', 'male_gender_id','unknown_gender_id','import_encoding','date_format','import_location', 'processed_location', 'failed_location');
     $config = CRM_Streetimport_Config::singleton();
-
-    // $groupList = $this->getGroupList();
-    // $prefixList = CRM_Streetimport_Utils::getOptionGroupList('individual_prefix');
-    // $membershipTypeList = $this->getMembershipTypeList();
-    // $relationshipTypeList = $this->getRelationshipTypeList();
 
     // contacts
     $employeeList = $config->getEmployeeList();
@@ -228,28 +230,6 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     return $groupList;
   }
 
-  // /**
-  //  * Method to get list of active membership types
-  //  *
-  //  * @return array
-  //  * @access protected
-  //  */
-  // protected function getMembershipTypeList() {
-  //   $membershipTypeList = array();
-  //   $params = array(
-  //     'is_active' => 1,
-  //     'options' => array('limit' => 99999));
-  //   try {
-  //     $activeMembershipTypes = civicrm_api3('MembershipType', 'Get', $params);
-  //   } catch (CiviCRM_API3_Exception $ex) {}
-  //   foreach ($activeMembershipTypes['values'] as $activeMembershipType) {
-  //     $membershipTypeList[$activeMembershipType['id']] = $activeMembershipType['name'];
-  //   }
-  //   $membershipTypeList[0] = ts('- select -');
-  //   asort($membershipTypeList);
-  //   return $membershipTypeList;
-  // }
-
   /**
    * Method to get list of active location types
    *
@@ -270,66 +250,6 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $locationTypeList[0] = ts('- select -');
     asort($locationTypeList);
     return $locationTypeList;
-  }
-
-  /**
-   * Method to get AIVL employees
-   * @return array
-   * @throws Exception
-   */
-  protected function getEmployeeList() {
-    $employeeList = array();
-    $extensionConfig = CRM_Streetimport_Config::singleton();
-    $legalName = $extensionConfig->getOrgLegalName();
-    $relationshipTypes = $extensionConfig->getEmployeeRelationshipTypeIds();
-    $aivlParams = array(
-      'legal_name' => $legalName,
-      'return' => 'id');
-    try {
-      $aivlContactId = civicrm_api3('Contact', 'Getvalue', $aivlParams);
-      foreach ($relationshipTypes as $relationshipTypeId) {
-        $relationshipParams = array(
-          'is_active' => 1,
-          'contact_id_b' => $aivlContactId,
-          'relationship_type_id' => $relationshipTypeId,
-          'options' => array('limit' => 9999));
-        try {
-          $foundRelationships = civicrm_api3('Relationship', 'Get', $relationshipParams);
-          foreach ($foundRelationships['values'] as $foundRelation) {
-            $employeeList[$foundRelation['contact_id_a']] = CRM_Streetimport_Utils::getContactName($foundRelation['contact_id_a']);
-          }
-        } catch (CiviCRM_API3_Exception $ex) {}
-      }
-      array_unique($employeeList);
-      $employeeList[0] = ts('- select -');
-      asort($employeeList);
-    } catch (CiviCRM_API3_Exception $ex) {
-      throw new Exception('Error retrieving contact with legal name '.$legalName
-        .', error from API Contact Getsingle: '.$ex->getMessage());
-    }
-    return $employeeList;
-  }
-
-  /**
-   * Method to get active relationship types for select list
-   *
-   * @return array
-   * @access protected
-   */
-  protected function getRelationshipTypeList() {
-    $relationshipTypeList = array();
-    $params = array(
-      'is_active' => 1,
-      'options' => array('limit' => 9999));
-    try {
-      $types = civicrm_api3('RelationshipType', 'Get', $params);
-      foreach ($types['values'] as $type) {
-        $relationshipTypeList[$type['id']] = $type['label_a_b'];
-      }
-      $relationshipTypeList[0] = ts('- select -');
-      asort($relationshipTypeList);
-    } catch (CiviCRM_API3_Exception $ex) {}
-    return $relationshipTypeList;
   }
 
   /**
