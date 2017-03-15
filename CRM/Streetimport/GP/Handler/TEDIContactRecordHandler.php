@@ -35,8 +35,11 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    * @throws exception if failed
    */
   public function processRecord($record, $sourceURI) {
+    $config = CRM_Streetimport_Config::singleton();
     $parsedFileName = $this->parseTmFile($sourceURI);
     // TODO
+
+    $this->logger->logImport($record, true, $config->translate('TM Contact'));
   }
 
 }

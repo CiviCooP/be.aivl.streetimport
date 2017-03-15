@@ -42,6 +42,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
    * @throws exception if failed
    */
   public function processRecord($record, $sourceURI) {
+    $config = CRM_Streetimport_Config::singleton();
     $parsedFileName = $this->parseTmFile($sourceURI);
 
     $contact_id = $this->getContactID($record);
@@ -73,6 +74,8 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
         // TODO: What should happen here?
         break;
     }
+
+    $this->logger->logImport($record, true, $config->translate('TM Phone'));
   }
 
 
