@@ -9,7 +9,7 @@ abstract class CRM_Streetimport_DataSource {
 
   /**
    * stores the result/logging object
-   */ 
+   */
   public $logger = NULL;
 
   /**
@@ -29,10 +29,11 @@ abstract class CRM_Streetimport_DataSource {
     if ($mapping == NULL) {
       // load default mapping
       // TODO: move to config
-      $settings = civicrm_api3('Setting', 'Getsingle', array());
-      $mappings_path = $settings['extensionsDir'].'/be.aivl.streetimport/resources/default_mapping.json';
-      $mappings_contenct = file_get_contents($mappings_path);
-      $mapping = json_decode($mappings_contenct, true);
+      // $settings = civicrm_api3('Setting', 'Getsingle', array());
+      // $mappings_path = $settings['extensionsDir'].'/be.aivl.streetimport/resources/default_mapping.json';
+      // $mappings_contenct = file_get_contents($mappings_path);
+      // $mapping = json_decode($mappings_contenct, true);
+      $mapping = array();
     }
     $this->mapping = $mapping;
   }
@@ -56,7 +57,7 @@ abstract class CRM_Streetimport_DataSource {
    */
   public abstract function next();
 
-  
+
   /**
    * Get the next record
    *

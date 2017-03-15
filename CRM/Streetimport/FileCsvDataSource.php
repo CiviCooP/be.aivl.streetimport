@@ -7,8 +7,8 @@
  */
 class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
 
-  protected $default_delimiter = ';';
-  protected $default_encoding  = 'UTF8';
+  protected $delimiter = ';';
+  protected $encoding = 'UTF8';
 
   /** this will hold the open file */
   protected $reader  = NULL;
@@ -20,11 +20,19 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
   protected $next    = NULL;
   protected $line_nr = 0;
 
+  public function __construct($uri, $logger, $mapping = NULL) {
+    CRM_Streetimport_DataSource::__construct($uri, $logger, $mapping);
+    $config = CRM_Streetimport_Config::singleton();
+    $this->encoding = $config->getSetting('import_encoding', 'UTF8');
+    $this->delimiter = $config->getSetting('import_delimiter', ';');
+  }
+
   /**
    * Will reset the status of the data source
    */
   public function reset() {
     $config = CRM_Streetimport_Config::singleton();
+
     $this->validate_separator();
     $this->validate_encoding();
     // try loading the given file
@@ -41,7 +49,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     }
 
     // read header
-    $this->header = fgetcsv($this->reader, 0, $this->default_delimiter);
+    $this->header = fgetcsv($this->reader, 0, $this->delimiter);
     if ($this->header == NULL) {
       // TODO: error handling
       $this->logger->abort($config->translate("File")." ".$this->uri." ".$config->translate("does not contain headers"));
@@ -95,7 +103,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     // read next data blob
     $this->next = NULL;
     $this->line_nr += 1;
-    $data = fgetcsv($this->reader, 0, $this->default_delimiter);
+    $data = fgetcsv($this->reader, 0, $this->delimiter);
     if ($data == NULL) {
       // there is no more records => reset
       fclose($this->reader);
@@ -124,10 +132,10 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     if ($testRow = fgetcsv($testSeparator, 0, ';')) {
       if (!isset($testRow[1])) {
         $this->logger->abort($config->translate("File")." ".$this->uri." "
-            .$config->translate("does not have ; as a field delimiter and can not be processed"));
+            .$config->translate("does not have '{$this->delimiter}' as a field delimiter and can not be processed"));
         $this->reader = NULL;
       } else {
-        $this->default_delimiter = ";";
+        $this->delimiter = ";";
       }
     }
     fclose($testSeparator);
@@ -141,35 +149,38 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     // TODO: re-instate?
     return;
     $config = CRM_Streetimport_Config::singleton();
-    if (!mb_check_encoding(file_get_contents($this->uri), "UTF-8")) {
+    if (!mb_check_encoding(file_get_contents($this->uri), $this->encoding)) {
       $this->logger->abort($config->translate("File")." ".$this->uri." "
-        .$config->translate("is not encoded as UTF-8 and can not be processed"));
+        .$config->translate("is not encoded as {$this->encoding} and can not be processed"));
       $this->reader = NULL;
     }
   }
 
   function validate_header() {
-    $wrongColumnNames = array();
+    // TODO: move to settings?
+    return TRUE;
 
-    foreach ($this->header as $columnName) {
-      // check if this is an expected column name
-      if (!array_key_exists($columnName, $this->mapping)) {
-        // nope
-        $wrongColumnNames[] = $columnName;
-      }
-    }
+  //   $wrongColumnNames = array();
 
-    // check if we have wrong column names
-    if (count($wrongColumnNames) > 0) {
-      $config = CRM_Streetimport_Config::singleton();
-      $this->logger->abort($config->translate("File")." ".$this->uri." "
-        .$config->translate("contains unexpected column name(s): ")
-        .implode(', ', $wrongColumnNames));
-      $this->reader = NULL;
-      return FALSE;
-    }
-    else {
-      return TRUE;
-    }
+  //   foreach ($this->header as $columnName) {
+  //     // check if this is an expected column name
+  //     if (!array_key_exists($columnName, $this->mapping)) {
+  //       // nope
+  //       $wrongColumnNames[] = $columnName;
+  //     }
+  //   }
+
+  //   // check if we have wrong column names
+  //   if (count($wrongColumnNames) > 0) {
+  //     $config = CRM_Streetimport_Config::singleton();
+  //     $this->logger->abort($config->translate("File")." ".$this->uri." "
+  //       .$config->translate("contains unexpected column name(s): ")
+  //       .implode(', ', $wrongColumnNames));
+  //     $this->reader = NULL;
+  //     return FALSE;
+  //   }
+  //   else {
+  //     return TRUE;
+  //   }
   }
 }
