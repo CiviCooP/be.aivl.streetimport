@@ -52,4 +52,11 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
     }
   }
 
+  /**
+   * get the activity date from the file name
+   */
+  protected function getDate($file_name_data) {
+    return $file_name_data['date'] . $file_name_data['time'];
+  }
+
 }

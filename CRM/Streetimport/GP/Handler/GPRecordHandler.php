@@ -30,8 +30,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   protected function getContactIDbyExternalID($external_identifier) {
     if (empty($external_identifier)) return NULL;
 
-    return $contact_id;
-
     // look up contact via external_identifier
     // TODO: use identity tracker!
     $contacts = civicrm_api3('Contact', 'get', array(
