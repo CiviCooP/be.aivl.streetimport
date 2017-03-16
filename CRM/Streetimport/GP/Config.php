@@ -16,6 +16,10 @@
  */
 class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
 
+  /** custom field cache */
+  protected $gp_custom_fields = array();
+  protected $gp_groups = array();
+
   /**
    * Constructor method
    *
@@ -60,6 +64,55 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
     );
   }
 
+  /**
+   * Get a group ID
+   */
+  public function getGPGroupID($group_name) {
+    $group = $this->getGPGroup($group_name);
+    return $group['id'];
+  }
 
+  /**
+   * Get group data based on name (title field)
+   */
+  public function getGPGroup($group_name) {
+    if (!isset($this->gp_groups[$group_name]) || !is_array($this->gp_groups[$group_name])) {
+      // load custom field data
+      try {
+        $this->gp_groups[$group_name] = civicrm_api3('Group', 'getsingle', array('title' => $group_name));
+      } catch (Exception $e) {
+      $this->gp_groups[$group_name] = array(
+        'is_error' => 1,
+        'error_msg' => $e->getMessage());
+      }
+    }
 
+    return $this->gp_groups[$group_name];
+  }
+
+  /**
+   * Look up custom fields and return full field data
+   */
+  public function getGPCustomField($field_name) {
+    if (!isset($this->gp_custom_fields[$field_name]) || !is_array($this->gp_custom_fields[$field_name])) {
+      // load custom field data
+      try {
+        $this->gp_custom_fields[$field_name] = civicrm_api3('CustomField', 'getsingle', array('name' => $field_name));
+      } catch (Exception $e) {
+      $this->gp_custom_fields[$field_name] = array(
+        'is_error' => 1,
+        'error_msg' => $e->getMessage());
+      }
+    }
+
+    return $this->gp_custom_fields[$field_name];
+  }
+
+  /**
+   * Look up custom fields and return full field data
+   */
+  public function getGPCustomFieldKey($field_name) {
+    $custom_field = $this->getGPCustomField($field_name);
+    return "custom_{$custom_field['id']}";
+  }
 }

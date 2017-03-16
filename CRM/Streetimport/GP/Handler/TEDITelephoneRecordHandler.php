@@ -2,8 +2,8 @@
 /*-------------------------------------------------------------+
 | GP StreetImporter Record Handlers                            |
 | Copyright (C) 2017 SYSTOPIA                                  |
-| Author: M. McAndrew (michaelmcandrew@thirdsectordesign.org)  |
-|         B. Endres (endres -at- systopia.de)                  |
+| Author: B. Endres (endres -at- systopia.de)                  |
+|         M. McAndrew (michaelmcandrew@thirdsectordesign.org)  |
 | http://www.systopia.de/                                      |
 +--------------------------------------------------------------*/
 
@@ -58,11 +58,13 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
     switch ($record['Status']) {
       case TM_PHONE_NOT_CALLED:
         // NOTHING TO DO HERE
+        $this->logger->logDebug("Contact [{$contact_id}] was NOT called", $record);
         break;
 
       case TM_PHONE_CALLED:
         // just log an activity
         $this->createContactCalledActivity($contact_id, $file_name_data, $record);
+        $this->logger->logDebug("Contact [{$contact_id}] was called", $record);
         break;
 
       case TM_PHONE_CHANGED:
@@ -77,6 +79,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
               'phone' => $this->getPhoneNumber($record)));
           }
           $this->createPhoneUpdatedActivity(TM_PHONE_CHANGED, $contact_id, $file_name_data, $record);
+          $this->logger->logDebug("Phone number of contact [{$contact_id}] was changed", $record);
         }
         break;
 
@@ -90,6 +93,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
             civicrm_api3('Phone', 'delete', array('id' => $phone_id));
           }
           $this->createPhoneUpdatedActivity(TM_PHONE_DELETED, $contact_id, $file_name_data, $record);
+          $this->logger->logDebug("Phone number of contact [{$contact_id}] was deleted", $record);
         }
         break;
 
@@ -101,6 +105,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
           'phone_type_id'    => $config->getPhonePhoneTypeId(),
           'location_type_id' => $config->getLocationTypeId()));
           $this->createPhoneUpdatedActivity(TM_PHONE_NEW, $contact_id, $file_name_data, $record);
+          $this->logger->logDebug("Phone number of contact [{$contact_id}] was added", $record);
         break;
 
       default:

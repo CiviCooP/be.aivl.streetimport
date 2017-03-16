@@ -2,8 +2,8 @@
 /*-------------------------------------------------------------+
 | GP StreetImporter Record Handlers                            |
 | Copyright (C) 2017 SYSTOPIA                                  |
-| Author: M. McAndrew (michaelmcandrew@thirdsectordesign.org)  |
-|         B. Endres (endres -at- systopia.de)                  |
+| Author: B. Endres (endres -at- systopia.de)                  |
+|         M. McAndrew (michaelmcandrew@thirdsectordesign.org)  |
 | http://www.systopia.de/                                      |
 +--------------------------------------------------------------*/
 
@@ -86,8 +86,14 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     // Ergebnisnummer  ErgebnisText
     // result response as sketched in doc "20140331_Telefonie_Response"
 
-    // FIELDS: Bemerkung1  Bemerkung2  Bemerkung3  Bemerkung4  Bemerkung5
-    // notes can trigger certain actions within Civi as mentioned in doc "20131107_Responses_Bemerkungen_1-5"
+
+    // process additional fields
+    // FIELDS: Bemerkung1  Bemerkung2  Bemerkung3  Bemerkung4  Bemerkung5 ...
+    for ($i=1; $i <= 10; $i++) {
+      if (!empty($record["Bemerkung{$i}"])) {
+        $this->processAdditionalFeature($record["Bemerkung{$i}"], $contact_id, $record, $file_name_data);
+      }
+    }
 
     $this->logger->logImport($record, true, $config->translate('TM Contact'));
   }
@@ -135,4 +141,103 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     // TODO: implement
   }
 
+  /**
+   * Process addational feature from the semi-formal "Bemerkung" note fields
+   *
+   * Those can trigger certain actions within Civi as mentioned in doc "20131107_Responses_Bemerkungen_1-5"
+   */
+  public function processAdditionalFeature($note, $contact_id, $record, $file_name_data) {
+    $config = CRM_Streetimport_Config::singleton();
+    $this->logger->logDebug("Contact [{$contact_id}] wants '{$note}'", $record);
+    switch ($note) {
+       case 'erhält keine Post':
+         // Marco: "Posthäkchen setzen, Adresse zurücksetzen, Kürzel 15 + 18 + ZO löschen"
+         // TODO:
+         break;
+
+       case 'kein Telefonkontakt erwünscht':
+         // Marco: "Telefonkanal schließen"
+         civicrm_api3('Contact', 'create', array(
+          'id' => $contact_id,
+          'do_not_phone' => 1));
+         $this->logger->logDebug("Setting 'do_not_phone' for contact [{$contact_id}].", $record);
+         break;
+
+       case 'keine Kalender senden':
+         // Marco: 'Negativleistung "Kalender"'
+         $this->addContactToGroup($config->getGPGroup('kein Kalender'), $newsletter_group_id, $record);
+         $this->logger->logDebug("Added contact [{$contact_id}] to group 'kein Kalender'.", $record);
+         break;
+
+       case 'nur Vereinsmagazin, sonst keine Post':
+       case 'nur Vereinsmagazin mit Spendenquittung':
+         // Marco: Positivleistung "Nur ACT"
+         $this->addContactToGroup($config->getGPGroup('Nur ACT'), $newsletter_group_id, $record);
+         $this->logger->logDebug("Added contact [{$contact_id}] to group 'Nur ACT'.", $record);
+         break;
+
+       case 'nur Vereinsmagazin mit 1 Mailing':
+         // Marco: Positivleistung "Nur ACT"
+         $this->addContactToGroup($config->getGPGroup('Nur ACT'), $newsletter_group_id, $record);
+         $this->logger->logDebug("Added contact [{$contact_id}] to group 'Nur ACT'.", $record);
+
+         //  + alle Monate bis auf Oktober deaktivieren
+         $dm_restrictions = $config->getGPCustomFieldKey('dm_restrictions');
+         civicrm_api3('Contact', 'create', array(
+            'id'             => $contact_id,
+            $dm_restrictions => '1')); // one mailing only
+         $this->logger->logDebug("Contact [{$contact_id}]: DM restrictions set to '1'.", $record);
+         break;
+
+       case 'möchte keine Incentives':
+         // Marco: Negativleistung " Geschenke"
+         $this->addContactToGroup($config->getGPGroup('keine Geschenke'), $newsletter_group_id, $record);
+         $this->logger->logDebug("Added contact [{$contact_id}] to group 'keine Geschenke'.", $record);
+         break;
+
+       case 'möchte keine Postsendungen':
+         // Marco: Postkanal schließen
+         civicrm_api3('Contact', 'create', array(
+          'id' => $contact_id,
+          'do_not_mail' => 1));
+         $this->logger->logDebug("Setting 'do_not_mail' for contact [{$contact_id}].", $record);
+         break;
+
+       case 'möchte max 4 Postsendungen':
+         // Marco: Leistung Januar, Februar, März, Mai, Juli, August, September, November deaktivieren
+         $dm_restrictions = $config->getGPCustomFieldKey('dm_restrictions');
+         civicrm_api3('Contact', 'create', array(
+            'id'             => $contact_id,
+            $dm_restrictions => '4')); // 4 mailings
+         $this->logger->logDebug("Contact [{$contact_id}]: DM restrictions set to '4'.", $record);
+         break;
+
+       case 'Postendung nur bei Notfällen':
+         // Marco: Im Leistungstool alle Monate rot einfärben
+         $dm_restrictions = $config->getGPCustomFieldKey('dm_restrictions');
+         civicrm_api3('Contact', 'create', array(
+            'id'             => $contact_id,
+            $dm_restrictions => '0')); // only emergency mailings
+         $this->logger->logDebug("Contact [{$contact_id}]: DM restrictions set to '0'.", $record);
+         break;
+
+       case 'hat kein Konto':
+       case 'möchte nur Jahresbericht':
+         // do nothing according to '20131107_Responses_Bemerkungen_1-5.xlsx'
+         $this->logger->logDebug("Nothing to be done for feature '{$note}'", $record);
+         break;
+
+       case 'Bankdaten gehören nicht dem Spender':
+         //
+       case 'Spende wurde übernommen, Daten geändert':
+       case 'erhält Post doppelt':
+         //
+
+
+       default:
+         return $this->logger->logError("Unkown feature '{$note}' ignored.", $record);
+         break;
+
+     }
+  }
 }
