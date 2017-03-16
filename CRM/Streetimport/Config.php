@@ -76,9 +76,7 @@ class CRM_Streetimport_Config {
   public static function setDomain($domain) {
     $current_domain = self::getDomain();
     if ($domain != $current_domain) {
-      $query = civicrm_api3('Setting', 'create', array(
-        'streetimporter_domain' => $domain,
-        'group'                 => 'StreetImporter'));
+      $query = civicrm_api3('Setting', 'create', array('streetimporter_domain' => $domain));
       self::$_singleton = NULL; // drop singleton
       self::$_domain = $domain; // drop domain
     }
@@ -129,9 +127,7 @@ class CRM_Streetimport_Config {
    * save the current settings to the DB
    */
   public function storeSettings() {
-    civicrm_api3('Setting', 'create', array(
-      'streetimporter_settings' => $this->settings,
-      'group' => 'StreetImporter'));
+    civicrm_api3('Setting', 'create', array('streetimporter_settings' => $this->settings));
   }
 
   /**
@@ -462,7 +458,8 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getAcceptedYesValues() {
-    return $this->getSetting('accepted_yes_values', array('1', 'yes', 'y'));
+    $value_list = $this->getSetting('accepted_yes_values', '1,yes,Yes,YES,Y,X,x');
+    return explode(',', $value_list);
   }
 
   /**
@@ -485,6 +482,16 @@ class CRM_Streetimport_Config {
    */
   public function getAdminContactID() {
     return $this->getSetting('admin_id');
+  }
+
+  /**
+   * Method to retrieve the newsletter group id
+   *
+   * @return int
+   * @access public
+   */
+  public function getNewsletterGroupID() {
+    return $this->getSetting('newsletter_group_id');
   }
 
   /**

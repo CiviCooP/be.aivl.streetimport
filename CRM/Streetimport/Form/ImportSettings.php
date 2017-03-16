@@ -26,7 +26,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @access public
    */
   public function buildQuickForm() {
-    $this->settings_list = array('admin_id', 'fundraiser_id', 'phone_phone_type_id', 'mobile_phone_type_id','location_type_id','other_location_type_id','default_country_id','default_financial_type_id','female_gender_id', 'male_gender_id','unknown_gender_id','import_encoding','date_format','import_location', 'processed_location', 'failed_location');
+    $this->settings_list = array('admin_id', 'fundraiser_id', 'phone_phone_type_id', 'mobile_phone_type_id','location_type_id','other_location_type_id','default_country_id','default_financial_type_id','female_gender_id', 'male_gender_id','unknown_gender_id','import_encoding','date_format','import_location', 'processed_location', 'failed_location', 'newsletter_group_id', 'accepted_yes_values');
     $config = CRM_Streetimport_Config::singleton();
 
     // contacts
@@ -48,6 +48,10 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $countryList = $this->getCountryList();
     $this->add('select', 'default_country_id', $config->translate('Default Country'), $countryList, TRUE);
 
+    // default newsletter group
+    $groupList = $this->getGroupList();
+    $this->add('select', 'newsletter_group_id', $config->translate('Newsletter Group'), $groupList, TRUE);
+
     // default financial types
     $financialTypeList = $this->getFinancialTypeList();
     $this->add('select', 'default_financial_type_id', $config->translate('Default Financial Type'), $financialTypeList, TRUE);
@@ -66,6 +70,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $this->add('text', 'import_location', $config->translate('Import File Location'), array('size' => 50), TRUE);
     $this->add('text', 'processed_location', $config->translate('Processed File Location'), array('size' => 50), TRUE);
     $this->add('text', 'failed_location', $config->translate('Failed File Location'), array('size' => 50), TRUE);
+    $this->add('text', 'accepted_yes_values', $config->translate('List of strings meaning "Yes" (comma separated)'), array('size' => 50), TRUE);
 
     // add domain settings
     $more_settings = $config->buildQuickFormSettings($this);

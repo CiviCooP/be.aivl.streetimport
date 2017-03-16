@@ -473,4 +473,36 @@ abstract class CRM_Streetimport_RecordHandler {
       }
     } catch (CiviCRM_API3_Exception $ex) {}
   }
+
+  /**
+   * Create note entity with the given contact
+   *
+   * @return note data
+   */
+  protected function createNote($contact_id, $subject, $text, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+    // verify data
+    if (empty($contact_id)) {
+      return NULL;
+    }
+
+    if (empty($subject)) {
+      $subject = $config->translate('Note');
+    }
+
+    // create via API
+    try {
+      $note = civicrm_api3('Note', 'create', array(
+        'entity_id'    => $contact_id,
+        'entity_table' => 'civicrm_contact',
+        'subject'      => $subject,
+        'note'         => $text
+        ));
+      $this->logger->logDebug($config->translate("Note created")." ".$config->translate("for contact")." ".$contact_id, $record);
+      return $note;
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Note Error"));
+      return NULL;
+    }
+  }
 }

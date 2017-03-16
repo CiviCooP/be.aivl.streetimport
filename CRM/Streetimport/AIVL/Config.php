@@ -314,17 +314,6 @@ class CRM_Streetimport_AIVL_Config extends CRM_Streetimport_Config {
   }
 
   /**
-   * Method to retrieve the newsletter group id
-   *
-   * @return int
-   * @access public
-   */
-  public function getNewsletterGroupID() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['newsletter_group_id']['value'];
-  }
-
-  /**
    * Method to retrieve the dedupe contacts group id
    *
    * @return int
