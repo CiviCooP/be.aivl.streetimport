@@ -7,6 +7,27 @@
 | http://www.systopia.de/                                      |
 +--------------------------------------------------------------*/
 
+define('TM_KONTAKT_RESPONSE_OFFF_SPENDE',            3);
+
+define('TM_KONTAKT_RESPONSE_ZUSAGE_FOERDER',         1);
+define('TM_KONTAKT_RESPONSE_ZUSAGE_FLOTTE',         53);
+define('TM_KONTAKT_RESPONSE_ZUSAGE_ARKTIS',         54);
+define('TM_KONTAKT_RESPONSE_ZUSAGE_DETOX',          55);
+define('TM_KONTAKT_RESPONSE_ZUSAGE_WAELDER',        57);
+define('TM_KONTAKT_RESPONSE_ZUSAGE_GP4ME',          58);
+define('TM_KONTAKT_RESPONSE_ZUSAGE_ATOM',           59);
+
+define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZS',     30);
+define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZSO',    31);
+define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_SMS',    32);
+
+define('TM_KONTAKT_RESPONSE_KONTAKT_DOWNGRADE',     24);
+define('TM_KONTAKT_RESPONSE_KONTAKT_LOESCHEN',      25);
+define('TM_KONTAKT_RESPONSE_KONTAKT_STILLEGEN',     26);
+define('TM_KONTAKT_RESPONSE_KONTAKT_VERSTORBEN',    40);
+define('TM_KONTAKT_RESPONSE_KONTAKT_ANRUFSPERRE',   41);
+
+
 
 /**
  * GP TEDI Handler
@@ -54,14 +75,6 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       $this->addContactToGroup($contact_id, $newsletter_group_id, $record);
     }
 
-    // Create / update contract
-    // FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
-    if (empty($record['Vertragsnummer'])) {
-      $this->createContract($contact_id, $record);
-    } else {
-      $this->updateContract($record['Vertragsnummer'], $contact_id, $record);
-    }
-
     // Add a note if requested
     // FIELDS: BemerkungFreitext
     if (!empty($record['BemerkungFreitext'])) {
@@ -74,18 +87,71 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       $this->addressValidated($contact_id, $record);
     }
 
-    // TODO: Internal selectionid in IMB which is used to connect this row to the correct activityentry
-    // FIELDS: Selektionshistoryid, zielgruppeid
+    // TODO: verify contract status Upg->active, Rech/React->inactive
 
-    // weiterbuchen
-    // This field kann take "0", "1" and "".
-    //    "1" => no break (normal data entry for contract data and Sepa DD issue date will be set as soon as possible;
-    //    "0" => break! (If there is a debit planned inbetween of date in field AA (Einzugsstart) and import date) the contract shall be paused and NOT debited asap.
-    //    ""  => nothing happens
+    // MAIN PROCESSING
+    switch ($record['Ergebnisnummer']) {
+      case TM_KONTAKT_RESPONSE_ZUSAGE_FOERDER:
+      case TM_KONTAKT_RESPONSE_ZUSAGE_FLOTTE:
+      case TM_KONTAKT_RESPONSE_ZUSAGE_ARKTIS:
+      case TM_KONTAKT_RESPONSE_ZUSAGE_DETOX:
+      case TM_KONTAKT_RESPONSE_ZUSAGE_WAELDER:
+      case TM_KONTAKT_RESPONSE_ZUSAGE_GP4ME:
+      case TM_KONTAKT_RESPONSE_ZUSAGE_ATOM:
+        // this is a conversion/upgrade
+        if (empty($record['Vertragsnummer'])) {
+          $this->createContract($contact_id, $record);
+        } else {
+          $this->updateContract($record['Vertragsnummer'], $contact_id, $record);
+        }
+        break;
 
-    // Ergebnisnummer  ErgebnisText
-    // result response as sketched in doc "20140331_Telefonie_Response"
+      case TM_KONTAKT_RESPONSE_OFFF_SPENDE:
+        // create a simple OOFF mandate
+        $this->createOOFFMandate($contact_id, $record);
+        break;
 
+      case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZS:
+      case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZSO:
+      case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_SMS:
+        // contact wants to cancel his/her contract
+        $this->cancelContract($contact_id, $record);
+        break;
+
+      case TM_KONTAKT_RESPONSE_KONTAKT_DOWNGRADE:
+        // this is a downgrade
+        $this->updateContract($record['Vertragsnummer'], $contact_id, $record);
+        break;
+
+      case TM_KONTAKT_RESPONSE_KONTAKT_LOESCHEN:
+        // contact wants to be erased from GP database
+        $this->disableContact($contact_id, 'erase', $record);
+        break;
+
+      case TM_KONTAKT_RESPONSE_KONTAKT_STILLEGEN:
+        // contact should be disabled
+        $this->disableContact($contact_id, 'disable', $record);
+        break;
+
+      case TM_KONTAKT_RESPONSE_KONTAKT_VERSTORBEN:
+        // contact should be disabled
+        $this->disableContact($contact_id, 'deceased', $record);
+        break;
+
+      case TM_KONTAKT_RESPONSE_KONTAKT_ANRUFSPERRE:
+        // contact doesn't want to be called
+        civicrm_api3('Contact', 'create', array(
+          'id'           => $contact_id,
+          'do_not_phone' => 1));
+        break;
+
+      default:
+        // in all other cases nothing needs to happen except the
+        //  to create the reponse activity, see below.
+    }
+
+    // GENERATE RESPONSE ACTIVITY
+    $this->createResponseActivity($contact_id, $record);
 
     // process additional fields
     // FIELDS: Bemerkung1  Bemerkung2  Bemerkung3  Bemerkung4  Bemerkung5 ...
@@ -101,8 +167,8 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
   /**
    * Extracts the specific activity date for this line
    */
-  protected function getActivityDate($record) {
-    return date('Y-m-d', strtotime($record['TagDerTelefonie']));
+  protected function getDate($record) {
+    return date('YmdHis', strtotime($record['TagDerTelefonie']));
   }
 
   /**
@@ -185,8 +251,9 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     }
 
     // update address
+    // FIXME: simply overwrite now, but see ticket 538
     if (!empty($address_update)) {
-      $address_update['id'] = $this->getAddressId($record);
+      $address_update['id'] = $this->getAddressId($contact_id, $record);
       civicrm_api3('Address', 'create', $address_update);
       $this->logger->logDebug("Contact [{$contact_id}] address updated: " . json_encode($address_update), $record);
     }
@@ -212,31 +279,20 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
   }
 
   /**
-   * create a new contract
-   *
-   * FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
-   */
-  public function createContract($contact_id, $record) {
-    // TODO: implement
-  }
-
-  /**
-   * update an existing contract:
-   * If contractId is set, then all changes in column U-AE are related to this contractID.
-   * In conversion projects you will find no contractid here, which means you have to create a new one,
-   * if the response in field AM/AN is positive and there is data in columns U-AE.
-   *
-   * FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
-   */
-  public function updateContract($contract_id, $contact_id, $record) {
-    // TODO: implement
-  }
-
-  /**
    * mark the given address as valid by resetting the RTS counter
    */
   public function addressValidated($contact_id, $record) {
-    // TODO: implement
+    $config = CRM_Streetimport_Config::singleton();
+
+    $address_id = $this->getAddressId($contact_id, $record);
+    if ($address_id) {
+      civicrm_api3('Address', 'create', array(
+        'id' => $address_id,
+        $config->getGPCustomFieldKey('rts_counter') => 0));
+      $this->logger->logDebug("RTS counter for address [{$address_id}] (contact [{$contact_id}]) was reset.", $record);
+    } else {
+      $this->logger->logError("RTS counter couldn't be reset, (primary) address for contact [{$contact_id}] couldn't be identified.", $record);
+    }
   }
 
   /**
@@ -326,11 +382,12 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
          break;
 
        case 'Bankdaten gehören nicht dem Spender':
-         //
        case 'Spende wurde übernommen, Daten geändert':
        case 'erhält Post doppelt':
-         //
-
+         // for these cases a manual update is required
+         $this->createManualUpdateActivity($contact_id, $note, $record);
+         $this->logger->logDebug("Manual update ticket created for contact [{$contact_id}]", $record);
+         break;
 
        default:
          return $this->logger->logError("Unkown feature '{$note}' ignored.", $record);

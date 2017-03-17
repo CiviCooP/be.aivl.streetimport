@@ -23,6 +23,7 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
 
   /**
    * Checks if this record uses IMB or CiviCRM IDs
+   * aka legacy mode
    */
   protected function isCompatibilityMode($record) {
     return substr($this->file_name_data['code'], 0, 1) != 'C';
@@ -57,6 +58,23 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
       return $this->getContactIDbyExternalID($external_identifier);
     } else {
       return $this->getContactIDbyCiviCRMID($record['id']);
+    }
+  }
+
+  /**
+   * Get the relevant address Id for the contact
+   */
+  protected function getAddressId($contact_id, $record) {
+    if ($this->isCompatibilityMode($record) || empty($record['address_id'])) {
+      // in compatibility mode we don't have an ID, just get the primary address
+      $addresses = civicrm_api3('Address', 'get', array(
+        'contact_id' => $contact_id,
+        'is_primary' => 1,
+        ));
+      return $addresses['id'];
+    } else {
+      // in the future, this should be filled
+      return $record['address_id'];
     }
   }
 

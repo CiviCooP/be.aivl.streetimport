@@ -287,7 +287,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getImportErrorActivityStatusId() {
-    return CRM_Streetimport_Utils::getActivityStatusIdWithName('scheduled');
+    return CRM_Streetimport_Utils::getActivityStatusIdWithName('Scheduled');
   }
 
   /**
@@ -298,7 +298,7 @@ class CRM_Streetimport_Config {
    */
   public function getActivityCompleteStatusId() {
     if ($this->_activityCompleteStatusId == NULL) {
-      $this->_activityCompleteStatusId = CRM_Streetimport_Utils::getActivityStatusIdWithName('complete');
+      $this->_activityCompleteStatusId = CRM_Streetimport_Utils::getActivityStatusIdWithName('Completed');
     }
     return $this->_activityCompleteStatusId;
   }
