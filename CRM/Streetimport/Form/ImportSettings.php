@@ -298,7 +298,11 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * get a list of all relevant file encodings
    */
   protected function getEncodingList() {
-    // TODO: implement
-    return array('UTF8' => 'UTF8');
+    $encodings = array();
+    $mb_list = mb_list_encodings();
+    foreach ($mb_list as $mb_encoding) {
+      $encodings[$mb_encoding] = $mb_encoding;
+    }
+    return $encodings;
   }
 }

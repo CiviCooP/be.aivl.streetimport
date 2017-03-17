@@ -50,6 +50,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
 
     // read header
     $this->header = fgetcsv($this->reader, 0, $this->delimiter);
+    $this->convert($this->header);
     if ($this->header == NULL) {
       // TODO: error handling
       $this->logger->abort($config->translate("File")." ".$this->uri." ".$config->translate("does not contain headers"));
@@ -58,7 +59,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     }
     else {
       // validate the header
-      if ($this->validate_header() == FALSE) {
+      if ($config->validateHeaders($this->header, $this->uri) == FALSE) {
         return;
       }
     }
@@ -116,6 +117,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
           $record[$key] = $data[$index];
         }
       }
+      $this->convert($record);
       $this->next = $this->applyMapping($record);
 
       // add some meta data
@@ -143,12 +145,9 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
   }
 
   /**
-   *
+   * check whether the input file complies with the given encoding
    */
   function validate_encoding() {
-    // skip this check for now since it didn't seem to be working for the csv we were supplied with
-    // TODO: re-instate?
-    return;
     $config = CRM_Streetimport_Config::singleton();
     if (!mb_check_encoding(file_get_contents($this->uri), $this->encoding)) {
       $this->logger->abort($config->translate("File")." ".$this->uri." "
@@ -157,31 +156,13 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
     }
   }
 
-  function validate_header() {
-    // TODO: move to settings?
-    return TRUE;
-
-  //   $wrongColumnNames = array();
-
-  //   foreach ($this->header as $columnName) {
-  //     // check if this is an expected column name
-  //     if (!array_key_exists($columnName, $this->mapping)) {
-  //       // nope
-  //       $wrongColumnNames[] = $columnName;
-  //     }
-  //   }
-
-  //   // check if we have wrong column names
-  //   if (count($wrongColumnNames) > 0) {
-  //     $config = CRM_Streetimport_Config::singleton();
-  //     $this->logger->abort($config->translate("File")." ".$this->uri." "
-  //       .$config->translate("contains unexpected column name(s): ")
-  //       .implode(', ', $wrongColumnNames));
-  //     $this->reader = NULL;
-  //     return FALSE;
-  //   }
-  //   else {
-  //     return TRUE;
-  //   }
+  /**
+   * convert every string in the record (array) to the given encoding
+   */
+  public function convert(&$record) {
+    $keys = array_keys($record);
+    foreach ($keys as $key) {
+      $record[$key] = mb_convert_encoding($record[$key], 'UTF8', $this->encoding);
+    }
   }
 }

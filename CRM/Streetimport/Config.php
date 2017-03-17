@@ -127,7 +127,12 @@ class CRM_Streetimport_Config {
    * save the current settings to the DB
    */
   public function storeSettings() {
-    civicrm_api3('Setting', 'create', array('streetimporter_settings' => $this->settings));
+    // the following does NOT work, since it doesn't set the group,
+    //  and we end up with different settings entries, one with one without group
+    // civicrm_api3('Setting', 'create', array('streetimporter_settings' => $this->settings));
+
+    // use the core function instead
+    CRM_Core_BAO_Setting::setItem($this->settings, 'StreetImporter', 'streetimporter_settings');
   }
 
   /**
@@ -139,8 +144,9 @@ class CRM_Streetimport_Config {
    */
   public function getSetting($setting_name, $default_value = NULL, $settings = NULL) {
     if ($settings == NULL) $settings = $this->settings[$this->domain];
-
+    // error_log("LOOKING FOR {$setting_name} IN " .json_encode($settings));
     if (is_string($setting_name) && isset($settings[$setting_name])) {
+      // error_log("FOUND ".$settings[$setting_name]);
       return $settings[$setting_name];
     } elseif (is_array($setting_name) && !empty($setting_name)) {
       $key = array_shift($setting_name);
@@ -151,6 +157,7 @@ class CRM_Streetimport_Config {
         return $this->getSetting($setting_name, $default_value, $value);
       }
     } else {
+      // error_log("NOT FOUND ".$setting_name);
       return $default_value;
     }
   }
@@ -192,6 +199,16 @@ class CRM_Streetimport_Config {
   public function getHandlers($logger) {
     // this should be overwritten
     return array();
+  }
+
+  /**
+   * this can be overwritte to reject certain files
+   *
+   * @return TRUE if all is well.
+   */
+  public function validateHeaders($headers, $uri) {
+    // by default: no validation
+    return TRUE;
   }
 
   /**
@@ -356,7 +373,7 @@ class CRM_Streetimport_Config {
    * @return int
    * @access public
    */
-  public function getLocationTypeId() {
+  public function getLocationTypeId($contact_type = 'Individual') {
     return $this->getSetting('location_type_id');
   }
 
@@ -366,7 +383,7 @@ class CRM_Streetimport_Config {
    * @return int
    * @access public
    */
-  public function getOtherLocationTypeId() {
+  public function getOtherLocationTypeId($contact_type = 'Individual') {
     return $this->getSetting('other_location_type_id');
   }
 
