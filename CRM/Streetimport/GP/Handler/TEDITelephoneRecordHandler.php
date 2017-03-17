@@ -46,7 +46,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
    */
   public function processRecord($record, $sourceURI) {
     $config = CRM_Streetimport_Config::singleton();
-    $file_name_data = $this->parseTmFile($sourceURI);
+    $this->file_name_data = $this->parseTmFile($sourceURI);
 
     $contact_id = $this->getContactID($record);
     $phone_ids  = $this->getPhoneIDs($record, $contact_id);
@@ -63,7 +63,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
 
       case TM_PHONE_CALLED:
         // just log an activity
-        $this->createContactCalledActivity($contact_id, $file_name_data, $record);
+        $this->createContactCalledActivity($contact_id, $record);
         $this->logger->logDebug("Contact [{$contact_id}] was called", $record);
         break;
 
@@ -78,7 +78,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
               'id'    => $phone_id,
               'phone' => $this->getPhoneNumber($record)));
           }
-          $this->createPhoneUpdatedActivity(TM_PHONE_CHANGED, $contact_id, $file_name_data, $record);
+          $this->createPhoneUpdatedActivity(TM_PHONE_CHANGED, $contact_id, $record);
           $this->logger->logDebug("Phone number of contact [{$contact_id}] was changed", $record);
         }
         break;
@@ -92,7 +92,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
           foreach ($phone_ids as $phone_id) {
             civicrm_api3('Phone', 'delete', array('id' => $phone_id));
           }
-          $this->createPhoneUpdatedActivity(TM_PHONE_DELETED, $contact_id, $file_name_data, $record);
+          $this->createPhoneUpdatedActivity(TM_PHONE_DELETED, $contact_id, $record);
           $this->logger->logDebug("Phone number of contact [{$contact_id}] was deleted", $record);
         }
         break;
@@ -104,7 +104,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
           'phone'            => $this->getPhoneNumber($record),
           'phone_type_id'    => $config->getPhonePhoneTypeId(),
           'location_type_id' => $config->getLocationTypeId()));
-          $this->createPhoneUpdatedActivity(TM_PHONE_NEW, $contact_id, $file_name_data, $record);
+          $this->createPhoneUpdatedActivity(TM_PHONE_NEW, $contact_id, $record);
           $this->logger->logDebug("Phone number of contact [{$contact_id}] was added", $record);
         break;
 
@@ -156,7 +156,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
   /**
    * Create a "Contact Called" activity
    */
-  public function createContactCalledActivity($contact_id, $file_name_data, $record) {
+  public function createContactCalledActivity($contact_id, $record) {
     $this->config = CRM_Streetimport_Config::singleton();
 
     // first get contact called activity type
@@ -179,7 +179,8 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
       'activity_type_id'    => $this->_contact_called_activity_id,
       'subject'             => $this->config->translate('Contact Called'),
       'status_id'           => $this->config->getActivityCompleteStatusId(),
-      'activity_date_time'  => $this->getDate($file_name_data),
+      'activity_date_time'  => $this->getDate($record),
+      'campaign_id'         => $this->getCampaignID($record),
       'source_contact_id'   => (int) $contact_id,
       'assignee_contact_id' => (int) $this->config->getFundraiserContactID(),
       'details'             => $this->config->translate('Called on number ') . $this->getPhoneNumber($record),
@@ -192,7 +193,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
   /**
    * Create a "Contact Called" activity
    */
-  public function createPhoneUpdatedActivity($type, $contact_id, $file_name_data, $record) {
+  public function createPhoneUpdatedActivity($type, $contact_id, $record) {
     $this->config = CRM_Streetimport_Config::singleton();
 
     // first get contact called activity type
@@ -238,11 +239,24 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
       'subject'             => $subject,
       'details'             => $details,
       'status_id'           => $this->config->getActivityCompleteStatusId(),
-      'activity_date_time'  => $this->getDate($file_name_data),
+      'campaign_id'         => $this->getCampaignID($record),
+      'activity_date_time'  => $this->getDate($record),
       'source_contact_id'   => (int) $contact_id,
       'assignee_contact_id' => (int) $this->config->getFundraiserContactID(),
     );
 
     $this->createActivity($activityParams, $record, array($this->config->getFundraiserContactID()));
   }
+
+  /**
+   * get the activity date from the file name
+   */
+  protected function getDate($record) {
+    // there's no date in the file
+    return date('YmdHis');
+
+    // this is unreliable:
+    // return $this->file_name_data['date'] . $this->file_name_data['time'];
+  }
+
 }

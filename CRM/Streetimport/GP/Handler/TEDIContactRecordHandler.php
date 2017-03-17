@@ -36,7 +36,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    */
   public function processRecord($record, $sourceURI) {
     $config = CRM_Streetimport_Config::singleton();
-    $file_name_data = $this->parseTmFile($sourceURI);
+    $this->file_name_data = $this->parseTmFile($sourceURI);
 
     $contact_id = $this->getContactID($record);
     if (empty($contact_id)) {
@@ -45,7 +45,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
     // apply contact base data updates if provided
     // FIELDS: nachname  vorname firma TitelAkademisch TitelAdel TitelAmt  Anrede  geburtsdatum  geburtsjahr strasse hausnummer  hausnummernzusatz PLZ Ort email
-    $this->performContactBaseUpdates($contact_id, $record, $file_name_data);
+    $this->performContactBaseUpdates($contact_id, $record);
 
     // Sign up for newsletter
     // FIELDS: emailNewsletter
@@ -57,9 +57,9 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     // Create / update contract
     // FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
     if (empty($record['Vertragsnummer'])) {
-      $this->createContract($contact_id, $record, $file_name_data);
+      $this->createContract($contact_id, $record);
     } else {
-      $this->updateContract($record['Vertragsnummer'], $contact_id, $record, $file_name_data);
+      $this->updateContract($record['Vertragsnummer'], $contact_id, $record);
     }
 
     // Add a note if requested
@@ -91,7 +91,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     // FIELDS: Bemerkung1  Bemerkung2  Bemerkung3  Bemerkung4  Bemerkung5 ...
     for ($i=1; $i <= 10; $i++) {
       if (!empty($record["Bemerkung{$i}"])) {
-        $this->processAdditionalFeature($record["Bemerkung{$i}"], $contact_id, $record, $file_name_data);
+        $this->processAdditionalFeature($record["Bemerkung{$i}"], $contact_id, $record);
       }
     }
 
@@ -101,7 +101,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
   /**
    * Extracts the specific activity date for this line
    */
-  protected function getActivityDate($record, $file_name_data) {
+  protected function getActivityDate($record) {
     return date('Y-m-d', strtotime($record['TagDerTelefonie']));
   }
 
@@ -109,7 +109,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    * apply contact base date updates (if present in the data)
    * FIELDS: nachname  vorname firma TitelAkademisch TitelAdel TitelAmt  Anrede  geburtsdatum  geburtsjahr strasse hausnummer  hausnummernzusatz PLZ Ort email
    */
-  public function performContactBaseUpdates($contact_id, $record, $file_name_data) {
+  public function performContactBaseUpdates($contact_id, $record) {
     // TODO: implement
   }
 
@@ -118,7 +118,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    *
    * FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
    */
-  public function createContract($contact_id, $record, $file_name_data) {
+  public function createContract($contact_id, $record) {
     // TODO: implement
   }
 
@@ -130,7 +130,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    *
    * FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
    */
-  public function updateContract($contract_id, $contact_id, $record, $file_name_data) {
+  public function updateContract($contract_id, $contact_id, $record) {
     // TODO: implement
   }
 
@@ -146,7 +146,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    *
    * Those can trigger certain actions within Civi as mentioned in doc "20131107_Responses_Bemerkungen_1-5"
    */
-  public function processAdditionalFeature($note, $contact_id, $record, $file_name_data) {
+  public function processAdditionalFeature($note, $contact_id, $record) {
     $config = CRM_Streetimport_Config::singleton();
     $this->logger->logDebug("Contact [{$contact_id}] wants '{$note}'", $record);
     switch ($note) {

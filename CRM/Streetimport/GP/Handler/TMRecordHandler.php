@@ -16,13 +16,34 @@
 abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimport_GP_Handler_GPRecordHandler {
 
   /** file name pattern as used by TM company */
-  protected static $TM_PATTERN = '#(?P<org>[a-zA-Z\-]+)_(?P<project1>\w+)_(?P<tm_company>[a-z]+)_(?P<code>\d{4})_(?P<date>\d{8})_(?P<time>\d{6})_(?P<project2>.+)_(?P<file_type>[a-zA-Z]+)[.]csv$#';
+  protected static $TM_PATTERN = '#(?P<org>[a-zA-Z\-]+)_(?P<project1>\w+)_(?P<tm_company>[a-z]+)_(?P<code>C?\d{4})_(?P<date>\d{8})_(?P<time>\d{6})_(?P<project2>.+)_(?P<file_type>[a-zA-Z]+)[.]csv$#';
+
+  /** stores the parsed file name */
+  protected $file_name_data = NULL;
 
   /**
    * Checks if this record uses IMB or CiviCRM IDs
    */
   protected function isCompatibilityMode($record) {
-    return empty($record['CiviCRM']);
+    return substr($this->file_name_data['code'], 0, 1) != 'C';
+  }
+
+  /**
+   * Checks if this record uses IMB or CiviCRM IDs
+   */
+  protected function getCampaignID($record) {
+    $campaign_identifier = $this->file_name_data['code'];
+    if ($this->isCompatibilityMode($record)) {
+      // these are IMB campaign IDs, look up the internal Id
+      $campaign = civicrm_api3('Campaign', 'getsingle', array(
+        'external_identifier' => 'AKTION-' . $campaign_identifier,
+        'return' => 'id'));
+      return $campaign['id'];
+
+    } else {
+      // this should be an internal campaign id, with prefix 'C'
+      return (int) substr($campaign_identifier, 1);
+    }
   }
 
 
@@ -51,12 +72,4 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
       return NULL;
     }
   }
-
-  /**
-   * get the activity date from the file name
-   */
-  protected function getDate($file_name_data) {
-    return $file_name_data['date'] . $file_name_data['time'];
-  }
-
 }
