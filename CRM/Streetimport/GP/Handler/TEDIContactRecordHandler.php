@@ -110,7 +110,105 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    * FIELDS: nachname  vorname firma TitelAkademisch TitelAdel TitelAmt  Anrede  geburtsdatum  geburtsjahr strasse hausnummer  hausnummernzusatz PLZ Ort email
    */
   public function performContactBaseUpdates($contact_id, $record) {
-    // TODO: implement
+    $config = CRM_Streetimport_Config::singleton();
+
+    // ---------------------------------------------
+    // |            Contact Entity                 |
+    // ---------------------------------------------
+    $contact_base_attributes = array(
+      'nachname'        => 'last_name',
+      'vorname'         => 'first_name',
+      'firma'           => 'current_employer',
+      'Anrede'          => 'prefix_id',
+      'geburtsdatum'    => 'birth_date',
+      'geburtsjahr'     => $config->getGPCustomFieldKey('birth_year'),
+      'TitelAkademisch' => 'formal_title_1',
+      'TitelAdel'       => 'formal_title_2',
+      'TitelAmt'        => 'formal_title_3');
+
+    // extract attributes
+    $contact_base_update = array();
+    foreach ($contact_base_attributes as $record_key => $civi_key) {
+      if (!empty($record[$record_key])) {
+        $contact_base_update[$civi_key] = trim($record[$record_key]);
+      }
+    }
+
+    // compile formal title
+    $formal_title = '';
+    for ($i=1; $i <= 3; $i++) {
+      if (isset($contact_base_update["formal_title_{$i}"])) {
+        $formal_title = trim($formal_title . ' ' . $contact_base_update["formal_title_{$i}"]);
+        unset($contact_base_update["formal_title_{$i}"]);
+      }
+    }
+    if (!empty($formal_title)) {
+      $contact_base_update['formal_title'] = $formal_title;
+    }
+
+    // update contact
+    if (!empty($contact_base_update)) {
+      $contact_base_update['id'] = $contact_id;
+      civicrm_api3('Contact', 'create', $contact_base_update);
+      $this->logger->logDebug("Contact [{$contact_id}] base data updated: " . json_encode($contact_base_update), $record);
+    }
+
+    // ---------------------------------------------
+    // |            Address Entity                 |
+    // ---------------------------------------------
+    $address_base_attributes = array(
+      'PLZ'               => 'postal_code',
+      'Ort'               => 'city',
+      'strasse'           => 'street_address_1',
+      'hausnummer'        => 'street_address_2',
+      'hausnummernzusatz' => 'street_address_3'
+      );
+
+    // extract attributes
+    $address_update = array();
+    foreach ($address_base_attributes as $record_key => $civi_key) {
+      if (!empty($record[$record_key])) {
+        $address_update[$civi_key] = trim($record[$record_key]);
+      }
+    }
+
+    // compile street address
+    $street_address = '';
+    for ($i=1; $i <= 3; $i++) {
+      if (isset($address_update["street_address_{$i}"])) {
+        $street_address = trim($street_address . ' ' . $address_update["street_address_{$i}"]);
+        unset($address_update["street_address_{$i}"]);
+      }
+    }
+    if (!empty($street_address)) {
+      $address_update['street_address'] = $street_address;
+    }
+
+    // update address
+    if (!empty($address_update)) {
+      $address_update['id'] = $this->getAddressId($record);
+      civicrm_api3('Address', 'create', $address_update);
+      $this->logger->logDebug("Contact [{$contact_id}] address updated: " . json_encode($address_update), $record);
+    }
+
+
+    // ---------------------------------------------
+    // |             Email Entity                  |
+    // ---------------------------------------------
+    if (!empty($record['email'])) {
+      $email = trim($record['email']);
+      // see if it's already there
+      $existing_emails = civicrm_api3('Email', 'get', array('email' => $email, 'contact_id' => $contact_id));
+      if ($existing_emails['count'] > 0) {
+        $this->logger->logDebug("Contact [{$contact_id}] already has email '{$email}'", $record);
+      } else {
+        civicrm_api3('Email', 'create', array(
+          'contact_id'       => $contact_id,
+          'email'            => $email,
+          'location_type_id' => $config->getLocationTypeId()));
+        $this->logger->logDebug("Contact [{$contact_id}] address updated: " . json_encode($address_update), $record);
+      }
+    }
   }
 
   /**
