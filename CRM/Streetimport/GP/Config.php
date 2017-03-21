@@ -9,10 +9,6 @@
 
 /**
  * Class following Singleton pattern for specific extension configuration
- *
- * @author Erik Hommel (CiviCooP) <erik.hommel@civicoop.org>
- * @date 30 April 2015
- * @license AGPL-3.0
  */
 class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
 

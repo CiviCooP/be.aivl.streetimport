@@ -29,6 +29,13 @@ define('TM_KONTAKT_RESPONSE_KONTAKT_ANRUFSPERRE',   41);
 
 
 
+define('TM_PROJECT_TYPE_CONVERSION',   'umw');
+define('TM_PROJECT_TYPE_UPGRADE',      'upg');
+define('TM_PROJECT_TYPE_REACTIVATION', 'rea');
+define('TM_PROJECT_TYPE_RESEARCH',     'res');
+define('TM_PROJECT_TYPE_SURVEY',       'umf');
+
+
 /**
  * GP TEDI Handler
  *
@@ -36,7 +43,6 @@ define('TM_KONTAKT_RESPONSE_KONTAKT_ANRUFSPERRE',   41);
  * @license AGPL-3.0
  */
 class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimport_GP_Handler_TMRecordHandler {
-
   /**
    * Check if the given handler implementation can process the record
    *
@@ -68,28 +74,53 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     // FIELDS: nachname  vorname firma TitelAkademisch TitelAdel TitelAmt  Anrede  geburtsdatum  geburtsjahr strasse hausnummer  hausnummernzusatz PLZ Ort email
     $this->performContactBaseUpdates($contact_id, $record);
 
-    // Sign up for newsletter
-    // FIELDS: emailNewsletter
-    if ($this->isTrue($record, 'emailNewsletter')) {
-      $newsletter_group_id = $config->getNewsletterGroupID();
-      $this->addContactToGroup($contact_id, $newsletter_group_id, $record);
+
+    /************************************
+     *           VERIFICATION           *
+     ***********************************/
+    $project_type = strtolower(substr($this->file_name_data['project1'], 0, 3));
+    switch ($project_type) {
+      case TM_PROJECT_TYPE_CONVERSION:
+        if (!empty($this->getContractID($record, $contact_id))) {
+          return $this->logger->logError("Conversion projects shouldn't provide a contract ID", $record);
+        }
+        break;
+
+      case TM_PROJECT_TYPE_UPGRADE:
+        $contract = $this->getContract($record, $contact_id);
+        if (empty($contract)) {
+          return $this->logger->logError("Update projects should provide contract ID", $record);
+        }
+        if (!$this->isContractActive($contract)) {
+          return $this->logger->logError("Update projects should refer to active contracts", $record);
+        }
+        break;
+
+      case TM_PROJECT_TYPE_REACTIVATION:
+        $contract = $this->getContract($record, $contact_id);
+        if (empty($contract)) {
+          return $this->logger->logError("Reactivation projects should provide contract ID", $record);
+        }
+        if ($this->isContractActive($contract)) {
+          return $this->logger->logError("Reactivation projects should refer to inactive contracts", $record);
+        }
+        break;
+
+      case TM_PROJECT_TYPE_RESEARCH:
+      case TM_PROJECT_TYPE_SURVEY:
+        // Nothing to check here?
+        break;
+
+      default:
+        $this->logger->logFatal("Unknown project type {$project_type}. Processing stopped.", $record);
+        break;
     }
 
-    // Add a note if requested
-    // FIELDS: BemerkungFreitext
-    if (!empty($record['BemerkungFreitext'])) {
-      $this->createNote($contact_id, $config->translate('TM Import Note'), $record['BemerkungFreitext'], $record);
-    }
 
-    // If "X" then set  "rts_counter" in table "civicrm_value_address_statistics"  to "0"
-    // FIELDS: AdresseGeprueft
-    if ($this->isTrue($record, 'AdresseGeprueft')) {
-      $this->addressValidated($contact_id, $record);
-    }
 
-    // TODO: verify contract status Upg->active, Rech/React->inactive
-
-    // MAIN PROCESSING
+    /************************************
+     *         MAIN PROCESSING          *
+     ***********************************/
     switch ($record['Ergebnisnummer']) {
       case TM_KONTAKT_RESPONSE_ZUSAGE_FOERDER:
       case TM_KONTAKT_RESPONSE_ZUSAGE_FLOTTE:
@@ -99,10 +130,11 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_KONTAKT_RESPONSE_ZUSAGE_GP4ME:
       case TM_KONTAKT_RESPONSE_ZUSAGE_ATOM:
         // this is a conversion/upgrade
-        if (empty($record['Vertragsnummer'])) {
+        $contract_id = $this->getContractID($record);
+        if (empty($contract_id)) {
           $this->createContract($contact_id, $record);
         } else {
-          $this->updateContract($record['Vertragsnummer'], $contact_id, $record);
+          $this->updateContract($contract_id, $contact_id, $record);
         }
         break;
 
@@ -120,7 +152,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
       case TM_KONTAKT_RESPONSE_KONTAKT_DOWNGRADE:
         // this is a downgrade
-        $this->updateContract($record['Vertragsnummer'], $contact_id, $record);
+        $this->updateContract($this->getContractID($record), $contact_id, $record);
         break;
 
       case TM_KONTAKT_RESPONSE_KONTAKT_LOESCHEN:
@@ -151,7 +183,31 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     }
 
     // GENERATE RESPONSE ACTIVITY
-    $this->createResponseActivity($contact_id, $record);
+    $this->createResponseActivity($contact_id, $record['ErgebnisText'], $record);
+
+
+    /************************************
+     *      SECONDARY PROCESSING        *
+     ***********************************/
+
+    // Sign up for newsletter
+    // FIELDS: emailNewsletter
+    if ($this->isTrue($record, 'emailNewsletter')) {
+      $newsletter_group_id = $config->getNewsletterGroupID();
+      $this->addContactToGroup($contact_id, $newsletter_group_id, $record);
+    }
+
+    // Add a note if requested
+    // FIELDS: BemerkungFreitext
+    if (!empty($record['BemerkungFreitext'])) {
+      $this->createNote($contact_id, $config->translate('TM Import Note'), $record['BemerkungFreitext'], $record);
+    }
+
+    // If "X" then set  "rts_counter" in table "civicrm_value_address_statistics"  to "0"
+    // FIELDS: AdresseGeprueft
+    if ($this->isTrue($record, 'AdresseGeprueft')) {
+      $this->addressValidated($contact_id, $record);
+    }
 
     // process additional fields
     // FIELDS: Bemerkung1  Bemerkung2  Bemerkung3  Bemerkung4  Bemerkung5 ...
@@ -306,7 +362,18 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     switch ($note) {
        case 'erhält keine Post':
          // Marco: "Posthäkchen setzen, Adresse zurücksetzen, Kürzel 15 + 18 + ZO löschen"
-         // TODO:
+         // i.e.: 1) allow mailing
+         civicrm_api3('Contact', 'create', array(
+          'id' => $contact_id,
+          'do_not_mail' => 0));
+
+         // i.e.: 2) mark address as validated
+         $this->addressValidated($contact_id, $record);
+
+         // i.e.: 3) remove from groups
+         $this->removeContactFromGroup($contact_id, $config->getGPGroup('kein ACT'), $record);
+         $this->removeContactFromGroup($contact_id, $config->getGPGroup('ACT nur online'), $record);
+         $this->removeContactFromGroup($contact_id, $config->getGPGroup('Zusendungen nur online'), $record);
          break;
 
        case 'kein Telefonkontakt erwünscht':
@@ -319,20 +386,20 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
        case 'keine Kalender senden':
          // Marco: 'Negativleistung "Kalender"'
-         $this->addContactToGroup($config->getGPGroup('kein Kalender'), $newsletter_group_id, $record);
+         $this->addContactToGroup($contact_id, $config->getGPGroup('kein Kalender'), $record);
          $this->logger->logDebug("Added contact [{$contact_id}] to group 'kein Kalender'.", $record);
          break;
 
        case 'nur Vereinsmagazin, sonst keine Post':
        case 'nur Vereinsmagazin mit Spendenquittung':
          // Marco: Positivleistung "Nur ACT"
-         $this->addContactToGroup($config->getGPGroup('Nur ACT'), $newsletter_group_id, $record);
+         $this->addContactToGroup($contact_id, $config->getGPGroup('Nur ACT'), $record);
          $this->logger->logDebug("Added contact [{$contact_id}] to group 'Nur ACT'.", $record);
          break;
 
        case 'nur Vereinsmagazin mit 1 Mailing':
          // Marco: Positivleistung "Nur ACT"
-         $this->addContactToGroup($config->getGPGroup('Nur ACT'), $newsletter_group_id, $record);
+         $this->addContactToGroup($contact_id, $contact_id, $config->getGPGroup('Nur ACT'), $record);
          $this->logger->logDebug("Added contact [{$contact_id}] to group 'Nur ACT'.", $record);
 
          //  + alle Monate bis auf Oktober deaktivieren
@@ -345,7 +412,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
        case 'möchte keine Incentives':
          // Marco: Negativleistung " Geschenke"
-         $this->addContactToGroup($config->getGPGroup('keine Geschenke'), $newsletter_group_id, $record);
+         $this->addContactToGroup($contact_id, $config->getGPGroup('keine Geschenke'), $record);
          $this->logger->logDebug("Added contact [{$contact_id}] to group 'keine Geschenke'.", $record);
          break;
 
@@ -394,5 +461,67 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
          break;
 
      }
+  }
+
+  /**
+   * Extract the contract id from the record
+   */
+  protected function getContractID($record) {
+    if (empty($record['Vertragsnummer'])) {
+      return NULL;
+    } else {
+      return (int) $record['Vertragsnummer'];
+    }
+  }
+
+  /**
+   * Get the requested membership type ID from the data record
+   */
+  protected function getMembershipTypeID($record) {
+    switch ($record['Ergebnisnummer']) {
+      case TM_KONTAKT_RESPONSE_ZUSAGE_FOERDER:
+        $name = 'Förderer';
+        break;
+
+      case TM_KONTAKT_RESPONSE_ZUSAGE_FLOTTE:
+        $name = 'Flottenpatenschaft';
+        break;
+
+      case TM_KONTAKT_RESPONSE_ZUSAGE_ARKTIS:
+        $name = 'arctic defender';
+        break;
+
+      case TM_KONTAKT_RESPONSE_ZUSAGE_DETOX:
+        // TODO: is this correct?
+        $name = 'Landwirtschaft';
+        break;
+
+      case TM_KONTAKT_RESPONSE_ZUSAGE_WAELDER:
+        $name = 'Könige der Wälder';
+        break;
+
+      case TM_KONTAKT_RESPONSE_ZUSAGE_GP4ME:
+        $name = 'Greenpeace for me';
+        break;
+
+      case TM_KONTAKT_RESPONSE_ZUSAGE_ATOM:
+        $name = 'Atom-Eingreiftrupp';
+        break;
+
+      default:
+        $this->logger->logError("No membership type can be derived from result code (Ergebnisnummer) '{$record['Ergebnisnummer']}'.", $record);
+        return NULL;
+    }
+
+    // find a membership type with that name
+    $membership_types = $this->getMembershipTypes();
+    foreach ($membership_types as $membership_type) {
+      if ($membership_type['name'] == $name) {
+        return $membership_type['id'];
+      }
+    }
+
+    $this->logger->logError("Membership type '{$name}' not found.", $record);
+    return NULL;
   }
 }

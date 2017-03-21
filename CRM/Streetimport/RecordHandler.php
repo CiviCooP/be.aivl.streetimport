@@ -15,6 +15,14 @@ abstract class CRM_Streetimport_RecordHandler {
   /** for cached contact lookup **/
   static protected $contact_cache = array();
 
+  /** for cached entity lookup **/
+  static protected $entity_cache = array();
+
+  /** for cached tagging lookup **/
+  static protected $tagname_to_tagid = array();
+
+  /** for cached membership lookup **/
+  static protected $membership_types = NULL;
 
 
   public function __construct($logger) {
@@ -105,7 +113,6 @@ abstract class CRM_Streetimport_RecordHandler {
    * @param bool $cached  if true, the contact will be kept on cache
    * @return mixed
    */
-
   protected function getContact($contact_id, $record, $cached = true) {
     if (empty($contact_id) || ((int)  $contact_id)==0) {
       $config = CRM_Streetimport_Config::singleton();
@@ -132,6 +139,24 @@ abstract class CRM_Streetimport_RecordHandler {
     }
 
     return NULL;
+  }
+
+  /**
+   * Load a full CiviCRM entitiy by ID
+   *
+   # @throws API exceptions if entity not found or not unique
+   */
+  protected function loadEntity($entity_type, $entity_id) {
+    if (empty($entity_id)) return NULL;
+
+    $cache_key = $entity_type . (int) $entity_id;
+    if (isset($this->entity_cache[$cache_key])) {
+      return $this->entity_cache[$cache_key];
+    }
+
+    // cache miss: load entity
+    $this->entity_cache[$cache_key] = civicrm_api3($entity_type, 'getsingle', array('id' => $entity_id));
+    return $this->entity_cache[$cache_key];
   }
 
 
@@ -310,6 +335,59 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logError($config->translate('Error from API GroupContact Create').': '.$ex->getMessage(), $record);
       return NULL;
     }
+  }
+
+  /**
+   * Method to remove a contact from  a given group ID
+   *
+   * @param int $contactId
+   * @param int $groupId
+   * @return mixed
+   * @access protected
+   */
+  protected function removeContactFromGroup($contactId, $groupId, $record) {
+    if (empty($contactId) || empty($groupId)) {
+      $config = CRM_Streetimport_Config::singleton();
+      $this->logger->logError($config->translate('Empty contact_id or group_id, could not remove contact from group'), $record);
+      return NULL;
+    }
+    try {
+      return civicrm_api3('GroupContact', 'Create', array(
+        'contact_id' => $contactId,
+        'group_id'   => $groupId,
+        'status'     => 'Removed'));
+    } catch (CiviCRM_API3_Exception $ex) {
+      $config = CRM_Streetimport_Config::singleton();
+      $this->logger->logError($config->translate('Error from API GroupContact Create').': '.$ex->getMessage(), $record);
+      return NULL;
+    }
+  }
+
+  /**
+   * Tag a contact. If the tag doesn't exist, it will be created
+   */
+  protected function tagContact($contact_id, $tag_name) {
+    if (empty($contact_id)) return NULL;
+
+    $config = CRM_Streetimport_Config::singleton();
+    if (!isset($this->tagname_to_tagid[$tag_name])) {
+      // look up tag
+      $tag = civicrm_api3('Tag', 'get', array('name' => $tag_name));
+      if (empty($tag['id'])) {
+        // tag doesn't exist yet, create it
+        $tag = civicrm_api3('Tag', 'create', array(
+          'name' => $tag_name,
+          'description' => $config->translate('Created by StreetImport')));
+      }
+      $this->tagname_to_tagid[$tag_name] = $tag['id'];
+    }
+
+    civicrm_api3('EntityTag', 'create', array(
+      'entitiy_table' => 'civicrm_contact',
+      'entity_id'     => (int) $contact_id,
+      'tag_id'        => $this->tagname_to_tagid[$tag_name],
+      ));
+    $this->logger->logDebug("Contact [{$contact_id}] tagged as '{$tag_name}'");
   }
 
   /**
@@ -504,5 +582,16 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Note Error"));
       return NULL;
     }
+  }
+
+  /**
+   * get all membership types (cached)
+   */
+  protected function getMembershipTypes() {
+    if ($this->membership_types === NULL) {
+      $types_query = civicrm_api3('MembershipType', 'get', array('option.limit' => 0));
+      $this->membership_types = $types_query['values'];
+    }
+    return $this->membership_types;
   }
 }
