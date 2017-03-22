@@ -1,6 +1,16 @@
 <?xml version="1.0"?>
 <menu>
   <item>
+    <path>civicrm/admin/setting/streetimport_domain</path>
+    <page_callback>CRM_Streetimport_Form_DomainSettings</page_callback>
+    <title>StreetImporter Domain</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <desc>DOMAIN for the "StreetImporter" bulk processing tool</desc>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <adminGroup>CiviContribute</adminGroup>
+    <icon>admin/import_export_map.png</icon>
+  </item>
+  <item>
     <path>civicrm/admin/setting/streetimport_settings</path>
     <page_callback>CRM_Streetimport_Form_ImportSettings</page_callback>
     <title>StreetImporter Settings</title>

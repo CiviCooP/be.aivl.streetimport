@@ -549,4 +549,12 @@ class CRM_Streetimport_Config {
     }
   }
 
+  /**
+   * get the list of available domains
+   */
+  public static function getDomains() {
+    // TODO: refer to an option group
+    return array('GP'   => 'GP',
+                 'AIVL' => 'AIVL');
+  }
 }

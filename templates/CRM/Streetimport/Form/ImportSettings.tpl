@@ -12,6 +12,11 @@
       <div class="clear"></div>
     </div>
   {/foreach}
+
+  {if $domain_template}
+    {include file=$domain_template}
+  {/if}
+
   {* FOOTER *}
   <div class="crm-submit-buttons">
   {include file="CRM/common/formButtons.tpl" location="bottom"}
