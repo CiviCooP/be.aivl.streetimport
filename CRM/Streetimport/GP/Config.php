@@ -111,4 +111,20 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
     $custom_field = $this->getGPCustomField($field_name);
     return "custom_{$custom_field['id']}";
   }
+
+  /**
+   * get a list of statuses considered active
+   */
+  public function getActiveMembershipStatuses() {
+    // TODO: look up?
+    return array(1,2,3);
+  }
+
+  /**
+   * get the default status for a cancelled memership
+   */
+  public function getMembershipCancelledStatus() {
+    // TODO: look up?
+    return 6; // Cancelled
+  }
 }

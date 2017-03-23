@@ -81,7 +81,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     $project_type = strtolower(substr($this->file_name_data['project1'], 0, 3));
     switch ($project_type) {
       case TM_PROJECT_TYPE_CONVERSION:
-        if (!empty($this->getContractID($record, $contact_id))) {
+        if (!empty($this->getContractID($record))) {
           return $this->logger->logError("Conversion projects shouldn't provide a contract ID", $record);
         }
         break;
@@ -147,7 +147,8 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZSO:
       case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_SMS:
         // contact wants to cancel his/her contract
-        $this->cancelContract($contact_id, $record);
+        $membership = $this->getContract($record, $contact_id);
+        $this->cancelContract($membership, $record);
         break;
 
       case TM_KONTAKT_RESPONSE_KONTAKT_DOWNGRADE:
@@ -467,6 +468,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    * Extract the contract id from the record
    */
   protected function getContractID($record) {
+    // TODO: compatibility mode?
     if (empty($record['Vertragsnummer'])) {
       return NULL;
     } else {

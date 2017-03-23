@@ -98,7 +98,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           'is_deleted' => 1));
         // FIXME: anonymisation not yet available
         $this->tagContact($contact_id, 'anonymise');
-        $this->cancelContract($contact_id, $record);
+        $this->cancelAllContracts($contact_id, $record);
         break;
 
       case 'disabled':
@@ -107,7 +107,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           'id'         => $contact_id,
           'is_deleted' => 1));
         $this->tagContact($contact_id, 'inaktiv');
-        $this->cancelContract($contact_id, $record);
+        $this->cancelAllContracts($contact_id, $record);
         break;
 
       case 'deceased':
@@ -117,7 +117,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           'is_deleted'  => 1,
           'is_deceased' => 1));
         $this->tagContact($contact_id, 'inaktiv');
-        $this->cancelContract($contact_id, $record);
+        $this->cancelAllContracts($contact_id, $record);
         break;
 
       default:
@@ -238,10 +238,126 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   }
 
   /**
-   * end a contract
+   * Cancel all active contracts of a given contact
    */
-  public function cancelContract($contact_id, $record) {
-    // TODO: implement
-    $this->logger->logError("CANCEL CONTRACT NOT IMPLEMENTED YET!", $record);
+  public function cancelAllContracts($contact_id, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+
+    // find all active memberships (contracts)
+    $memberships = civicrm_api3('Membership', 'get', array(
+      'contact_id' => $contact_id,
+      'status_id'  => array('IN' => $config->getActiveMembershipStatuses()),
+      'return'     => 'id'
+      ));
+    foreach ($memberships as $membership) {
+      $this->cancelContract($membership, $record);
+    }
+  }
+
+  /**
+   * end contract, i.e. membership _and_ mandate
+   */
+  public function cancelContract($membership, $record, $params = array()) {
+    $config = CRM_Streetimport_Config::singleton();
+
+    // first load the membership
+    $membership = $this->getContract($record, $contact_id);
+    if (empty($membership)) {
+      $membership_id = $this->getContractID($record);
+      return $this->logger->logError("Contract (membership) [{$membership_id}] NOT FOUND.", $record);
+    }
+
+    // now check if it's still active
+    if (!$this->isContractActive($membership)) {
+      $this->logger->logError("Contract (membership) [{$membership_id}] is not active.", $record);
+    }
+
+    // finally set to cancelled
+    $membership_cancellation = array(
+      'id'        => $membership['id'],
+      'status_id' => $config->getMembershipCancelledStatus(),
+      'end_date'  => $this->getDate());
+
+    // add extra parameters
+    foreach ($params as $key => $value) {
+      $membership_cancellation[$key] = $value;
+    }
+
+    // finally: end membership
+    civicrm_api3('Membership', 'create', $membership_cancellation);
+    $this->logger->logDebug("Contract (membership) [{$membership_cancellation['id']}] ended.");
+
+    // NOW: end the attached recurring contribution
+    $contribution_recur_id = $membership[$config->getGPCustomFieldKey('membership_recurring_contribution')];
+    if ($contribution_recur_id) {
+      // check if this is a SepaMandate
+      $end_date = data('YmdHis'); // end_date has to be now, not $this->getDate()
+      $sepa_mandate = civicrm_api3('SepaMandate', 'get', array(
+        'entity_id'    => $contribution_recur_id,
+        'entity_table' => 'civicrm_contribution_recur'));
+      if ($sepa_mandate['count']) {
+        // this is a SEPA Mandate
+        if ($sepa_mandate['id']) {
+          $mandate = reset($sepa_mandate['values']);
+          if ($this->isMandateActive($mandate)) {
+            $cancel_reason = CRM_Utils_Array::value('cancel_reason', $params);
+            // TODO: use API (when available)
+            CRM_Sepa_BAO_SEPAMandate::terminateMandate($sepa_mandate['id'], $end_date, $cancel_reason);
+            $this->logger->logDebug("Mandate '{$mandate['reference']}' ended.");
+          } else {
+            $this->logger->logDebug("Mandate  '{$mandate['reference']}' has already been cancelled.");
+          }
+
+        } else {
+          $this->logger->logError("Multiple mandates found! This shouldn't happen, please investigate", $record);
+        }
+
+      } else {
+        // this is a non-sepa recurring contribution
+        $contribution_recur_search = civicrm_api3('ContributionRecur', 'get', array('id' => $contribution_recur_id));
+        if ($contribution_recur_search['id']) {
+          $contribution_recur = reset($contribution_recur_search['values']);
+          if ($this->isContributionRecurActive($contribution_recur)) {
+            $cancel_reason = CRM_Utils_Array::value('cancel_reason', $params);
+            civicrm_api3('ContributionRecur', 'create', array(
+              'id'                     => $contribution_recur['id'],
+              'cancel_reason'          => $cancel_reason,
+              'end_date'               => $end_date,
+              'contribution_status_id' => 3, // Cancelled
+              ));
+            $this->logger->logDebug("RecurringContribution [{$contribution_recur['id']}] ended.");
+          } else {
+            $this->logger->logDebug("RecurringContribution [{$contribution_recur['id']}] has already been cancelled.");
+          }
+        }
+      }
+    }
+    $this->logger->logDebug("No payment scheme attached to contract (membership) [{$membership['id']}].");
+  }
+
+  /**
+   * check if the given contract is still active
+   */
+  public function isContractActive($membership) {
+    $config = CRM_Streetimport_Config::singleton();
+    return in_array($membership['status_id'], $config->getActiveMembershipStatuses());
+  }
+
+  /**
+   * check if the given mandate is active
+   */
+  public function isMandateActive($mandate) {
+    return  $mandate['status'] == 'RCUR'
+         || $mandate['status'] == 'FRST'
+         || $mandate['status'] == 'INIT'
+         || $mandate['status'] == 'SENT';
+  }
+
+  /**
+   * check if the given recurring contribution is active
+   */
+  public function isContributionRecurActive($contribution_recur) {
+    return  $contribution_recur['contribution_status_id'] == 2 // pending
+         || $contribution_recur['contribution_status_id'] == 5; // in progress
   }
 }
