@@ -181,8 +181,9 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
       'status_id'           => $this->config->getActivityCompleteStatusId(),
       'activity_date_time'  => $this->getDate($record),
       'campaign_id'         => $this->getCampaignID($record),
-      'source_contact_id'   => (int) $contact_id,
-      'assignee_contact_id' => (int) $this->config->getFundraiserContactID(),
+      'source_contact_id'   => $this->config->getCurrentUserID(),
+      'target_contact_id'   => (int) $contact_id,
+      // 'assignee_contact_id' => (int) $this->config->getFundraiserContactID(),
       'details'             => $this->config->translate('Called on number ') . $this->getPhoneNumber($record),
     );
 

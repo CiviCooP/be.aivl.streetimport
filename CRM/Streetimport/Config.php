@@ -557,4 +557,18 @@ class CRM_Streetimport_Config {
     return array('GP'   => 'GP',
                  'AIVL' => 'AIVL');
   }
+
+  /**
+   * get the ID of the current user
+   */
+  public function getCurrentUserID() {
+    $session = CRM_Core_Session::singleton();
+    $user_id = $session->get('userID');
+    if ($user_id) {
+      return $user_id;
+    } else {
+      // FIXME: is there a fallback?
+      return 1;
+    }
+  }
 }
