@@ -366,7 +366,7 @@ abstract class CRM_Streetimport_RecordHandler {
   /**
    * Tag a contact. If the tag doesn't exist, it will be created
    */
-  protected function tagContact($contact_id, $tag_name) {
+  protected function tagContact($contact_id, $tag_name, $record) {
     if (empty($contact_id)) return NULL;
 
     $config = CRM_Streetimport_Config::singleton();
@@ -387,7 +387,7 @@ abstract class CRM_Streetimport_RecordHandler {
       'entity_id'     => (int) $contact_id,
       'tag_id'        => $this->tagname_to_tagid[$tag_name],
       ));
-    $this->logger->logDebug("Contact [{$contact_id}] tagged as '{$tag_name}'");
+    $this->logger->logDebug("Contact [{$contact_id}] tagged as '{$tag_name}'", $record);
   }
 
   /**
