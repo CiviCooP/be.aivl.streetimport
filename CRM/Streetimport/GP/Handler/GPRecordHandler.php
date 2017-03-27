@@ -97,16 +97,16 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           'id'         => $contact_id,
           'is_deleted' => 1));
         // FIXME: anonymisation not yet available
-        $this->tagContact($contact_id, 'anonymise');
+        $this->tagContact($contact_id, 'anonymise', $record);
         $this->cancelAllContracts($contact_id, $record);
         break;
 
-      case 'disabled':
+      case 'disable':
         // disabled (stillgelegt) means deleted + tagged
         civicrm_api3('Contact', 'create', array(
           'id'         => $contact_id,
           'is_deleted' => 1));
-        $this->tagContact($contact_id, 'inaktiv');
+        $this->tagContact($contact_id, 'inaktiv', $record);
         $this->cancelAllContracts($contact_id, $record);
         break;
 
@@ -117,7 +117,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           // 'is_deleted'  => 1, // Marco said (27.03.2017): don't delete right away
           'deceased_date' => $this->getDate($record),
           'is_deceased'   => 1));
-        $this->tagContact($contact_id, 'inaktiv');
+        $this->tagContact($contact_id, 'inaktiv', $record);
         $this->cancelAllContracts($contact_id, $record);
         break;
 
@@ -252,9 +252,9 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $memberships = civicrm_api3('Membership', 'get', array(
       'contact_id' => $contact_id,
       'status_id'  => array('IN' => $config->getActiveMembershipStatuses()),
-      'return'     => 'id'
+      'return'     => 'id,status_id'  // TODO: more needed for cancellation?
       ));
-    foreach ($memberships as $membership) {
+    foreach ($memberships['values'] as $membership) {
       $this->cancelContract($membership, $record);
     }
   }
@@ -266,15 +266,13 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $config = CRM_Streetimport_Config::singleton();
 
     // first load the membership
-    $membership = $this->getContract($record, $contact_id);
     if (empty($membership)) {
-      $membership_id = $this->getContractID($record);
-      return $this->logger->logError("Contract (membership) [{$membership_id}] NOT FOUND.", $record);
+      return $this->logger->logError("Contract (membership) [{$membership['id']}] NOT FOUND.", $record);
     }
 
     // now check if it's still active
     if (!$this->isContractActive($membership)) {
-      $this->logger->logError("Contract (membership) [{$membership_id}] is not active.", $record);
+      $this->logger->logError("Contract (membership) [{$membership['id']}] is not active.", $record);
     }
 
     // finally set to cancelled
@@ -290,7 +288,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     // finally: end membership
     civicrm_api3('Membership', 'create', $membership_cancellation);
-    $this->logger->logDebug("Contract (membership) [{$membership_cancellation['id']}] ended.");
+    $this->logger->logDebug("Contract (membership) [{$membership['id']}] ended.", $record);
 
     // NOW: end the attached recurring contribution
     $contribution_recur_id = $membership[$config->getGPCustomFieldKey('membership_recurring_contribution')];
@@ -337,7 +335,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         }
       }
     }
-    $this->logger->logDebug("No payment scheme attached to contract (membership) [{$membership['id']}].");
+    $this->logger->logDebug("No payment scheme attached to contract (membership) [{$membership['id']}].", $record);
   }
 
   /**
