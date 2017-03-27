@@ -111,11 +111,12 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         break;
 
       case 'deceased':
-        // disabled (stillgelegt) means deleted + tagged
+        // disabled (verstorben) means deceased + tagged
         civicrm_api3('Contact', 'create', array(
-          'id'          => $contact_id,
-          'is_deleted'  => 1,
-          'is_deceased' => 1));
+          'id'            => $contact_id,
+          // 'is_deleted'  => 1, // Marco said (27.03.2017): don't delete right away
+          'deceased_date' => $this->getDate($record),
+          'is_deceased'   => 1));
         $this->tagContact($contact_id, 'inaktiv');
         $this->cancelAllContracts($contact_id, $record);
         break;
@@ -209,7 +210,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $membership_params = array(
       'contact_id'              => $contact_id,
       'membership_type_id'      => $this->getMembershipTypeID($record),
-      'member_since'            => $this->getDate(),
+      'member_since'            => $this->getDate($record),
       'start_date'              => $mandate_start_date,
       'campaign_id'             => $this->getCampaignID($record),
       $membership_annual        => number_format($annual_amount, 2),
@@ -234,6 +235,10 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     //    "1" => no break (normal data entry for contract data and Sepa DD issue date will be set as soon as possible;
     //    "0" => break! (If there is a debit planned inbetween of date in field AA (Einzugsstart) and import date) the contract shall be paused and NOT debited asap.
     //    ""  => nothing happens
+
+    // i.e. "1"/"" => create contract manually
+    // "0" stop now / start new later (Einzugsstart)
+
     $this->logger->logError("UPDATE CONTRACT NOT IMPLEMENTED YET!", $record);
   }
 
@@ -276,7 +281,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $membership_cancellation = array(
       'id'        => $membership['id'],
       'status_id' => $config->getMembershipCancelledStatus(),
-      'end_date'  => $this->getDate());
+      'end_date'  => $end_date);
 
     // add extra parameters
     foreach ($params as $key => $value) {

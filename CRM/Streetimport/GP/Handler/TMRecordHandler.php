@@ -58,11 +58,6 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
   }
 
   /**
-   * Check if the given contract is active
-   */
-  isContractActive
-
-  /**
    * Will resolve the referenced contact id
    */
   protected function getContactID($record) {
