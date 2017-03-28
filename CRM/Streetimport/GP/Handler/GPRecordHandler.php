@@ -78,7 +78,8 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'status_id'           => $config->getActivityCompleteStatusId(),
       'campaign_id'         => $this->getCampaignID($record),
       'activity_date_time'  => $this->getDate($record),
-      'source_contact_id'   => (int) $contact_id,
+      'target_contact_id'   => (int) $contact_id,
+      'source_contact_id'   => (int) $config->getCurrentUserID(),
       'assignee_contact_id' => (int) $config->getFundraiserContactID(),
     );
 
@@ -98,7 +99,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           'is_deleted' => 1));
         // FIXME: anonymisation not yet available
         $this->tagContact($contact_id, 'anonymise', $record);
-        $this->cancelAllContracts($contact_id, $record);
+        $this->cancelAllContracts($contact_id, 'XX02', $record);
         break;
 
       case 'disable':
@@ -107,7 +108,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           'id'         => $contact_id,
           'is_deleted' => 1));
         $this->tagContact($contact_id, 'inaktiv', $record);
-        $this->cancelAllContracts($contact_id, $record);
+        $this->cancelAllContracts($contact_id, 'XX02', $record);
         break;
 
       case 'deceased':
@@ -118,7 +119,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           'deceased_date' => $this->getDate($record),
           'is_deceased'   => 1));
         $this->tagContact($contact_id, 'inaktiv', $record);
-        $this->cancelAllContracts($contact_id, $record);
+        $this->cancelAllContracts($contact_id, 'XX13', $record);
         break;
 
       default:
@@ -159,11 +160,15 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'status_id'           => $config->getActivityCompleteStatusId(),
       'campaign_id'         => $this->getCampaignID($record),
       'activity_date_time'  => $this->getDate($record),
-      'source_contact_id'   => (int) $contact_id,
+      'source_contact_id'   => (int) $config->getCurrentUserID(),
+      'target_contact_id'   => (int) $contact_id,
       'assignee_contact_id' => (int) $config->getFundraiserContactID(),
     );
 
-    $this->createActivity($activityParams, $record, array($config->getFundraiserContactID()));
+    // add segment ("Zielgruppe")
+    $activityParams[$config->getGPCustomFieldKey('segment')] = $this->getSegment($record);
+
+    $activity = $this->createActivity($activityParams, $record, array($config->getFundraiserContactID()));
   }
 
   /**
@@ -245,7 +250,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   /**
    * Cancel all active contracts of a given contact
    */
-  public function cancelAllContracts($contact_id, $record) {
+  public function cancelAllContracts($contact_id, $cancel_reason, $record) {
     $config = CRM_Streetimport_Config::singleton();
 
     // find all active memberships (contracts)
@@ -255,7 +260,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'return'     => 'id,status_id'  // TODO: more needed for cancellation?
       ));
     foreach ($memberships['values'] as $membership) {
-      $this->cancelContract($membership, $record);
+      $this->cancelContract($membership, $record, array('cancel_reason' => $cancel_reason));
     }
   }
 
@@ -264,6 +269,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    */
   public function cancelContract($membership, $record, $params = array()) {
     $config = CRM_Streetimport_Config::singleton();
+    $end_date = date('YmdHis'); // end_date has to be now, not $this->getDate()
 
     // first load the membership
     if (empty($membership)) {
@@ -286,6 +292,11 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       $membership_cancellation[$key] = $value;
     }
 
+    // add cancel data
+    $cancel_reason = CRM_Utils_Array::value('cancel_reason', $params, 'MS02');
+    $membership_cancellation[$config->getGPCustomFieldKey('membership_cancel_reason')] = $cancel_reason;
+    $membership_cancellation[$config->getGPCustomFieldKey('membership_cancel_date')] = $this->getDate($record);
+
     // finally: end membership
     civicrm_api3('Membership', 'create', $membership_cancellation);
     $this->logger->logDebug("Contract (membership) [{$membership['id']}] ended.", $record);
@@ -294,7 +305,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $contribution_recur_id = $membership[$config->getGPCustomFieldKey('membership_recurring_contribution')];
     if ($contribution_recur_id) {
       // check if this is a SepaMandate
-      $end_date = data('YmdHis'); // end_date has to be now, not $this->getDate()
       $sepa_mandate = civicrm_api3('SepaMandate', 'get', array(
         'entity_id'    => $contribution_recur_id,
         'entity_table' => 'civicrm_contribution_recur'));
@@ -303,7 +313,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         if ($sepa_mandate['id']) {
           $mandate = reset($sepa_mandate['values']);
           if ($this->isMandateActive($mandate)) {
-            $cancel_reason = CRM_Utils_Array::value('cancel_reason', $params);
             // TODO: use API (when available)
             CRM_Sepa_BAO_SEPAMandate::terminateMandate($sepa_mandate['id'], $end_date, $cancel_reason);
             $this->logger->logDebug("Mandate '{$mandate['reference']}' ended.");

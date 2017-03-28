@@ -785,6 +785,18 @@ class CRM_Streetimport_Utils {
       }
     }
 
+    // set custom fields (if any)
+    $custom_data = array();
+    foreach ($data as $key => $value) {
+      if (substr($key, 0, 7) == 'custom_') {
+        $custom_data[$key] = $value;
+      }
+    }
+    if ($activity->id && !empty($custom_data)) {
+      $custom_data['id'] = $activity->id;
+      civicrm_api3('Activity', 'create', $custom_data);
+    }
+
     return $activity;
   }
 
