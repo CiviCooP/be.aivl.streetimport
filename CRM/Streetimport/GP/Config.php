@@ -127,4 +127,45 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
     // TODO: look up?
     return 6; // Cancelled
   }
+
+  /**
+   * calculate the next valid cycle day
+   */
+  public function getNextCycleDay($start_date) {
+    // TODO: use SEPA function
+    $buffer_days = 1; // TODO: more?
+    $cycle_days = $this->getCycleDays();
+
+    $safety_counter = 32;
+    $start_date = strtotime(strtotime($start_date), "+{$buffer_days} day");
+    while (!in_array(date('d', $start_date), $cycle_days)) {
+      $start_date = strtotime($start_date, '+ 1 day');
+      $safety_counter -= 1;
+      if ($safety_counter == 0) {
+        throw new Exception("There's something wrong with the getNextCycleDay method.");
+      }
+    }
+    return date('d', $start_date);
+  }
+
+  /**
+   * Get the list of allowed cycle days
+   */
+  public function getCycleDays() {
+    // TODO: restrict?
+    return CRM_Sepa_Logic_Settings::getListSetting("cycledays", range(1, 28), $this->getCreditorID());
+  }
+
+  /**
+   * get the SEPA creditor ID to be used for all mandates
+   */
+  public function getCreditorID() {
+    // TODO: use default creditor?
+    $default_creditor = CRM_Sepa_Logic_Settings::defaultCreditor();
+    if (!empty($default_creditor->id)) {
+      return $default_creditor->id;
+    } else {
+      return 1;
+    }
+  }
 }

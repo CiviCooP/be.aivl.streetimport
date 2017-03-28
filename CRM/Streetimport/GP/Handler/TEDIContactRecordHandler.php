@@ -81,19 +81,20 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     $project_type = strtolower(substr($this->file_name_data['project1'], 0, 3));
     switch ($project_type) {
       case TM_PROJECT_TYPE_CONVERSION:
-        if (!empty($this->getContractID($record))) {
+        if (!empty($this->getContractID($contact_id, $record))) {
           return $this->logger->logError("Conversion projects shouldn't provide a contract ID", $record);
         }
         break;
 
       case TM_PROJECT_TYPE_UPGRADE:
         $contract = $this->getContract($record, $contact_id);
-        if (empty($contract)) {
-          return $this->logger->logError("Update projects should provide contract ID", $record);
-        }
-        if (!$this->isContractActive($contract)) {
-          return $this->logger->logError("Update projects should refer to active contracts", $record);
-        }
+        // apparently this is not the case
+        // if (empty($contract)) {
+        //   return $this->logger->logError("Update projects should provide contract ID", $record);
+        // }
+        // if (!$this->isContractActive($contract)) {
+        //   return $this->logger->logError("Update projects should refer to active contracts", $record);
+        // }
         break;
 
       case TM_PROJECT_TYPE_REACTIVATION:
@@ -130,7 +131,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_KONTAKT_RESPONSE_ZUSAGE_GP4ME:
       case TM_KONTAKT_RESPONSE_ZUSAGE_ATOM:
         // this is a conversion/upgrade
-        $contract_id = $this->getContractID($record);
+        $contract_id = $this->getContractID($contact_id, $record);
         if (empty($contract_id)) {
           $this->createContract($contact_id, $record);
         } else {
@@ -153,7 +154,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
       case TM_KONTAKT_RESPONSE_KONTAKT_DOWNGRADE:
         // this is a downgrade
-        $this->updateContract($this->getContractID($record), $contact_id, $record);
+        $this->updateContract($this->getContractID($contact_id, $record), $contact_id, $record);
         break;
 
       case TM_KONTAKT_RESPONSE_KONTAKT_LOESCHEN:
@@ -470,10 +471,19 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
   /**
    * Extract the contract id from the record
    */
-  protected function getContractID($record) {
-    // TODO: compatibility mode?
+  protected function getContractID($contact_id, $record) {
     if (empty($record['Vertragsnummer'])) {
       return NULL;
+    }
+
+    if ($this->isCompatibilityMode($record)) {
+      // legacy files: look up via membership_imbid
+      $config = CRM_Streetimport_Config::singleton();
+      $membership_imbid =$config->getGPCustomFieldKey('membership_imbid');
+      $membership = civicrm_api3('Membership', 'get', array(
+        'contact_id'      => $contact_id,
+        $membership_imbid => $record['Vertragsnummer']));
+      return $membership['id'];
     } else {
       return (int) $record['Vertragsnummer'];
     }

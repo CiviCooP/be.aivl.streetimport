@@ -100,10 +100,20 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   public function createContract($contact_id, $record) {
     $config = CRM_Streetimport_Config::singleton();
 
-    // TODO: validate parameters
+    // validate parameters
+    if (    empty($record['IBAN'])
+         || empty($record['BIC'])
+         || empty($record['JahresBetrag'])
+         || empty($record['Einzugsintervall'])) {
+      return $this->logger->logError("Couldn't create mandate, information incomplete.", $record);
+    }
 
-    // TODO: adjust start date
+    // get start date
+    $now = date('YmdHis');
     $mandate_start_date = date('YmdHis', strtotime($record['Einzugsstart']));
+    if (empty($mandate_start_date) || $mandate_start_date < $now) {
+      $mandate_start_date = $now;
+    }
 
     // FIRST: compile and create SEPA mandate
     $annual_amount = $record['JahresBetrag'];
@@ -111,11 +121,13 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $amount = number_format($annual_amount / $frequency, 2);
     $mandate_params = array(
       'type'                => 'RCUR',
-      'iban'                => $record['Iban'],
-      'bic'                 => $record['Bic'],
+      'iban'                => $record['IBAN'],
+      'bic'                 => $record['BIC'],
+      'amount'              => $amount,
       'contact_id'          => $contact_id,
       'currency'            => 'EUR',
       'frequency_unit'      => 'month',
+      'cycle_day'           => $config->getNextCycleDay($mandate_start_date),
       'frequency_interval'  => (int) (12.0 / $frequency),
       'start_date'          => $mandate_start_date,
       'campaign_id'         => $this->getCampaignID($record),
@@ -124,8 +136,9 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     if (!empty($record['EinzugsEndeDatum'])) {
       $mandate_params['end_date'] = date('YmdHis', strtotime($record['EinzugsEndeDatum']));
     }
+
+    // create and reload mandate
     $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_params);
-    // relead freshly created mandate to get all attributes
     $mandate = civicrm_api3('SepaMandate', 'getsingle', array('id' => $mandate['id']));
 
     // NEXT: create membership
@@ -147,6 +160,43 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   }
 
   /**
+   * Create a OOFF mandate
+   */
+  public function createOOFFMandate($contact_id, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+
+    // validate parameters
+    if (    empty($record['IBAN'])
+         || empty($record['BIC'])
+         || empty($record['BuchungsBetrag'])) {
+      return $this->logger->logError("Couldn't create mandate, information incomplete.", $record);
+    }
+
+    // get start date
+    $now = date('YmdHis');
+    $mandate_start_date = date('YmdHis', strtotime($record['Einzugsstart']));
+    if (empty($mandate_start_date) || $mandate_start_date < $now) {
+      $mandate_start_date = $now;
+    }
+
+    // compile and create SEPA mandate
+    $mandate_params = array(
+      'type'                => 'OOFF',
+      'iban'                => $record['IBAN'],
+      'bic'                 => $record['BIC'],
+      'amount'              => number_format($record['BuchungsBetrag'], 2),
+      'contact_id'          => $contact_id,
+      'currency'            => 'EUR',
+      'receive_date'        => $mandate_start_date,
+      'campaign_id'         => $this->getCampaignID($record),
+      'financial_type_id'   => 1, // Donation
+      );
+
+    // create mandate
+    $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_params);
+  }
+
+  /**
    * update an existing contract:
    * If contractId is set, then all changes in column U-AE are related to this contractID.
    * In conversion projects you will find no contractid here, which means you have to create a new one,
@@ -155,17 +205,78 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    * FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
    */
   public function updateContract($contract_id, $contact_id, $record) {
-    // TODO: implement
-    // CAUTION: "weiterbuchen"
-    // This field kann take "0", "1" and "".
-    //    "1" => no break (normal data entry for contract data and Sepa DD issue date will be set as soon as possible;
-    //    "0" => break! (If there is a debit planned inbetween of date in field AA (Einzugsstart) and import date) the contract shall be paused and NOT debited asap.
-    //    ""  => nothing happens
+    $config = CRM_Streetimport_Config::singleton();
+    $now = date('YmdHis');
+    if (empty($record['Einzugsstart'])) {
+      $new_start_date = $now;
+    } else {
+      $new_start_date = date('YmdHis', strtotime($record['Einzugsstart']));
+      if ($new_start_date < $now) {
+        $new_start_date = $now;
+      }
+    }
 
-    // i.e. "1"/"" => create contract manually
-    // "0" stop now / start new later (Einzugsstart)
+    if ($record['weiterbuchen']) {
+      $old_end_date = $new_start_date;
+    } else {
+      $old_end_date = $now;
+    }
 
-    $this->logger->logError("UPDATE CONTRACT NOT IMPLEMENTED YET!", $record);
+    // end old mandate
+    $old_recurring_contribution_id = civicrm_api3('Membership', 'getvalue', array(
+      'id'     => $contract_id,
+      'return' => $config->getGPCustomFieldKey('membership_recurring_contribution')));
+    $old_mandate_id = civicrm_api3('SepaMandate', 'get', array(
+      'entity_id'    => $old_recurring_contribution_id,
+      'entity_table' => 'civicrm_contribution_recur',
+      'return'       => 'id'));
+    if (!empty($old_mandate_id['id'])) {
+      CRM_Sepa_BAO_SEPAMandate::terminateMandate($old_mandate_id['id'], $old_end_date, 'CHNG');
+      CRM_Sepa_Logic_Batching::closeEnded();
+    } else {
+      $this->logger->logError("No mandate attached to membership [{$contract_id}], couldn't stop!", $record);
+    }
+
+    // create new mandate
+    // validate parameters
+    if (    empty($record['IBAN'])
+         || empty($record['BIC'])
+         || empty($record['JahresBetrag'])
+         || empty($record['Einzugsintervall'])) {
+      return $this->logger->logError("Couldn't create mandate, information incomplete.", $record);
+    }
+
+    // FIRST: compile and create SEPA mandate
+    $annual_amount = $record['JahresBetrag'];
+    $frequency = $record['Einzugsintervall'];
+    $amount = number_format($annual_amount / $frequency, 2);
+    $mandate_params = array(
+      'type'                => 'RCUR',
+      'iban'                => $record['IBAN'],
+      'bic'                 => $record['BIC'],
+      'amount'              => $amount,
+      'contact_id'          => $contact_id,
+      'currency'            => 'EUR',
+      'frequency_unit'      => 'month',
+      'cycle_day'           => $config->getNextCycleDay($mandate_start_date),
+      'frequency_interval'  => (int) (12.0 / $frequency),
+      'start_date'          => $new_start_date,
+      'campaign_id'         => $this->getCampaignID($record),
+      'financial_type_id'   => 3, // Membership Dues
+      );
+    if (!empty($record['EinzugsEndeDatum'])) {
+      $mandate_params['end_date'] = date('YmdHis', strtotime($record['EinzugsEndeDatum']));
+    }
+
+    // create and reload mandate
+    $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_params);
+    $mandate = civicrm_api3('SepaMandate', 'getsingle', array('id' => $mandate['id']));
+
+    // update membership
+    $membership_rcontribution = $config->getGPCustomFieldKey('membership_recurring_contribution');
+    civicrm_api3('Membership', 'create', array(
+      'id'                      => $contract_id,
+      $membership_rcontribution => $mandate['entity_id']));
   }
 
   /**
@@ -190,7 +301,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    */
   public function cancelContract($membership, $record, $params = array()) {
     $config = CRM_Streetimport_Config::singleton();
-    $end_date = date('YmdHis'); // end_date has to be now, not $this->getDate()
+    $end_date = date('YmdHis', strtotime('yesterday')); // end_date has to be now, not $this->getDate()
 
     // first load the membership
     if (empty($membership)) {
@@ -236,6 +347,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           if ($this->isMandateActive($mandate)) {
             // TODO: use API (when available)
             CRM_Sepa_BAO_SEPAMandate::terminateMandate($sepa_mandate['id'], $end_date, $cancel_reason);
+            CRM_Sepa_Logic_Batching::closeEnded();
             $this->logger->logDebug("Mandate '{$mandate['reference']}' ended.");
           } else {
             $this->logger->logDebug("Mandate  '{$mandate['reference']}' has already been cancelled.");

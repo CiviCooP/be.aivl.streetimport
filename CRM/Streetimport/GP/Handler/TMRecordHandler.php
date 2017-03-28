@@ -51,10 +51,15 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
    * this will return the membership object representing the contract
    */
   protected function getContract($record, $contact_id) {
-    $membership_id = $this->getContractID($record);
+    $membership_id = $this->getContractID($contact_id, $record);
     if (empty($membership_id)) return NULL;
 
-    return civicrm_api3('Membership', 'getsingle', array('id' => $membership_id));
+    $membership = civicrm_api3('Membership', 'get', array('id' => $membership_id));
+    if ($membership['id']) {
+      return reset($membership);
+    } else {
+      return NULL;
+    }
   }
 
   /**
