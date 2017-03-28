@@ -273,6 +273,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     if (!empty($contact_base_update)) {
       $contact_base_update['id'] = $contact_id;
       civicrm_api3('Contact', 'create', $contact_base_update);
+      $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Base Data Updated'), NULL, $record);
       $this->logger->logDebug("Contact [{$contact_id}] base data updated: " . json_encode($contact_base_update), $record);
     }
 
@@ -312,6 +313,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     if (!empty($address_update)) {
       $address_update['id'] = $this->getAddressId($contact_id, $record);
       civicrm_api3('Address', 'create', $address_update);
+      $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Address Updated'), NULL, $record);
       $this->logger->logDebug("Contact [{$contact_id}] address updated: " . json_encode($address_update), $record);
     }
 
@@ -330,6 +332,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
           'contact_id'       => $contact_id,
           'email'            => $email,
           'location_type_id' => $config->getLocationTypeId()));
+        $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Email Added'), NULL, $record);
         $this->logger->logDebug("Contact [{$contact_id}] address updated: " . json_encode($address_update), $record);
       }
     }

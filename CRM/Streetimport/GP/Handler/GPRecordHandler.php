@@ -18,6 +18,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   /** activity type cache */
   protected $_manual_update_required_id = NULL;
   protected $_response_activity_id = NULL;
+  protected $_update_activity_id = NULL;
 
   /**
    * look up contact id with CiviCRM ID
@@ -47,43 +48,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       // NOT found
       return NULL;
     }
-  }
-
-  /**
-   * Create a "Manual Update" activity
-   */
-  public function createManualUpdateActivity($contact_id, $message, $record) {
-    $config = CRM_Streetimport_Config::singleton();
-
-    // first get contact called activity type
-    if ($this->_manual_update_required_id == NULL) {
-      $this->_manual_update_required_id = CRM_Core_OptionGroup::getValue('activity_type', 'manual_update_required', 'name');
-      if (empty($this->_manual_update_required_id)) {
-        // couldn't be found => create
-        $activity = civicrm_api3('OptionValue', 'create', array(
-          'option_group_id' => 'activity_type',
-          'name'            => 'manual_update_required',
-          'label'           => $config->translate('Manual Update Required'),
-          'is_active'       => 1
-          ));
-        $this->_manual_update_required_id = $activity['id'];
-      }
-    }
-
-    // NOW create the activity
-    $activityParams = array(
-      'activity_type_id'    => $this->_manual_update_required_id,
-      'subject'             => $config->translate('Manual Update Required'),
-      'details'             => $message,
-      'status_id'           => $config->getActivityCompleteStatusId(),
-      'campaign_id'         => $this->getCampaignID($record),
-      'activity_date_time'  => $this->getDate($record),
-      'target_contact_id'   => (int) $contact_id,
-      'source_contact_id'   => (int) $config->getCurrentUserID(),
-      'assignee_contact_id' => (int) $config->getFundraiserContactID(),
-    );
-
-    $this->createActivity($activityParams, $record, array($config->getFundraiserContactID()));
   }
 
   /**
@@ -126,49 +90,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         $this->logger->logFatal("DisableContact mode '{$mode}' not implemented!", $record);
         break;
     }
-  }
-
-  /**
-   * Create a RESPONSE activity
-   */
-  public function createResponseActivity($contact_id, $title, $record) {
-    $config = CRM_Streetimport_Config::singleton();
-
-    // first get Response activity type
-    if ($this->_response_activity_id == NULL) {
-      $this->_response_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'Response', 'name');
-      if (empty($this->_response_activity_id)) {
-        // couldn't be found => create
-        $activity = civicrm_api3('OptionValue', 'create', array(
-          'option_group_id' => 'activity_type',
-          'name'            => 'Response',
-          'label'           => $config->translate('Manual Update Required'),
-          'is_active'       => 1
-          ));
-        $this->_response_activity_id = $activity['id'];
-      }
-    }
-
-    // determine the subject
-    $campaign = $this->loadEntity('Campaign', $this->getCampaignID($record));
-    $subject = $campaign['title'] . ' - ' . $title;
-
-    // NOW create the activity
-    $activityParams = array(
-      'activity_type_id'    => $this->_response_activity_id,
-      'subject'             => $subject,
-      'status_id'           => $config->getActivityCompleteStatusId(),
-      'campaign_id'         => $this->getCampaignID($record),
-      'activity_date_time'  => $this->getDate($record),
-      'source_contact_id'   => (int) $config->getCurrentUserID(),
-      'target_contact_id'   => (int) $contact_id,
-      'assignee_contact_id' => (int) $config->getFundraiserContactID(),
-    );
-
-    // add segment ("Zielgruppe")
-    $activityParams[$config->getGPCustomFieldKey('segment')] = $this->getSegment($record);
-
-    $activity = $this->createActivity($activityParams, $record, array($config->getFundraiserContactID()));
   }
 
   /**
@@ -372,4 +293,147 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     return  $contribution_recur['contribution_status_id'] == 2 // pending
          || $contribution_recur['contribution_status_id'] == 5; // in progress
   }
+
+
+
+
+  /*****************************************************
+   *               ACTIVITY CREATION                   *
+   ****************************************************/
+
+
+  /**
+   * Create a "Manual Update" activity
+   */
+  public function createManualUpdateActivity($contact_id, $message, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+
+    // first get contact called activity type
+    if ($this->_manual_update_required_id == NULL) {
+      $this->_manual_update_required_id = CRM_Core_OptionGroup::getValue('activity_type', 'manual_update_required', 'name');
+      if (empty($this->_manual_update_required_id)) {
+        // couldn't be found => create
+        $activity = civicrm_api3('OptionValue', 'create', array(
+          'option_group_id' => 'activity_type',
+          'name'            => 'manual_update_required',
+          'label'           => $config->translate('Manual Update Required'),
+          'is_active'       => 1
+          ));
+        $this->_manual_update_required_id = CRM_Core_OptionGroup::getValue('activity_type', 'manual_update_required', 'name');
+      }
+    }
+
+    // NOW create the activity
+    $activityParams = array(
+      'activity_type_id'    => $this->_manual_update_required_id,
+      'subject'             => $config->translate('Manual Update Required'),
+      'details'             => $message,
+      'status_id'           => $config->getActivityCompleteStatusId(),
+      'campaign_id'         => $this->getCampaignID($record),
+      'activity_date_time'  => $this->getDate($record),
+      'target_contact_id'   => (int) $contact_id,
+      'source_contact_id'   => (int) $config->getCurrentUserID(),
+      'assignee_contact_id' => (int) $config->getFundraiserContactID(),
+    );
+
+    // add segment ("Zielgruppe")
+    $segment = $this->getSegment($record);
+    if ($segment) {
+      $activityParams[$config->getGPCustomFieldKey('segment')] = $segment;
+    }
+
+    $this->createActivity($activityParams, $record, array($config->getFundraiserContactID()));
+  }
+
+
+  /**
+   * Create a RESPONSE activity
+   */
+  public function createResponseActivity($contact_id, $title, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+
+    // first get Response activity type
+    if ($this->_response_activity_id == NULL) {
+      $this->_response_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'Response', 'name');
+      if (empty($this->_response_activity_id)) {
+        // couldn't be found => create
+        $activity = civicrm_api3('OptionValue', 'create', array(
+          'option_group_id' => 'activity_type',
+          'name'            => 'Response',
+          'label'           => $config->translate('Manual Update Required'),
+          'is_active'       => 1
+          ));
+        $this->_response_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'Response', 'name');
+      }
+    }
+
+    // determine the subject
+    $campaign = $this->loadEntity('Campaign', $this->getCampaignID($record));
+    $subject = $campaign['title'] . ' - ' . $title;
+
+    // NOW create the activity
+    $activityParams = array(
+      'activity_type_id'    => $this->_response_activity_id,
+      'subject'             => $subject,
+      'status_id'           => $config->getActivityCompleteStatusId(),
+      'campaign_id'         => $this->getCampaignID($record),
+      'activity_date_time'  => $this->getDate($record),
+      'source_contact_id'   => (int) $config->getCurrentUserID(),
+      'target_contact_id'   => (int) $contact_id,
+      // 'assignee_contact_id' => (int) $config->getFundraiserContactID(),
+    );
+
+    // add segment ("Zielgruppe")
+    $segment = $this->getSegment($record);
+    if ($segment) {
+      $activityParams[$config->getGPCustomFieldKey('segment')] = $segment;
+    }
+
+    $activity = $this->createActivity($activityParams, $record);
+  }
+
+
+  /**
+   * Create a "Contact Updated" activity
+   */
+  public function createContactUpdatedActivity($contact_id, $subject, $details, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+
+    // first get contact called activity type
+    if ($this->_update_activity_id == NULL) {
+      $this->_update_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'contact_updated', 'name');
+      if (empty($this->_update_activity_id)) {
+        // couldn't be found => create
+        $activity = civicrm_api3('OptionValue', 'create', array(
+          'option_group_id' => 'activity_type',
+          'name'            => 'contact_updated',
+          'label'           => $config->translate('Contact Updated'),
+          'is_active'       => 1
+          ));
+        $this->_update_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'contact_updated', 'name');
+      }
+    }
+
+    // NOW create the activity
+    $activityParams = array(
+      'activity_type_id'    => $this->_update_activity_id,
+      'subject'             => $subject,
+      'details'             => $details,
+      'status_id'           => $config->getActivityCompleteStatusId(),
+      'campaign_id'         => $this->getCampaignID($record),
+      'activity_date_time'  => date('YmdHis'), // has to be now
+      'source_contact_id'   => (int) $config->getCurrentUserID(),
+      'target_contact_id'   => (int) $contact_id,
+      // 'assignee_contact_id' => (int) $config->getFundraiserContactID(),
+    );
+
+    // add segment ("Zielgruppe")
+    $segment = $this->getSegment($record);
+    if ($segment) {
+      $activityParams[$config->getGPCustomFieldKey('segment')] = $segment;
+    }
+
+    $this->createActivity($activityParams, $record);
+  }
+
 }

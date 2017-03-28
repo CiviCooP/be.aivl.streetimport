@@ -197,21 +197,6 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
   public function createPhoneUpdatedActivity($type, $contact_id, $record) {
     $this->config = CRM_Streetimport_Config::singleton();
 
-    // first get contact called activity type
-    if ($this->_contact_phone_changed_id == NULL) {
-      $this->_contact_phone_changed_id = CRM_Core_OptionGroup::getValue('activity_type', 'contact_phone_updated', 'name');
-      if (empty($this->_contact_phone_changed_id)) {
-        // couldn't be found => create
-        $activity = civicrm_api3('OptionValue', 'create', array(
-          'option_group_id' => 'activity_type',
-          'name'            => 'contact_phone_updated',
-          'label'           => $this->config->translate('Contact Phone Updated'),
-          'is_active'       => 1
-          ));
-        $this->_contact_phone_changed_id = $activity['id'];
-      }
-    }
-
     // calculate subject based on type
     $new_number = $this->getPhoneNumber($record);
     switch ($type) {
@@ -234,20 +219,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
         return $this->logger->logError("Undefined status [{$record['Status']}]. Row ignored.", $record);
     }
 
-    // NOW create the activity
-    $activityParams = array(
-      'activity_type_id'    => $this->_contact_phone_changed_id,
-      'subject'             => $subject,
-      'details'             => $details,
-      'status_id'           => $this->config->getActivityCompleteStatusId(),
-      'campaign_id'         => $this->getCampaignID($record),
-      'activity_date_time'  => $this->getDate($record),
-      'source_contact_id'   => (int) $config->getCurrentUserID(),
-      'target_contact_id'   => (int) $contact_id,
-      'assignee_contact_id' => (int) $this->config->getFundraiserContactID(),
-    );
-
-    $this->createActivity($activityParams, $record, array($this->config->getFundraiserContactID()));
+    $this->createContactUpdatedActivity($contact_id, $subject, $details, $record);
   }
 
   /**
@@ -259,6 +231,14 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
 
     // this is unreliable:
     // return $this->file_name_data['date'] . $this->file_name_data['time'];
+  }
+
+  /**
+   * get the segment ("Zielgruppe")
+   */
+  protected function getSegment($record) {
+    // phone file doesn't have segment data
+    return NULL;
   }
 
 }
