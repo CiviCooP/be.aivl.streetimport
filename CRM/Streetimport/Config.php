@@ -25,6 +25,9 @@ class CRM_Streetimport_Config {
   /** will store strings for translation */
   private $error_activity_id = NULL;
 
+  /** caches */
+  private $_activityCompleteStatusId = NULL;
+
   /**
    * Singleton method
    *
