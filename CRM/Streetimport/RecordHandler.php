@@ -12,17 +12,17 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   protected $logger = NULL;
 
-  /** for cached contact lookup **/
+  /** STATIC cached contact lookup **/
   static protected $contact_cache = array();
 
   /** for cached entity lookup **/
-  static protected $entity_cache = array();
+  private $entity_cache = array();
 
   /** for cached tagging lookup **/
-  static protected $tagname_to_tagid = array();
+  private $tagname_to_tagid = array();
 
   /** for cached membership lookup **/
-  static protected $membership_types = NULL;
+  private $membership_types = NULL;
 
 
   public function __construct($logger) {
