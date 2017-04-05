@@ -89,7 +89,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
       }
     } catch (Exception $ex) {
       // whole import was aborted...
-      $result->logMessage("Exception was: " . $ex->getMessage());
+      $result->logMessage("Exception was: " . $ex->getMessage(), NULL, BE_AIVL_STREETIMPORT_ERROR);
 
       // move the failed file to the failed folder
       if (!empty($failed_folder)) {
