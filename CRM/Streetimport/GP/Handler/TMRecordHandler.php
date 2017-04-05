@@ -81,14 +81,20 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
   protected function getAddressId($contact_id, $record) {
     if ($this->isCompatibilityMode($record) || empty($record['address_id'])) {
       // in compatibility mode we don't have an ID, just get the primary address
-      $addresses = civicrm_api3('Address', 'get', array(
+      $addresses_search = array(
         'contact_id' => $contact_id,
-        'is_primary' => 1,
-        ));
-      return $addresses['id'];
+        'is_primary' => 1);
     } else {
-      // in the future, this should be filled
-      return $record['address_id'];
+      // check if the address_id is (still) there
+      $addresses_search = array('id' => $record['address_id']);
+    }
+
+    $address_query = civicrm_api3('Address', 'get', $addresses_search);
+    if ($address_query['id']) {
+      // address found
+      return $address_query['id'];
+    } else {
+      return NULL;
     }
   }
 
