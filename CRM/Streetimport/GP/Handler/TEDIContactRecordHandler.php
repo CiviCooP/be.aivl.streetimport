@@ -309,13 +309,24 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       $address_update['street_address'] = $street_address;
     }
 
-    // update address
-    // FIXME: simply overwrite now, but see ticket 538
+    // update/create address
     if (!empty($address_update)) {
-      $address_update['id'] = $this->getAddressId($contact_id, $record);
+      $address_id = $this->getAddressId($contact_id, $record);
+      if ($address_id) {
+        // UPDATE: address was identified
+        // FIXME: simply overwrite now, but see ticket 538
+        $address_update['id'] = $address_id;
+        $activity_subject = $config->translate('Contact Address Updated');
+        $this->logger->logDebug("Updating address for contact [{$contact_id}]: " . json_encode($address_update), $record);
+      } else {
+        // CREATION: there is no address
+        $address_update['location_type_id'] = $config->getLocationTypeId();
+        $address_update['contact_id'] = $contact_id;
+        $activity_subject = $config->translate('Contact Address Created');
+        $this->logger->logDebug("Creating address for contact [{$contact_id}]: " . json_encode($address_update), $record);
+      }
       civicrm_api3('Address', 'create', $address_update);
-      $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Address Updated'), NULL, $record);
-      $this->logger->logDebug("Contact [{$contact_id}] address updated: " . json_encode($address_update), $record);
+      $this->createContactUpdatedActivity($contact_id, $activity_subject, NULL, $record);
     }
 
 
@@ -334,7 +345,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
           'email'            => $email,
           'location_type_id' => $config->getLocationTypeId()));
         $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Email Added'), NULL, $record);
-        $this->logger->logDebug("Contact [{$contact_id}] address updated: " . json_encode($address_update), $record);
+        $this->logger->logDebug("Contact [{$contact_id}] email updated: {$email}", $record);
       }
     }
   }
