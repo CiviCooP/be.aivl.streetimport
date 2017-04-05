@@ -120,6 +120,11 @@ function _civicrm_api3_streetimport_importcsvfile(&$params) {
   $params['filepath']['api.required'] = 1;
 }
 
+/**
+ * @todo What is this? A clone of Streetimport:importcsvfile?
+ * @author ?Erik Hommel?
+ * @deprecated this can go, right?
+ */
 function civicrm_api3_streetimport_tm($params) {
   $config = CRM_Streetimport_Config::singleton();
   $result = new CRM_Streetimport_ImportResult();
