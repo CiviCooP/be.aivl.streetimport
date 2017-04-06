@@ -733,6 +733,7 @@ class CRM_Streetimport_Utils {
    * render a given template with the given variables
    */
   public static function renderTemplate($template_path, $vars) {
+    $config = CRM_Streetimport_Config::singleton();
     $smarty = CRM_Core_Smarty::singleton();
 
     // first backup original variables, since smarty instance is a singleton
@@ -749,8 +750,8 @@ class CRM_Streetimport_Utils {
       $smarty->assign($key, $value);
     }
 
-    // create result
-    $result =  $smarty->fetch($template_path);
+    // adjust template path
+    $result =  $smarty->fetch($config->getDomain() . '/' . $template_path;);
 
     // reset smarty variables
     foreach ($backupFrame as $key => $value) {
