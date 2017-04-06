@@ -407,6 +407,80 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   }
 
 
+  /**
+   * take address data and see what to do with it:
+   * - if it's not enough data -> create ticket (activity) for manual processing
+   * - else: if no address is present -> create a new one
+   * - else: if new data wouldn't replace ALL the data of the old address -> create ticket (activity) for manual processing
+   * - else: update address
+   */
+  public function createOrUpdateAddress($contact_id, $address_data, $record) {
+    if (empty($address_data)) return;
+
+    // check if address is complete
+    $address_complete = TRUE;
+    $config = CRM_Streetimport_Config::singleton();
+    $required_attributes = $config->getRequiredAddressAttributes();
+    foreach ($required_attributes as $required_attribute) {
+      if (empty($address_data[$required_attribute])) {
+        $address_complete = FALSE;
+      }
+    }
+
+    if (!$address_complete) {
+      $this->logger->logDebug("Manual address update required for [{$contact_id}].", $record);
+      return $this->createManualUpdateActivity(
+          $contact_id, 'Manual Address Update', $record, 'activities/ManualAddressUpdate.tpl',
+          array('title'   => 'Please update contact\'s address',
+                'fields'  => $config->getAllAddressAttributes(),
+                'address' => $address_data));
+    }
+
+    // find the old address
+    $old_address_id = $this->getAddressId($contact_id, $record);
+    if (!$old_address_id) {
+      // CREATION (there is no address)
+      $address_data['location_type_id'] = $config->getLocationTypeId();
+      $address_data['contact_id'] = $contact_id;
+      $this->logger->logDebug("Creating address for contact [{$contact_id}]: " . json_encode($address_data), $record);
+      civicrm_api3('Address', 'create', $address_data);
+      return $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Address Created'), NULL, $record);
+    }
+
+    // load old address
+    $old_address = civicrm_api3('Address', 'getsingle', array('id' => $old_address_id));
+
+    // check if we'd overwrite EVERY one the relevant fields
+    //  to avoid inconsistent addresses
+    $full_overwrite = TRUE;
+    $all_fields = $config->getAllAddressAttributes();
+    foreach ($all_fields as $field) {
+      if (empty($address_data[$field]) && !empty($old_address[$field])) {
+        $full_overwrite = FALSE;
+        break;
+      }
+    }
+
+    if ($full_overwrite) {
+      // this is a proper address update
+      $address_data['id'] = $address_id;
+      $this->logger->logDebug("Updating address for contact [{$contact_id}]: " . json_encode($address_data), $record);
+      civicrm_api3('Address', 'create', $address_data);
+      return $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Address Updated'), NULL, $record);
+
+    } else {
+      // this would create inconsistent/invalid addresses -> manual interaction required
+      $this->logger->logDebug("Manual address update required for [{$contact_id}].", $record);
+      return $this->createManualUpdateActivity(
+          $contact_id, 'Manual Address Update', $record, 'activities/ManualAddressUpdate.tpl',
+          array('title'       => 'Please update contact\'s address',
+                'fields'      => $config->getAllAddressAttributes(),
+                'address'     => $address_data,
+                'old_address' => $old_address));
+    }
+  }
+
+
 
 
   /*****************************************************
@@ -416,8 +490,14 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
   /**
    * Create a "Manual Update" activity
+   *
+   * @param $contact_id        well....
+   * @param $subject           subject for the activity
+   * @param $record            the data record that's being processed
+   * @param $messageOrTemplate either the full details body of the activity (if $data empty)
+   *                            or a template path (if $data not empty), in which case $data will be assigned as template variables
    */
-  public function createManualUpdateActivity($contact_id, $message, $record) {
+  public function createManualUpdateActivity($contact_id, $subject, $record, $messageOrTemplate=NULL, $data=NULL) {
     $config = CRM_Streetimport_Config::singleton();
 
     // first get contact called activity type
@@ -438,8 +518,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     // NOW create the activity
     $activityParams = array(
       'activity_type_id'    => $this->_manual_update_required_id,
-      'subject'             => $config->translate('Manual Update Required'),
-      'details'             => $message,
+      'subject'             => $config->translate($subject),
       'status_id'           => $config->getActivityCompleteStatusId(),
       'campaign_id'         => $this->getCampaignID($record),
       'activity_date_time'  => $this->getDate($record),
@@ -447,6 +526,16 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'source_contact_id'   => (int) $config->getCurrentUserID(),
       'assignee_contact_id' => (int) $config->getFundraiserContactID(),
     );
+
+    // calculate details
+    if ($messageOrTemplate) {
+      if ($data) {
+        // this is should be a template -> render it!
+        $activityParams['details'] = $this->renderTemplate($messageOrTemplate, $data);
+      } else {
+        $activityParams['details'] = $messageOrTemplate;
+      }
+    }
 
     // add segment ("Zielgruppe")
     $segment = $this->getSegment($record);
@@ -547,5 +636,4 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     $this->createActivity($activityParams, $record);
   }
-
 }

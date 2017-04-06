@@ -168,4 +168,20 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
       return 1;
     }
   }
+
+  /**
+   * returns the list of attributes that are required for
+   * a valid address
+   */
+  public function getRequiredAddressAttributes() {
+    return array('postal_code', 'street_address');
+  }
+
+  /**
+   * returns the list of attributes that are required for
+   * a valid address
+   */
+  public function getAllAddressAttributes() {
+    return array('postal_code', 'street_address', 'city', 'country_id');
+  }
 }
