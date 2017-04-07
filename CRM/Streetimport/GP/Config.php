@@ -137,9 +137,9 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
     $cycle_days = $this->getCycleDays();
 
     $safety_counter = 32;
-    $start_date = strtotime(strtotime($start_date), "+{$buffer_days} day");
+    $start_date = strtotime("+{$buffer_days} day", strtotime($start_date));
     while (!in_array(date('d', $start_date), $cycle_days)) {
-      $start_date = strtotime($start_date, '+ 1 day');
+      $start_date = strtotime('+ 1 day', $start_date);
       $safety_counter -= 1;
       if ($safety_counter == 0) {
         throw new Exception("There's something wrong with the getNextCycleDay method.");
