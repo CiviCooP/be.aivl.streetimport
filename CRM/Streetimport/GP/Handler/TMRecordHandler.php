@@ -90,7 +90,7 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
     }
 
     $address_query = civicrm_api3('Address', 'get', $addresses_search);
-    if ($address_query['id']) {
+    if (isset($address_query['id']) && $address_query['id']) {
       // address found
       return $address_query['id'];
     } else {
