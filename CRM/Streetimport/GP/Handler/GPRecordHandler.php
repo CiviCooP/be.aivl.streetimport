@@ -442,6 +442,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       // CREATION (there is no address)
       $address_data['location_type_id'] = $config->getLocationTypeId();
       $address_data['contact_id'] = $contact_id;
+      $this->resolveFields($address_data, $record);
       $this->logger->logDebug("Creating address for contact [{$contact_id}]: " . json_encode($address_data), $record);
       civicrm_api3('Address', 'create', $address_data);
       return $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Address Created'), NULL, $record);
@@ -477,6 +478,25 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
                 'fields'      => $config->getAllAddressAttributes(),
                 'address'     => $address_data,
                 'old_address' => $old_address));
+    }
+  }
+
+  /**
+   * Will resolve known fields (e.g. prefix_id, country_id, ...)
+   * that require IDs rather than the value in the given data array
+   *
+   * @todo move to parent class
+   */
+  public function resolveFields(&$data, $record) {
+    if (isset($data['prefix_id']) && !is_numeric($data['prefix_id'])) {
+      $prefix_id = CRM_Core_OptionGroup::getValue('individual_prefix', $data['prefix_id']);
+      if ($prefix_id) {
+        $data['prefix_id'] = $prefix_id;
+      } else {
+        // not found!
+        $this->logger->logError("Couldn't resolve prefix '{$data['prefix_id']}'.", $record);
+        $data['prefix_id'] = '';
+      }
     }
   }
 

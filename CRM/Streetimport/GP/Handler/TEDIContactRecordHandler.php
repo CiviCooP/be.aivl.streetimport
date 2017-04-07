@@ -273,6 +273,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     // update contact
     if (!empty($contact_base_update)) {
       $contact_base_update['id'] = $contact_id;
+      $this->resolveFields($contact_base_update, $record);
       civicrm_api3('Contact', 'create', $contact_base_update);
       $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Base Data Updated'), NULL, $record);
       $this->logger->logDebug("Contact [{$contact_id}] base data updated: " . json_encode($contact_base_update), $record);
