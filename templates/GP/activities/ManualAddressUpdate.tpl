@@ -19,6 +19,7 @@
         <td>{$old_address.$field}</td>
         {/if}
       </tr>
+      {/if}
     {/foreach}
   </tbody>
 </table>

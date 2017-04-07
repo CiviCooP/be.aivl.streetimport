@@ -751,7 +751,7 @@ class CRM_Streetimport_Utils {
     }
 
     // adjust template path
-    $result =  $smarty->fetch($config->getDomain() . '/' . $template_path;);
+    $result =  $smarty->fetch($config->getDomain() . '/' . $template_path);
 
     // reset smarty variables
     foreach ($backupFrame as $key => $value) {
