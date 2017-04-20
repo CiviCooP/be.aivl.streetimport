@@ -41,6 +41,7 @@ class CRM_Streetimport_Config {
   protected $loadingTypes = array();
   protected $defaultPhoneTypeId = NULL;
   protected $defaultLocationTypeId = NULL;
+
   /**
    * Constructor method
    *
