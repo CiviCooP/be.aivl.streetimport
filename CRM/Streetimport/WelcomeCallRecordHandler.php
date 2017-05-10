@@ -10,7 +10,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
   /** 
    * Check if the given handler implementation can process the record
    *
-   * @param $record  an array of key=>value pairs
+   * @param $record array of key=>value pairs
    * @return true or false
    */
   public function canProcessRecord($record) {
@@ -204,14 +204,14 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // if both dates are in the past, we can ignore the change 
     //   (they're both probably just auto-generated)
     if (!empty($mandate_diff['start_date'])) {
-      if (  $old_contribution['start_date'] > $now 
+      if (  $old_contribution['start_date'] > $now
          || $new_mandate_data['start_date'] > $now ) {
         unset($mandate_diff['start_date']);
       }
     }
 
     // filter the changes, some can be safely ignored
-    $ignore_changes_for = array('creation_date', 'contact_id');
+    $ignore_changes_for = array('creation_date', 'contact_id', 'validation_date');
     foreach ($ignore_changes_for as $field) unset($mandate_diff[$field]);
     //  => this should only happen if the donor ID lookup failed...
 
@@ -237,7 +237,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       if (!empty($mandate_diff['end_date'])) {
         CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], 
                                                     $new_mandate_data['end_date'], 
-                                                    $cancel_reason=$config->translate("Update via welcome call."));
+                                                    $cancel_reason=$config->translate("Update end date via welcome call."));
       }
 
       if (!empty($mandate_diff['validation_date'])) {
@@ -252,7 +252,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       }
 
     } else {
-      // MORE/OTHER CHANGES -> create new mandte
+      // MORE/OTHER CHANGES -> create new mandate
       // step 1: find new reference (append letters)
       for ($suffix=ord('a'); $suffix < ord('z'); $suffix++) {
         $new_reference_number = $new_mandate_data['reference'] . chr($suffix);
@@ -281,7 +281,8 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $cancel_date_str = date('Y-m-d');
       CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], 
                                                   $cancel_date_str, 
-                                                  $cancel_reason=sprintf($config->translate("Replaced with '%s' due to welcome call."), $new_reference_number));
+                                                  $cancel_reason=sprintf($config->translate("Replaced with '%s' due to welcome call."), $new_reference_number)
+                                                    . " with changes : ".implode('; ', $mandate_diff));
 
       // step 4: save bank account if it has changed:
       if (!empty($mandate_diff['iban']) || !empty($mandate_diff['bic'])) {
