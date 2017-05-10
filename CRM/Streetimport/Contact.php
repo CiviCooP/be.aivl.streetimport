@@ -47,21 +47,17 @@ class CRM_Streetimport_Contact {
       // create organization as soon as we have an organization name
       if (isset($organizationData['organization_name']) && !empty($organizationData['organization_name'])) {
         try {
-          $result = civicrm_api3('Contact', 'create', array(
+          $organizationParams = array(
             'contact_type' => 'Organization',
-            'organization_name' => $organizationData['organization_name']
-          ));
-          $organization = $result['values'][$result['id']];
-          // add phone if in organization data
-          if (isset($organizationData['organization_phone']) && !empty($organizationData['organization_phone'])) {
-            try {
-              civicrm_api3('Phone', 'create', array(
-              'contact_id'       => $organization['id'],
-              'phone_type_id'    => $config->getDefaultPhoneTypeId(),
-              'location_type_id' => $config->getDefaultLocationTypeId(),
-              'phone'            => $organizationData['organization_phone']));
-            } catch (CiviCRM_API3_Exception $ex) {}
+            'organization_name' => $organizationData['organization_name'],
+          );
+          // add organization number if in data
+          if (isset($organizationData['organization_number']) && !empty($organizationData['organization_number'])) {
+            $customField = 'custom_'.$config->getAivlOrganizationDataCustomFields('aivl_organisation_number');
+            $organizationParams['custom_'.$customField['id']] = $organizationData['organization_number'];
           }
+          $result = civicrm_api3('Contact', 'create', $organizationParams);
+          $organization = $result['values'][$result['id']];
           // if job title in organization data, update individual with job_title and current employer
           if (isset($organizationData['job_title']) && !empty($organizationData['job_title'])) {
             try {
@@ -144,11 +140,11 @@ class CRM_Streetimport_Contact {
       if (trim($nameParts[0]) == 'companyName' && isset($nameParts[1]) && !empty($nameParts[1])) {
         $result['organization_name'] = trim($nameParts[1]);
       }
-      // split second element on ':', second part should be companyNumber and second contact phone data
+      // split second element on ':', second part should be companyNumber going to custom field organization number
       if (isset($orgParts[1])) {
-        $phoneParts = explode(':', trim($orgParts[1]));
-        if (trim($phoneParts[0]) == 'companyNumber' && isset($phoneParts[1]) && !empty($phoneParts[1])) {
-          $result['organization_phone'] = trim($phoneParts[1]);
+        $orgNumberParts = explode(':', trim($orgParts[1]));
+        if (trim($orgNumberParts[0]) == 'companyNumber' && isset($orgNumberParts[1]) && !empty($orgNumberParts[1])) {
+          $result['organization_number'] = trim($orgNumberParts[1]);
         }
       }
       // split third element on ':', first part should be companyFunction and second job title data

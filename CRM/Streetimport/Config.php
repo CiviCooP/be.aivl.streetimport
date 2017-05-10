@@ -26,6 +26,8 @@ class CRM_Streetimport_Config {
   protected $welcomeCallCustomFields = array();
   protected $importErrorCustomGroup = array();
   protected $importErrorCustomFields = array();
+  protected $aivlOrganizatonDataCustomGroup = array();
+  protected $aivlOrganizationDataCustomFields = array();
   protected $externalDonorIdCustomGroup = array();
   protected $externalDonorIdCustomFields = array();
   protected $recruiterInformationCustomGroup = array();
@@ -644,6 +646,21 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to get the aivl organization data custom group (whole array or specific element)
+   *
+   * @param null $key
+   * @return mixed
+   * @access public
+   */
+  public function getAivlOrganizationDataCustomGroup($key = null) {
+    if (empty($key)) {
+      return $this->aivlOrganizatonDataCustomGroup;
+    } else {
+      return $this->aivlOrganizatonDataCustomGroup[$key];
+    }
+  }
+
+  /**
    * Method to get the external donor id custom group (whole array or specific element)
    *
    * @param null $key
@@ -671,6 +688,28 @@ class CRM_Streetimport_Config {
     } else {
       // find field by name or ID
       foreach ($this->externalDonorIdCustomFields as $field_id => $customField) {
+        if ($customField['name'] == $key || $field_id==$key) {
+          return $customField;
+        }
+      }
+      // no such field
+      return NULL;
+    }
+  }
+
+  /**
+   * Method to get the custom fields for organization data (whole array or specific field array)
+   *
+   * @param null $key
+   * @return array
+   * @access public
+   */
+  public function getAivlOrganizationDataCustomFields($key = null) {
+    if (empty($key)) {
+      return $this->aivlOrganizationDataCustomFields;
+    } else {
+      // find field by name or ID
+      foreach ($this->aivlOrganizationDataCustomFields as $field_id => $customField) {
         if ($customField['name'] == $key || $field_id==$key) {
           return $customField;
         }
@@ -914,6 +953,8 @@ class CRM_Streetimport_Config {
     }
     $customDataJson = file_get_contents($jsonFile);
     $customData = json_decode($customDataJson, true);
+    //CRM_Core_Error::debug('customData', $customData);
+    //exit();
 
     foreach ($customData as $customGroupName => $customGroupData) {
       $propertyCustomGroup = $customGroupName.'CustomGroup';

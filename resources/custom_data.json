@@ -1,4 +1,28 @@
 {
+  "aivlOrganizationData":{
+    "name":"aivlOrganizationData",
+    "title":"Organisatie Data",
+    "extends":"Organization",
+    "style":"Inline",
+    "is_multiple":0,
+    "is_active":1,
+    "is_reserved":1,
+    "collapse_display":0,
+    "table_name":"civicrm_value_aivl_organization_data",
+    "fields":{
+      "aivl_organization_id":{
+        "name":"aivl_organization_id",
+        "label":"Organisatienummer",
+        "data_type":"String",
+        "html_type":"Text",
+        "is_searchable":1,
+        "is_view":0,
+        "weight":-20,
+        "column_name":"aivl_organization_id",
+        "is_active":1
+      }
+    }
+  },
   "externalDonorId":{
     "name":"externalDonorId",
     "title":"Externe Donor Identificatie",
