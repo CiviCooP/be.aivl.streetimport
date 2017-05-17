@@ -118,19 +118,19 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * will create/lookup the donor along with all relevant information
    *
    * @param array $record
-   * @param array $recruiting_organisation
+   * @param array $recruitingOrganisation
    * @return array with entity data
    */
-  protected function processDonor($record, $recruiting_organisation) {
+  protected function processDonor($record, $recruitingOrganisation) {
     $config = CRM_Streetimport_Config::singleton();
-    $donor = $this->getDonorWithExternalId($record['DonorID'], $recruiting_organisation['id'], $record);
+    $donor = $this->getDonorWithExternalId($record['DonorID'], $recruitingOrganisation['id'], $record);
     if (!empty($donor)) {
       // issue #82 if loading type is street recruitment, donor should be new so error if already known
       $loadingType = (int) $record['Loading type'];
       $allowedLoadingTypes = $config->getLoadingTypes();
       if ($allowedLoadingTypes[$loadingType] == "Street Recruitment") {
         $this->logger->logError($config->translate("Donor with ID")." ".$record['DonorID']." ".$config->translate("for recr. org.")
-            ." ".$recruiting_organisation['id']." ".$config->translate("already exists where new donor expected in StreetRecruitment.
+            ." ".$recruitingOrganisation['id']." ".$config->translate("already exists where new donor expected in StreetRecruitment.
             No act. or mandate created"), $record);
         return array();
       } else {
@@ -141,25 +141,10 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         return $donor;
       }
     }
-    // create base contact
-    $householdPrefixes = $config->getHouseholdPrefixIds();
-    $contact_data = array();
-    $prefixId = $this->getPrefixIdWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
-    $genderId = $this->getGenderWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
-    if (in_array($record['Prefix'], $householdPrefixes)) {
-      $contact_data['contact_type']      = 'Household';
-      $contact_data['household_name']    = CRM_Utils_Array::value('Last Name',  $record);
-    } else {
-      $contact_data['contact_type']      = 'Individual';
-      $contact_data['first_name']        = CRM_Utils_Array::value('First Name', $record);
-      $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
-      $contact_data['prefix_id']         = $prefixId;
-      $contact_data['gender_id']         = $genderId;
-      $contact_data['birth_date']        = $record['Birth date'];
-    }
-    $donor = $this->createContact($contact_data, $record);
+    $contactData = $this->setDonorData($record);
+    $donor = $this->createContact($contactData, $record);
     if (!empty($donor)) {
-      $this->setDonorID($donor['id'], $record['DonorID'], $recruiting_organisation['id'], $record);
+      $this->setDonorID($donor['id'], $record['DonorID'], $recruitingOrganisation['id'], $record);
 
       // issue 677 - add organization details if required
       if (in_array(CRM_Utils_Array::value('Organization Yes/No', $record), $config->getAcceptedYesValues())) {
@@ -235,6 +220,26 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
     return $donor;
   }
+  protected function setDonorData($record) {
+    // create base contact
+    $householdPrefixes = $config->getHouseholdPrefixIds();
+    $contact_data = array();
+    $contactData =
+    $prefixId = $this->getPrefixIdWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
+    $genderId = $this->getGenderWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
+    if (in_array($record['Prefix'], $householdPrefixes)) {
+      $contact_data['contact_type']      = 'Household';
+      $contact_data['household_name']    = CRM_Utils_Array::value('Last Name',  $record);
+    } else {
+      $contact_data['contact_type']      = 'Individual';
+      $contact_data['first_name']        = CRM_Utils_Array::value('First Name', $record);
+      $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
+      $contact_data['prefix_id']         = $prefixId;
+      $contact_data['gender_id']         = $genderId;
+      $contact_data['birth_date']        = $record['Birth date'];
+    }
+  }
+
   /**
    * Manages the contact_id <-> donor_id (external) mapping
    *
