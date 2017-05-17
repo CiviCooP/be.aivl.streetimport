@@ -53,7 +53,7 @@ class CRM_Streetimport_Contact {
           );
           // add organization number if in data
           if (isset($organizationData['organization_number']) && !empty($organizationData['organization_number'])) {
-            $customField = 'custom_'.$config->getAivlOrganizationDataCustomFields('aivl_organisation_number');
+            $customField = $config->getAivlOrganizationDataCustomFields('aivl_organization_id');
             $organizationParams['custom_'.$customField['id']] = $organizationData['organization_number'];
           }
           $result = civicrm_api3('Contact', 'create', $organizationParams);

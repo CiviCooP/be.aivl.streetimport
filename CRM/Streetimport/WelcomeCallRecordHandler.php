@@ -225,6 +225,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     unset($require_new_mandate['amount']);
     unset($require_new_mandate['end_date']);
     unset($require_new_mandate['date']);
+    unset($mandate_diff['date']);
     unset($require_new_mandate['validation_date']);
 
     if (empty($require_new_mandate)) {
@@ -233,6 +234,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         CRM_Sepa_BAO_SEPAMandate::adjustAmount(     $old_mandate_data['id'], 
                                                     $new_mandate_data['amount']);
       }
+
 
       if (!empty($mandate_diff['end_date'])) {
         CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], 
@@ -279,16 +281,22 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $cancel_date = max($now, $cancel_date);
       }
       $cancel_date_str = date('Y-m-d');
-      CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], 
-                                                  $cancel_date_str, 
-                                                  $cancel_reason=sprintf($config->translate("Replaced with '%s' due to welcome call."), $new_reference_number
-                                                    . " with changes : ".implode('; ', $mandate_diff)));
+      $changesParts = array();
+      $ignoreDiffs = array('date', 'validation_date', 'end_date', 'amount');
+      foreach ($mandate_diff as $diffKey => $diffValue) {
+        if (!in_array($diffKey, $ignoreDiffs)) {
+          $changesParts[] = $diffKey;
+        }
+      }
+      $cancelReason = $config->translate('Replaced with').' '.$new_reference_number.' '
+        .$config->translate('due to the following changes in the Welcome Call').': '
+        .implode('; ', $changesParts);
+      CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], $cancel_date_str, $cancelReason);
 
       // step 4: save bank account if it has changed:
       if (!empty($mandate_diff['iban']) || !empty($mandate_diff['bic'])) {
         $this->saveBankAccount($new_mandate_data, $record);
       }
-
       return $new_mandate;
     }
   }

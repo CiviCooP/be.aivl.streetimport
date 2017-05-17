@@ -220,24 +220,32 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
     return $donor;
   }
+
+  /**
+   * Method to set the donor data
+   *
+   * @param $record
+   * @return array
+   */
   protected function setDonorData($record) {
+    $config = CRM_Streetimport_Config::singleton();
     // create base contact
     $householdPrefixes = $config->getHouseholdPrefixIds();
-    $contact_data = array();
-    $contactData =
+    $donorData = array();
     $prefixId = $this->getPrefixIdWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
     $genderId = $this->getGenderWithImportPrefix(CRM_Utils_Array::value('Prefix', $record));
     if (in_array($record['Prefix'], $householdPrefixes)) {
-      $contact_data['contact_type']      = 'Household';
-      $contact_data['household_name']    = CRM_Utils_Array::value('Last Name',  $record);
+      $donorData['contact_type']      = 'Household';
+      $donorData['household_name']    = CRM_Utils_Array::value('Last Name',  $record);
     } else {
-      $contact_data['contact_type']      = 'Individual';
-      $contact_data['first_name']        = CRM_Utils_Array::value('First Name', $record);
-      $contact_data['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
-      $contact_data['prefix_id']         = $prefixId;
-      $contact_data['gender_id']         = $genderId;
-      $contact_data['birth_date']        = $record['Birth date'];
+      $donorData['contact_type']      = 'Individual';
+      $donorData['first_name']        = CRM_Utils_Array::value('First Name', $record);
+      $donorData['last_name']         = CRM_Utils_Array::value('Last Name',  $record);
+      $donorData['prefix_id']         = $prefixId;
+      $donorData['gender_id']         = $genderId;
+      $donorData['birth_date']        = $record['Birth date'];
     }
+    return $donorData;
   }
 
   /**
