@@ -281,8 +281,8 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $cancel_date_str = date('Y-m-d');
       CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], 
                                                   $cancel_date_str, 
-                                                  $cancel_reason=sprintf($config->translate("Replaced with '%s' due to welcome call."), $new_reference_number)
-                                                    . " with changes : ".implode('; ', $mandate_diff));
+                                                  $cancel_reason=sprintf($config->translate("Replaced with '%s' due to welcome call."), $new_reference_number
+                                                    . " with changes : ".implode('; ', $mandate_diff)));
 
       // step 4: save bank account if it has changed:
       if (!empty($mandate_diff['iban']) || !empty($mandate_diff['bic'])) {
