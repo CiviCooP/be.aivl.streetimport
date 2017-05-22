@@ -154,7 +154,12 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
       case TM_KONTAKT_RESPONSE_KONTAKT_DOWNGRADE:
         // this is a downgrade
-        $this->updateContract($this->getContractID($contact_id, $record), $contact_id, $record);
+        $contract_id = $this->getContractID($contact_id, $record);
+        if (empty($contract_id)) {
+          $this->logger->logError("Trying to downgrade an nonexisting contract for contact [{$contact_id}]!", $record);
+        } else {
+          $this->updateContract($contract_id, $contact_id, $record);
+        }
         break;
 
       case TM_KONTAKT_RESPONSE_KONTAKT_LOESCHEN:

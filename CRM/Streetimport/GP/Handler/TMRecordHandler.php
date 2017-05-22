@@ -110,4 +110,11 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
       return NULL;
     }
   }
+
+  /**
+   * get the medium for created activities
+   */
+  public function getMediumID() {
+    return 2; // Phone
+  }
 }

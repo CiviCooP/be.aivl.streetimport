@@ -204,13 +204,24 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   /**
    * update an existing contract:
    * If contractId is set, then all changes in column U-AE are related to this contractID.
-   * In conversion projects you will find no contractid here, which means you have to create a new one,
    * if the response in field AM/AN is positive and there is data in columns U-AE.
    *
    * FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
    */
   public function updateContract($contract_id, $contact_id, $record) {
-    $config = CRM_Streetimport_Config::singleton();
+    if (empty($contract_id)) return; // this shoudln't happen
+
+    // STEP 1: TRIGGER UPDATE
+
+    // validate parameters
+    if (    empty($record['IBAN'])
+         || empty($record['BIC'])
+         || empty($record['JahresBetrag'])
+         || empty($record['Einzugsintervall'])) {
+      return $this->logger->logError("Couldn't create mandate, information incomplete.", $record);
+    }
+
+    // find out update date
     $now = date('YmdHis');
     if (empty($record['Einzugsstart'])) {
       $new_start_date = $now;
@@ -221,67 +232,47 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       }
     }
 
-    if ($record['weiterbuchen']) {
-      $old_end_date = $new_start_date;
-    } else {
-      $old_end_date = $now;
-    }
-
-    // end old mandate
-    $old_recurring_contribution_id = civicrm_api3('Membership', 'getvalue', array(
-      'id'     => $contract_id,
-      'return' => $config->getGPCustomFieldKey('membership_recurring_contribution')));
-    $old_mandate_id = civicrm_api3('SepaMandate', 'get', array(
-      'entity_id'    => $old_recurring_contribution_id,
-      'entity_table' => 'civicrm_contribution_recur',
-      'return'       => 'id'));
-    if (!empty($old_mandate_id['id'])) {
-      CRM_Sepa_BAO_SEPAMandate::terminateMandate($old_mandate_id['id'], $old_end_date, 'CHNG');
-      CRM_Sepa_Logic_Batching::closeEnded();
-    } else {
-      $this->logger->logError("No mandate attached to membership [{$contract_id}], couldn't stop!", $record);
-    }
-
-    // create new mandate
-    // validate parameters
-    if (    empty($record['IBAN'])
-         || empty($record['BIC'])
-         || empty($record['JahresBetrag'])
-         || empty($record['Einzugsintervall'])) {
-      return $this->logger->logError("Couldn't create mandate, information incomplete.", $record);
-    }
-
-    // FIRST: compile and create SEPA mandate
+    // send upgrade notification
     $annual_amount = $record['JahresBetrag'];
     $frequency = $record['Einzugsintervall'];
     $amount = number_format($annual_amount / $frequency, 2);
-    $mandate_params = array(
-      'type'                => 'RCUR',
+    civicrm_api3('Contract', 'modify', array(
+      'action'              => 'update',
+      'date'                => $new_start_date,
+      'id'                  => $contract_id,
+      'medium_id'           => $this->getMediumID(),
+      'campaign_id'         => $this->getCampaignID(),
       'iban'                => $record['IBAN'],
       'bic'                 => $record['BIC'],
       'amount'              => $amount,
-      'contact_id'          => $contact_id,
-      'currency'            => 'EUR',
-      'frequency_unit'      => 'month',
-      'cycle_day'           => $config->getNextCycleDay($mandate_start_date),
       'frequency_interval'  => (int) (12.0 / $frequency),
+      'frequency_unit'      => 'month',
+      'cycle_day'           => $config->getNextCycleDay($new_start_date),
       'start_date'          => $new_start_date,
-      'campaign_id'         => $this->getCampaignID($record),
-      'financial_type_id'   => 3, // Membership Dues
-      );
-    if (!empty($record['EinzugsEndeDatum'])) {
-      $mandate_params['end_date'] = date('YmdHis', strtotime($record['EinzugsEndeDatum']));
+      'end_date'            => empty($record['EinzugsEndeDatum']) ? NULL : date('YmdHis', strtotime($record['EinzugsEndeDatum'])),
+      ));
+    $this->logger->logDebug("Update for membership [{$contract_id}] scheduled.", $record);
+
+
+
+    // STEP 2: STOP OLD MANDATE RIGHT AWAY IF REQUESTED
+
+    if (!$record['weiterbuchen']) {
+      $old_recurring_contribution_id = civicrm_api3('Membership', 'getvalue', array(
+        'id'     => $contract_id,
+        'return' => $config->getGPCustomFieldKey('membership_recurring_contribution')));
+      $old_mandate_id = civicrm_api3('SepaMandate', 'get', array(
+        'entity_id'    => $old_recurring_contribution_id,
+        'entity_table' => 'civicrm_contribution_recur',
+        'return'       => 'id'));
+      if (!empty($old_mandate_id['id'])) {
+        CRM_Sepa_BAO_SEPAMandate::terminateMandate($old_mandate_id['id'], $now, 'CHNG');
+        CRM_Sepa_Logic_Batching::closeEnded();
+        $this->logger->logDebug("SEPA mandate for membership [{$contract_id}] terminated right away on request.", $record);
+      } else {
+        $this->logger->logError("No mandate attached to membership [{$contract_id}], couldn't stop!", $record);
+      }
     }
-
-    // create and reload mandate
-    $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_params);
-    $mandate = civicrm_api3('SepaMandate', 'getsingle', array('id' => $mandate['id']));
-
-    // update membership
-    $membership_rcontribution = $config->getGPCustomFieldKey('membership_recurring_contribution');
-    civicrm_api3('Membership', 'create', array(
-      'id'                      => $contract_id,
-      $membership_rcontribution => $mandate['entity_id']));
   }
 
   /**
@@ -318,71 +309,63 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       $this->logger->logError("Contract (membership) [{$membership['id']}] is not active.", $record);
     }
 
-    // finally set to cancelled
-    $membership_cancellation = array(
-      'id'        => $membership['id'],
-      'status_id' => $config->getMembershipCancelledStatus(),
-      'end_date'  => $end_date);
+    // finally call contract extesion
+    civicrm_api3('Contract', 'modify', array(
+      'action'        => 'cancel',
+      'id'            => $membership['id'],
+      'medium_id'     => $this->getMediumID(),
+      'campaign_id'   => $this->getCampaignID(),
+      'cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
+      'cancel_date'   => $this->getDate($record),
+      ));
 
-    // add extra parameters
-    foreach ($params as $key => $value) {
-      $membership_cancellation[$key] = $value;
-    }
-
-    // add cancel data
-    $cancel_reason = CRM_Utils_Array::value('cancel_reason', $params, 'MS02');
-    $membership_cancellation[$config->getGPCustomFieldKey('membership_cancel_reason')] = $cancel_reason;
-    $membership_cancellation[$config->getGPCustomFieldKey('membership_cancel_date')] = $this->getDate($record);
-
-    // finally: end membership
-    civicrm_api3('Membership', 'create', $membership_cancellation);
     $this->logger->logDebug("Contract (membership) [{$membership['id']}] ended.", $record);
 
-    // NOW: end the attached recurring contribution
-    $contribution_recur_id = $membership[$config->getGPCustomFieldKey('membership_recurring_contribution')];
-    if ($contribution_recur_id) {
-      // check if this is a SepaMandate
-      $sepa_mandate = civicrm_api3('SepaMandate', 'get', array(
-        'entity_id'    => $contribution_recur_id,
-        'entity_table' => 'civicrm_contribution_recur'));
-      if ($sepa_mandate['count']) {
-        // this is a SEPA Mandate
-        if ($sepa_mandate['id']) {
-          $mandate = reset($sepa_mandate['values']);
-          if ($this->isMandateActive($mandate)) {
-            // TODO: use API (when available)
-            CRM_Sepa_BAO_SEPAMandate::terminateMandate($sepa_mandate['id'], $end_date, $cancel_reason);
-            CRM_Sepa_Logic_Batching::closeEnded();
-            $this->logger->logDebug("Mandate '{$mandate['reference']}' ended.");
-          } else {
-            $this->logger->logDebug("Mandate  '{$mandate['reference']}' has already been cancelled.");
-          }
+    // SHOULD BE DONE BY CONTRACT EXTENSION: end the attached recurring contribution
+    // $contribution_recur_id = $membership[$config->getGPCustomFieldKey('membership_recurring_contribution')];
+    // if ($contribution_recur_id) {
+    //   // check if this is a SepaMandate
+    //   $sepa_mandate = civicrm_api3('SepaMandate', 'get', array(
+    //     'entity_id'    => $contribution_recur_id,
+    //     'entity_table' => 'civicrm_contribution_recur'));
+    //   if ($sepa_mandate['count']) {
+    //     // this is a SEPA Mandate
+    //     if ($sepa_mandate['id']) {
+    //       $mandate = reset($sepa_mandate['values']);
+    //       if ($this->isMandateActive($mandate)) {
+    //         // TODO: use API (when available)
+    //         CRM_Sepa_BAO_SEPAMandate::terminateMandate($sepa_mandate['id'], $end_date, $cancel_reason);
+    //         CRM_Sepa_Logic_Batching::closeEnded();
+    //         $this->logger->logDebug("Mandate '{$mandate['reference']}' ended.");
+    //       } else {
+    //         $this->logger->logDebug("Mandate  '{$mandate['reference']}' has already been cancelled.");
+    //       }
 
-        } else {
-          $this->logger->logError("Multiple mandates found! This shouldn't happen, please investigate", $record);
-        }
+    //     } else {
+    //       $this->logger->logError("Multiple mandates found! This shouldn't happen, please investigate", $record);
+    //     }
 
-      } else {
-        // this is a non-sepa recurring contribution
-        $contribution_recur_search = civicrm_api3('ContributionRecur', 'get', array('id' => $contribution_recur_id));
-        if ($contribution_recur_search['id']) {
-          $contribution_recur = reset($contribution_recur_search['values']);
-          if ($this->isContributionRecurActive($contribution_recur)) {
-            $cancel_reason = CRM_Utils_Array::value('cancel_reason', $params);
-            civicrm_api3('ContributionRecur', 'create', array(
-              'id'                     => $contribution_recur['id'],
-              'cancel_reason'          => $cancel_reason,
-              'end_date'               => $end_date,
-              'contribution_status_id' => 3, // Cancelled
-              ));
-            $this->logger->logDebug("RecurringContribution [{$contribution_recur['id']}] ended.");
-          } else {
-            $this->logger->logDebug("RecurringContribution [{$contribution_recur['id']}] has already been cancelled.");
-          }
-        }
-      }
-    }
-    $this->logger->logDebug("No payment scheme attached to contract (membership) [{$membership['id']}].", $record);
+    //   } else {
+    //     // this is a non-sepa recurring contribution
+    //     $contribution_recur_search = civicrm_api3('ContributionRecur', 'get', array('id' => $contribution_recur_id));
+    //     if ($contribution_recur_search['id']) {
+    //       $contribution_recur = reset($contribution_recur_search['values']);
+    //       if ($this->isContributionRecurActive($contribution_recur)) {
+    //         $cancel_reason = CRM_Utils_Array::value('cancel_reason', $params);
+    //         civicrm_api3('ContributionRecur', 'create', array(
+    //           'id'                     => $contribution_recur['id'],
+    //           'cancel_reason'          => $cancel_reason,
+    //           'end_date'               => $end_date,
+    //           'contribution_status_id' => 3, // Cancelled
+    //           ));
+    //         $this->logger->logDebug("RecurringContribution [{$contribution_recur['id']}] ended.");
+    //       } else {
+    //         $this->logger->logDebug("RecurringContribution [{$contribution_recur['id']}] has already been cancelled.");
+    //       }
+    //     }
+    //   }
+    // }
+    // $this->logger->logDebug("No payment scheme attached to contract (membership) [{$membership['id']}].", $record);
   }
 
   /**
