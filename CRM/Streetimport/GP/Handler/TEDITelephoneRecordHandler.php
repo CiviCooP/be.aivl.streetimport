@@ -70,6 +70,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
       case TM_PHONE_CHANGED:
         // update phone numbers
         if (empty($phone_ids)) {
+          $this->createManualUpdateActivity($contact_id, "Phone number has changed to: " . $this->getPhoneNumber($record), $record);
           return $this->logger->logError("Phone [{$record['TelID']}] couldn't be identified.", $record);
         } else {
           // delete all identified phones (usually one)
