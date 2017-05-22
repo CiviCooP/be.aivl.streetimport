@@ -233,12 +233,4 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
     // return $this->file_name_data['date'] . $this->file_name_data['time'];
   }
 
-  /**
-   * get the segment ("Zielgruppe")
-   */
-  protected function getSegment($record) {
-    // phone file doesn't have segment data
-    return NULL;
-  }
-
 }

@@ -557,12 +557,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       }
     }
 
-    // add segment ("Zielgruppe")
-    $segment = $this->getSegment($record);
-    if ($segment) {
-      $activityParams[$config->getGPCustomFieldKey('segment')] = $segment;
-    }
-
     $this->createActivity($activityParams, $record, array($config->getFundraiserContactID()));
   }
 
@@ -604,12 +598,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       // 'assignee_contact_id' => (int) $config->getFundraiserContactID(),
     );
 
-    // add segment ("Zielgruppe")
-    $segment = $this->getSegment($record);
-    if ($segment) {
-      $activityParams[$config->getGPCustomFieldKey('segment')] = $segment;
-    }
-
     $activity = $this->createActivity($activityParams, $record);
   }
 
@@ -647,12 +635,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'target_contact_id'   => (int) $contact_id,
       // 'assignee_contact_id' => (int) $config->getFundraiserContactID(),
     );
-
-    // add segment ("Zielgruppe")
-    $segment = $this->getSegment($record);
-    if ($segment) {
-      $activityParams[$config->getGPCustomFieldKey('segment')] = $segment;
-    }
 
     $this->createActivity($activityParams, $record);
   }

@@ -485,13 +485,6 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
   }
 
   /**
-   * get the segemnt id ("Zielgruppe")
-   */
-  protected function getSegment($record) {
-    return $record['zielgruppeid'];
-  }
-
-  /**
    * Get the requested membership type ID from the data record
    */
   protected function getMembershipTypeID($record) {
