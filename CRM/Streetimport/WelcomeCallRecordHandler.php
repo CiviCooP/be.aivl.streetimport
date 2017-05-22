@@ -220,11 +220,12 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       return;
     }
 
-    // if only the attributes amount and/or end_date have changed
+    // if only the attributes amount and/or end_date and/or campaign have changed
     $require_new_mandate = $mandate_diff;
     unset($require_new_mandate['amount']);
     unset($require_new_mandate['end_date']);
     unset($require_new_mandate['date']);
+    unset($require_new_mandate['campaign_id']);
     unset($mandate_diff['date']);
     unset($require_new_mandate['validation_date']);
 
@@ -251,6 +252,14 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
                   'validation_date' => date("YmdHis", $new_validation_date),
                   'date'            => date("YmdHis", $new_signature_date),
                   ));
+      }
+
+      if (!empty($mandate_diff['campaign_id'])) {
+        // update campaign
+        civicrm_api3('SepaMandate', 'create', array(
+          'id' => $old_mandate_data['id'],
+          'campaign_id' => $new_mandate_data['campaign_id'],
+        ));
       }
 
     } else {
