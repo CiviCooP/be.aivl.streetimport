@@ -141,6 +141,11 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_params);
     $mandate = civicrm_api3('SepaMandate', 'getsingle', array('id' => $mandate['id']));
 
+    // make sure the bank account exists
+    $this->addBankAccount($contact_id, 'IBAN', $record['IBAN'], $record, array(
+      'BIC'     => $record['BIC'],
+      'country' => substr($record['IBAN'], 0, 2)));
+
     // NEXT: create membership
     $membership_annual        = $config->getGPCustomFieldKey('membership_annual');
     $membership_frequency     = $config->getGPCustomFieldKey('membership_frequency');
@@ -156,7 +161,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       $membership_frequency     => $frequency,
       $membership_rcontribution => $mandate['entity_id']
       );
-    $membership = civicrm_api3('Membership', 'create', $membership_params);
+    $membership = civicrm_api3('Contract', 'create', $membership_params);
   }
 
   /**
@@ -406,6 +411,54 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
          || $contribution_recur['contribution_status_id'] == 5; // in progress
   }
 
+  /**
+   * Create a new bank account unless it already exists
+   */
+  public function addBankAccount($contact_id, $reference_type, $reference, $record, $data = array()) {
+    try {
+      // look up reference type option value ID(!)
+      $reference_type_value = civicrm_api3('OptionValue', 'getsingle', array(
+        'value'           => $reference_type,
+        'option_group_id' => 'civicrm_banking.reference_types',
+        'is_active'       => 1));
+
+      // find existing references
+      $existing_references = civicrm_api3('BankingAccountReference', 'get', array(
+        'reference'         => $reference,
+        'reference_type_id' => $reference_type_value['id'],
+        'option.limit'      => 0));
+
+      // get the accounts for this
+      $bank_account_ids = array();
+      foreach ($existing_references['values'] as $account_reference) {
+        $bank_account_ids[] = $account_reference['ba_id'];
+      }
+      if (!empty($bank_account_ids)) {
+        $contact_bank_accounts = civicrm_api3('BankingAccount', 'get', array(
+          'id'           => array('IN' => $bank_account_ids),
+          'contact_id'   => $contact_id,
+          'option.limit' => 1));
+        if ($contact_bank_accounts['count']) {
+          // bank account already exists with the contact
+          return;
+        }
+      }
+
+      // if we get here, that means that there is no such bank account
+      //  => create one
+      $bank_account = civicrm_api3('BankingAccount', 'create', array(
+        'contact_id'  => $contact_id,
+        'description' => "Bulk Importer",
+        'data_parsed' => json_encode($data)));
+
+      $bank_account_reference = civicrm_api3('BankingAccountReference', 'create', array(
+        'reference'         => $reference,
+        'reference_type_id' => $reference_type_value['id'],
+        'ba_id'             => $bank_account['id']));
+    } catch (Exception $e) {
+      $this->logger->logError("Couldn't add bank account {$reference} [{$reference_type}]", $record);
+    }
+  }
 
   /**
    * take address data and see what to do with it:
