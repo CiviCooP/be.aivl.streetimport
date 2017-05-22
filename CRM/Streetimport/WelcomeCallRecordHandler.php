@@ -220,13 +220,21 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       return;
     }
 
-    // if only the attributes amount and/or end_date have changed
+    // if only the attributes amount and/or campaign and/or end_date have changed
     $require_new_mandate = $mandate_diff;
     unset($require_new_mandate['amount']);
     unset($require_new_mandate['end_date']);
     unset($require_new_mandate['date']);
     unset($mandate_diff['date']);
     unset($require_new_mandate['validation_date']);
+    unset($require_new_mandate['campaign_id']);
+
+    // if any changes to campaign, update recurring contribution (issue 1139) <https://civicoop.plan.io/issues/1139>
+    if (isset($new_mandate_data['campaign_id'])) {
+      $this->changeCampaign($old_mandate_data, $new_mandate_data, $record);
+      unset($mandate_diff['campaign_id']);
+      unset($new_mandate_data['campaign_id']);
+    }
 
     if (empty($require_new_mandate)) {
       // CHANGES ONLY TO end_date and/or amount
@@ -385,6 +393,35 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       return TRUE;
     } else {
       return FALSE;
+    }
+  }
+
+  /**
+   * Method to update campaign on recurring contribution if required
+   *
+   * @param array $oldMandateData
+   * @param array $newMandateData
+   */
+  protected function changeCampaign($oldMandateData, $newMandateData, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+    try {
+      // find old campaign
+      $oldCampaignId = civicrm_api3('ContributionRecur', 'getvalue', array(
+        'id' => $oldMandateData['entity_id'],
+        'return' => 'campaign_id',
+      ));
+      if ($newMandateData['campaign_id'] != $oldCampaignId) {
+        civicrm_api3('ContributionRecur', 'create', array(
+          'id' => $oldMandateData['entity_id'],
+          'campaign_id' => $newMandateData['campaign_id'],
+        ));
+      }
+      $this->logger->logDebug($config->translate("Campaign changed from")." ".$oldCampaignId." "
+        .$config->translate("to")." ".$newMandateData['campaign_id'], $record);
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError($config->translate("Couldn't find or update recurring contribution with campaign for mandate").' '
+        .$newMandateData['reference'], $record, "Warning");
     }
   }
 }
