@@ -249,7 +249,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'frequency_unit'      => 'month',
       'cycle_day'           => $config->getNextCycleDay($new_start_date),
       'start_date'          => $new_start_date,
-      'end_date'            => empty($record['EinzugsEndeDatum']) ? NULL : date('YmdHis', strtotime($record['EinzugsEndeDatum'])),
+      // no 'end_date' in contracts any more
       ));
     $this->logger->logDebug("Update for membership [{$contract_id}] scheduled.", $record);
 
@@ -272,6 +272,21 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       } else {
         $this->logger->logError("No mandate attached to membership [{$contract_id}], couldn't stop!", $record);
       }
+    }
+
+
+    // STEP 3: SCHEDULE END IF REQUESTED
+
+    if (!empty($record['EinzugsEndeDatum'])) {
+      civicrm_api3('Contract', 'modify', array(
+        'action'        => 'cancel',
+        'id'            => $contract_id,
+        'medium_id'     => $this->getMediumID(),
+        'campaign_id'   => $this->getCampaignID(),
+        'cancel_reason' => 'MS02',
+        'cancel_date'   => date('YmdHis', strtotime($record['EinzugsEndeDatum'])),
+        ));
+      $this->logger->logDebug("Contract (membership) [{$contract_id}] scheduled for termination.", $record);
     }
   }
 
@@ -319,53 +334,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'cancel_date'   => $this->getDate($record),
       ));
 
-    $this->logger->logDebug("Contract (membership) [{$membership['id']}] ended.", $record);
-
-    // SHOULD BE DONE BY CONTRACT EXTENSION: end the attached recurring contribution
-    // $contribution_recur_id = $membership[$config->getGPCustomFieldKey('membership_recurring_contribution')];
-    // if ($contribution_recur_id) {
-    //   // check if this is a SepaMandate
-    //   $sepa_mandate = civicrm_api3('SepaMandate', 'get', array(
-    //     'entity_id'    => $contribution_recur_id,
-    //     'entity_table' => 'civicrm_contribution_recur'));
-    //   if ($sepa_mandate['count']) {
-    //     // this is a SEPA Mandate
-    //     if ($sepa_mandate['id']) {
-    //       $mandate = reset($sepa_mandate['values']);
-    //       if ($this->isMandateActive($mandate)) {
-    //         // TODO: use API (when available)
-    //         CRM_Sepa_BAO_SEPAMandate::terminateMandate($sepa_mandate['id'], $end_date, $cancel_reason);
-    //         CRM_Sepa_Logic_Batching::closeEnded();
-    //         $this->logger->logDebug("Mandate '{$mandate['reference']}' ended.");
-    //       } else {
-    //         $this->logger->logDebug("Mandate  '{$mandate['reference']}' has already been cancelled.");
-    //       }
-
-    //     } else {
-    //       $this->logger->logError("Multiple mandates found! This shouldn't happen, please investigate", $record);
-    //     }
-
-    //   } else {
-    //     // this is a non-sepa recurring contribution
-    //     $contribution_recur_search = civicrm_api3('ContributionRecur', 'get', array('id' => $contribution_recur_id));
-    //     if ($contribution_recur_search['id']) {
-    //       $contribution_recur = reset($contribution_recur_search['values']);
-    //       if ($this->isContributionRecurActive($contribution_recur)) {
-    //         $cancel_reason = CRM_Utils_Array::value('cancel_reason', $params);
-    //         civicrm_api3('ContributionRecur', 'create', array(
-    //           'id'                     => $contribution_recur['id'],
-    //           'cancel_reason'          => $cancel_reason,
-    //           'end_date'               => $end_date,
-    //           'contribution_status_id' => 3, // Cancelled
-    //           ));
-    //         $this->logger->logDebug("RecurringContribution [{$contribution_recur['id']}] ended.");
-    //       } else {
-    //         $this->logger->logDebug("RecurringContribution [{$contribution_recur['id']}] has already been cancelled.");
-    //       }
-    //     }
-    //   }
-    // }
-    // $this->logger->logDebug("No payment scheme attached to contract (membership) [{$membership['id']}].", $record);
+    $this->logger->logDebug("Contract (membership) [{$membership['id']}] scheduled for termination.", $record);
   }
 
   /**
