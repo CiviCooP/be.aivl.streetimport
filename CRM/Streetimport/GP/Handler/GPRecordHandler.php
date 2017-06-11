@@ -336,7 +336,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'medium_id'     => $this->getMediumID(),
       'campaign_id'   => $this->getCampaignID(),
       'cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
-      'cancel_date'   => date('Y-m-d H:i:s', strtotime($this->getDate($record)),
+      'cancel_date'   => date('Y-m-d H:i:s', strtotime($this->getDate($record))),
       );
     error_log("Contract.modify: " . json_encode($contract_modification));
     civicrm_api3('Contract', 'modify', $contract_modification);
