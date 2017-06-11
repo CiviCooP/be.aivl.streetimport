@@ -210,6 +210,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    */
   public function updateContract($contract_id, $contact_id, $record) {
     if (empty($contract_id)) return; // this shoudln't happen
+    $config = CRM_Streetimport_Config::singleton();
 
     // STEP 1: TRIGGER UPDATE
 
