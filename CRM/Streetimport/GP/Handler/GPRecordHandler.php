@@ -147,19 +147,14 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'country' => substr($record['IBAN'], 0, 2)));
 
     // NEXT: create membership
-    $membership_annual        = $config->getGPCustomFieldKey('membership_annual');
-    $membership_frequency     = $config->getGPCustomFieldKey('membership_frequency');
-    $membership_rcontribution = $config->getGPCustomFieldKey('membership_recurring_contribution');
-
     $membership_params = array(
-      'contact_id'              => $contact_id,
-      'membership_type_id'      => $this->getMembershipTypeID($record),
-      'member_since'            => $this->getDate($record),
-      'start_date'              => $mandate_start_date,
-      'campaign_id'             => $this->getCampaignID($record),
-      $membership_annual        => number_format($annual_amount, 2),
-      $membership_frequency     => $frequency,
-      $membership_rcontribution => $mandate['entity_id']
+      'contact_id'                                           => $contact_id,
+      'membership_type_id'                                   => $this->getMembershipTypeID($record),
+      'member_since'                                         => $this->getDate($record),
+      'start_date'                                           => $mandate_start_date,
+      'campaign_id'                                          => $this->getCampaignID($record),
+      'membership_payment.membership_recurring_contribution' => $mandate['entity_id'],
+
       );
     error_log("Contract.create: " . json_encode($membership_params));
     $membership = civicrm_api3('Contract', 'create', $membership_params);
@@ -234,22 +229,25 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       }
     }
 
+    // make sure the bank account exists
+    $ba_id = $this->addBankAccount($contact_id, 'IBAN', $record['IBAN'], $record, array(
+      'BIC'     => $record['BIC'],
+      'country' => substr($record['IBAN'], 0, 2)));
+
     // send upgrade notification
     $annual_amount = $record['JahresBetrag'];
     $frequency = $record['Einzugsintervall'];
     $amount = number_format($annual_amount / $frequency, 2);
     $contract_modification = array(
-      'action'              => 'update',
-      'date'                => $new_start_date,
-      'id'                  => $contract_id,
-      'medium_id'           => $this->getMediumID(),
-      'campaign_id'         => $this->getCampaignID(),
-      'iban'                => $record['IBAN'],
-      'bic'                 => $record['BIC'],
-      'amount'              => $amount,
-      'frequency_interval'  => (int) (12.0 / $frequency),
-      'frequency_unit'      => 'month',
-      'cycle_day'           => $config->getNextCycleDay($new_start_date),
+      'action'                               => 'update',
+      'date'                                 => $new_start_date,
+      'id'                                   => $contract_id,
+      'medium_id'                            => $this->getMediumID(),
+      'campaign_id'                          => $this->getCampaignID(),
+      'membership_payment.from_ba'           => $ba_id,
+      'membership_payment.membership_annual' => number_format($annual_amount, 2),
+      'membership_payment.frequency'         => $frequency,
+      'membership_payment.cycle_day'         => $config->getNextCycleDay($new_start_date),
       // no 'end_date' in contracts any more
       );
     error_log("Contract.modify: " . json_encode($contract_modification));
@@ -282,12 +280,12 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     if (!empty($record['EinzugsEndeDatum'])) {
       $contract_modification = array(
-        'action'        => 'cancel',
-        'id'            => $contract_id,
-        'medium_id'     => $this->getMediumID(),
-        'campaign_id'   => $this->getCampaignID(),
-        'cancel_reason' => 'MS02',
-        'cancel_date'   => date('Y-m-d H:i:s', strtotime($record['EinzugsEndeDatum'])),
+        'action'                                           => 'cancel',
+        'id'                                               => $contract_id,
+        'medium_id'                                        => $this->getMediumID(),
+        'campaign_id'                                      => $this->getCampaignID(),
+        'membership_cancellation.membership_cancel_reason' => 'MS02',
+        'date'                                             => date('Y-m-d H:i:s', strtotime($record['EinzugsEndeDatum'])),
         );
       error_log("Contract.modify: " . json_encode($contract_modification));
       civicrm_api3('Contract', 'modify', $contract_modification);
@@ -331,12 +329,12 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     // finally call contract extesion
     $contract_modification = array(
-      'action'        => 'cancel',
-      'id'            => $membership['id'],
-      'medium_id'     => $this->getMediumID(),
-      'campaign_id'   => $this->getCampaignID(),
-      'cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
-      'cancel_date'   => date('Y-m-d H:i:s', strtotime($this->getDate($record))),
+      'action'                                           => 'cancel',
+      'id'                                               => $membership['id'],
+      'medium_id'                                        => $this->getMediumID(),
+      'campaign_id'                                      => $this->getCampaignID(),
+      'membership_cancellation.membership_cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
+      'date'                                             => date('Y-m-d H:i:s', strtotime($this->getDate($record))),
       );
     error_log("Contract.modify: " . json_encode($contract_modification));
     civicrm_api3('Contract', 'modify', $contract_modification);
@@ -371,6 +369,8 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
   /**
    * Create a new bank account unless it already exists
+   *
+   * @return bank account ID
    */
   public function addBankAccount($contact_id, $reference_type, $reference, $record, $data = array()) {
     try {
@@ -398,7 +398,8 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
           'option.limit' => 1));
         if ($contact_bank_accounts['count']) {
           // bank account already exists with the contact
-          return;
+          $account = reset($contact_bank_accounts['values']);
+          return $account['id'];
         }
       }
 
@@ -413,6 +414,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         'reference'         => $reference,
         'reference_type_id' => $reference_type_value['id'],
         'ba_id'             => $bank_account['id']));
+      return $bank_account['id'];
     } catch (Exception $e) {
       $this->logger->logError("Couldn't add bank account {$reference} [{$reference_type}]", $record);
     }
