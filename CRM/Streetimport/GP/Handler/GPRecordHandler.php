@@ -161,6 +161,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       $membership_frequency     => $frequency,
       $membership_rcontribution => $mandate['entity_id']
       );
+    // error_log("Contract.create: " . json_encode($membership_params));
     $membership = civicrm_api3('Contract', 'create', $membership_params);
   }
 
@@ -237,7 +238,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $annual_amount = $record['JahresBetrag'];
     $frequency = $record['Einzugsintervall'];
     $amount = number_format($annual_amount / $frequency, 2);
-    civicrm_api3('Contract', 'modify', array(
+    $contract_modification = array(
       'action'              => 'update',
       'date'                => $new_start_date,
       'id'                  => $contract_id,
@@ -251,7 +252,9 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'cycle_day'           => $config->getNextCycleDay($new_start_date),
       'start_date'          => $new_start_date,
       // no 'end_date' in contracts any more
-      ));
+      );
+    // error_log("Contract.modify: " . json_encode($contract_modification));
+    civicrm_api3('Contract', 'modify', $contract_modification);
     $this->logger->logDebug("Update for membership [{$contract_id}] scheduled.", $record);
 
 
@@ -279,14 +282,16 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     // STEP 3: SCHEDULE END IF REQUESTED
 
     if (!empty($record['EinzugsEndeDatum'])) {
-      civicrm_api3('Contract', 'modify', array(
+      $contract_modification = array(
         'action'        => 'cancel',
         'id'            => $contract_id,
         'medium_id'     => $this->getMediumID(),
         'campaign_id'   => $this->getCampaignID(),
         'cancel_reason' => 'MS02',
         'cancel_date'   => date('YmdHis', strtotime($record['EinzugsEndeDatum'])),
-        ));
+        );
+      // error_log("Contract.modify: " . json_encode($contract_modification));
+      civicrm_api3('Contract', 'modify', $contract_modification);
       $this->logger->logDebug("Contract (membership) [{$contract_id}] scheduled for termination.", $record);
     }
   }
@@ -326,15 +331,16 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     }
 
     // finally call contract extesion
-    civicrm_api3('Contract', 'modify', array(
+    $contract_modification = array(
       'action'        => 'cancel',
       'id'            => $membership['id'],
       'medium_id'     => $this->getMediumID(),
       'campaign_id'   => $this->getCampaignID(),
       'cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
       'cancel_date'   => $this->getDate($record),
-      ));
-
+      );
+    // error_log("Contract.modify: " . json_encode($contract_modification));
+    civicrm_api3('Contract', 'modify', $contract_modification);
     $this->logger->logDebug("Contract (membership) [{$membership['id']}] scheduled for termination.", $record);
   }
 
