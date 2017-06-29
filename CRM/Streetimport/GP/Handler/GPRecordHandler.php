@@ -266,6 +266,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       );
     error_log("Contract.modify: " . json_encode($contract_modification));
     civicrm_api3('Contract', 'modify', $contract_modification);
+    $this->_contract_changes_produced = TRUE;
     $this->logger->logDebug("Update for membership [{$contract_id}] scheduled.", $record);
 
 
@@ -303,6 +304,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         );
       error_log("Contract.modify: " . json_encode($contract_modification));
       civicrm_api3('Contract', 'modify', $contract_modification);
+      $this->_contract_changes_produced = TRUE;
       $this->logger->logDebug("Contract (membership) [{$contract_id}] scheduled for termination.", $record);
     }
   }
@@ -352,6 +354,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       );
     error_log("Contract.modify: " . json_encode($contract_modification));
     civicrm_api3('Contract', 'modify', $contract_modification);
+    $this->_contract_changes_produced = TRUE;
     $this->logger->logDebug("Contract (membership) [{$membership['id']}] scheduled for termination.", $record);
   }
 
