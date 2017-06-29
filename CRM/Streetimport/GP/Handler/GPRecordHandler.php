@@ -19,6 +19,20 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   protected $_manual_update_required_id = NULL;
   protected $_response_activity_id = NULL;
   protected $_update_activity_id = NULL;
+  protected $_contract_changes_produced = FALSE;
+
+  /**
+   * This event is triggered AFTER the last record of a datasource has been processed
+   *
+   * @param $sourceURI string  source identifier, e.g. file name
+   */
+  public function finishProcessing($sourceURI) {
+    if ($this->_contract_changes_produced) {
+      // if contract changes have been produced, call the
+      //  Contract processor to execute them
+      civicrm_api3('Contract', 'process_scheduled_modifications', array());
+    }
+  }
 
   /**
    * look up contact id with CiviCRM ID

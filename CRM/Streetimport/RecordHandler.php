@@ -50,6 +50,24 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   public abstract function processRecord($record, $sourceURI);
 
+  /**
+   * This event is triggered BEFORE the processing of a datasource starts
+   *
+   * @param $sourceURI string  source identifier, e.g. file name
+   */
+  public function startProcessing($sourceURI) {
+    // NOTHING TO DO, OVERRIDE IF REQUIRED
+  }
+
+  /**
+   * This event is triggered AFTER the last record of a datasource has been processed
+   *
+   * @param $sourceURI string  source identifier, e.g. file name
+   */
+  public function finishProcessing($sourceURI) {
+    // NOTHING TO DO, OVERRIDE IF REQUIRED
+  }
+
 
   /**
    * process all records of the given data source
@@ -68,6 +86,12 @@ abstract class CRM_Streetimport_RecordHandler {
     // exit;
     $counter = 0;
     $sourceURI = $dataSource->getURI();
+
+    // send start event
+    foreach ($handlers as $handler) {
+      $handler->startProcessing();
+    }
+
     while ($dataSource->hasNext()) {
       $record = $dataSource->next();
       // var_dump($record);
@@ -87,6 +111,11 @@ abstract class CRM_Streetimport_RecordHandler {
         // no handlers found.
         $dataSource->logger->logImport($record, false, '', $config->translate('No handlers found'));
       }
+    }
+
+    // send finish event
+    foreach ($handlers as $handler) {
+      $handler->finishProcessing();
     }
   }
 
