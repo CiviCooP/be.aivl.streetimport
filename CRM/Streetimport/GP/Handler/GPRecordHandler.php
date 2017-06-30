@@ -627,9 +627,9 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     }
 
     // determine the subject
-    $campaign = $this->loadEntity('Campaign', $this->getCampaignID($record));
+    // $campaign = $this->loadEntity('Campaign', $this->getCampaignID($record));
     // $subject = $campaign['title'] . ' - ' . $title;
-    $subject = $title; // Marco: drop the title
+    $subject = $title; // Marco said: drop the title
 
     // NOW create the activity
     $activityParams = array(

@@ -21,6 +21,9 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
   /** stores the parsed file name */
   protected $file_name_data = 'not parsed';
 
+  /** stores the parsed file name */
+  protected $_dialoger_cache = array();
+
   /**
    * Check if the given handler implementation can process the record
    *
@@ -109,6 +112,56 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
    *  groups, tags, contact restrictions, etc.
    */
   protected function processAdditionalInformation($contact_id, $record) {
+    // process 'Interesse1' => DD groups
+    $interesse_1 = CRM_Utils_Array::value('Interesse1', $record);
+    switch ($interesse_1) {
+      case '':
+        break;
+
+      case 'A':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Aktivisten'), $record);
+        break;
+
+      case 'B':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Tierfreunde'), $record);
+        break;
+
+      case 'C':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Rationalisten'), $record);
+        break;
+
+      case 'D':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Ökobürger'), $record);
+        break;
+
+      default:
+        $this->logger->logError("Unknown Interesse1 '{$interesse_1}'. Ignored.", $record);
+        break;
+    }
+
+    // process 'Interesse2' => Interest Groups
+    $interesse_2 = CRM_Utils_Array::value('Interesse2', $record);
+    switch ($interesse_2) {
+      case '':
+        break;
+
+      case 'I_MEERE':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Meere'), $record);
+        break;
+
+      // TODO: extend
+
+      default:
+        $this->logger->logError("Unknown Interesse2 '{$interesse_2}'. Ignored.", $record);
+        break;
+    }
+
+    // process 'Informationen_elektronisch' => 'Zusendungen nur online'
+    $elektronisch = CRM_Utils_Array::value('Informationen_elektronisch', $record);
+    if ($elektronisch == 'Ja') {
+      $this->addContactToGroup($contact_id, $config->getGPGroupID('Zusendungen nur online'), $record);
+    }
+
     // TODO:
     // Informationen_elektronisch
     // Nicht_Kontaktieren
@@ -130,7 +183,6 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       'bic'                => CRM_Utils_Array::value('BIC', $record),
       'start_date'         => CRM_Utils_Array::value('Vertrags_Beginn', $record),
       'amount'             => CRM_Utils_Array::value('MG_Beitrag_pro_Jahr', $record),
-      'frequency_interval' => $this->getFrequency(CRM_Utils_Array::value('Zahlungszeitraum', $record)),
       'frequency_unit'     => 'month',
       'contact_id'         => $contact_id,
       'currency'           => 'EUR',
@@ -140,8 +192,10 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
 
     // process/adjust data:
     //  - calculate amount/frequency
-    $amount = number_format($mandate_data['amount'] / $mandate_data['frequency_interval'], 2, '.', '');
-    if ($amount * $mandate_data['frequency_interval'] != $mandate_data['amount']) {
+    $frequency = $this->getFrequency($record);
+    $mandate_data['frequency_interval'] = 12 / $frequency;
+    $amount = number_format($mandate_data['amount'] / $frequency, 2, '.', '');
+    if ($amount * $frequency != $mandate_data['amount']) {
       // this is a bad contract amount for the interval
       $frequency = CRM_Utils_Array::value('Vertrags_Beginn', $record);
       $this->logger->logError("Contract annual amount '{$mandate_data['amount']}' not divisiable by frequency {$frequency}.", $record);
@@ -161,11 +215,11 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     // |           CREATE MEMBERSHIP                 |
     //  ---------------------------------------------
     $contract_data = array(
-      'membership_type_id'                                   => $this->getMembershipType($record),
+      'membership_type_id'                                   => $this->getMembershipTypeID($record),
       'start_date'                                           => CRM_Utils_Array::value('Aufnahmedatum', $record),
       'membership_general.membership_channel'                => CRM_Utils_Array::value('Kontaktart', $record),
       'membership_general.membership_contract'               => CRM_Utils_Array::value('MG_NR_Formular', $record),
-      'membership_general.membership_dialoger'               => $this->getDialoger($record),
+      'membership_general.membership_dialoger'               => $this->getDialogerID($record),
       'membership_payment.membership_recurring_contribution' => $mandate['entity_id'],
       'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $record['BIC']),
       'membership_payment.to_ba'                             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
@@ -174,18 +228,136 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     // process/adjust data:
     $contract_data['start_date'] = date('YmdHis', strtotime($contract_data['start_date']));
 
-    // TODO:
-    // $this->getFrequency
-    // $this->getMembershipType
-    // $this->getDialoger
     // create
-
+    $membership = civicrm_api3('Contract', 'create', $contract_data);
   }
 
 
   //  ---------------------------------------------
-  // |            Helper Functions                 |
+  // |          Helper / Lookup Functions          |
   //  ---------------------------------------------
+
+  /**
+   * Look up the "dialoger" data based on 'Ausweis_nr'
+   */
+  protected function getDialogerID($record) {
+    $dialoger_id = CRM_Utils_Array::value('Ausweis_nr', $record);
+    if (empty($dialoger_id)) {
+      return '';
+    }
+
+    if (!array_key_exists($dialoger_id, $this->_dialoger_cache)) {
+      $config = CRM_Streetimport_Config::singleton();
+      $dialoger_id_field = $config->getGPCustomField('dialoger_id');
+      $dialoger = civicrm_api3('Contact', 'get', array(
+        $dialoger_id_field  => $dialoger_id,
+        'contact_sub_type'  => 'Dialoger',
+        'return'            => 'id'));
+      if (empty($dialoger['id'])) {
+        $this->logger->logError("Dialoger '{$dialoger_id}' not found!", $record);
+        $this->_dialoger_cache[$dialoger_id] = '';
+      } else {
+        $this->_dialoger_cache[$dialoger_id] = $dialoger['id'];
+      }
+    }
+
+    return $this->_dialoger_cache[$dialoger_id];
+  }
+
+  /**
+   * derive the membership type id from the 'Vertragstyp' field
+   * @todo get value range
+   */
+  protected function getMembershipTypeID($record) {
+    $value = CRM_Utils_Array::value('Vertragstyp', $record);
+    $membership_type_name = 'Förderer';
+    switch (strtolower($value)) {
+      case 'KoenigWald':
+        $membership_type_name = 'Könige der Wälder';
+        break;
+
+      case 'Foerderer':
+        $membership_type_name = 'Förderer';
+        break;
+
+      case 'Flottenpatenschaft':
+        $membership_type_name = 'Flottenpatenschaft';
+        break;
+
+      case 'Landwirtschaft':
+        $membership_type_name = 'Landwirtschaft';
+        break;
+
+      case 'Baumpatenschaft':
+        $membership_type_name = 'Baumpatenschaft';
+        break;
+
+      case 'arctic defender':
+        $membership_type_name = 'arctic defender';
+        break;
+
+      case 'Eisbärpatenschaft':
+        $membership_type_name = 'Eisbärpatenschaft';
+        break;
+
+      case 'Walpatenschaft':
+        $membership_type_name = 'Walpatenschaft';
+        break;
+
+      case 'Atom-Eingreiftrupp':
+        $membership_type_name = 'Atom-Eingreiftrupp';
+        break;
+
+      case 'Greenpeace for me':
+        $membership_type_name = 'Greenpeace for me';
+        break;
+
+      default:
+        $this->logger->logError("Unknown Vertragstyp '{$value}', assuming 'Förderer'.", $record);
+        break;
+    }
+
+    // find a membership type with that name
+    $membership_types = $this->getMembershipTypes();
+    foreach ($membership_types as $membership_type) {
+      if ($membership_type['name'] == $membership_type_name) {
+        return $membership_type['id'];
+      }
+    }
+
+    // not found?
+    $this->logger->logError("Unknown Membership type '{$membership_type_name}'.", $record);
+    return 1;
+  }
+
+  /**
+   * get the frequency from the 'Zahlungszeitraum' plain text value
+   * @todo get value range
+   */
+  protected function getFrequency($record) {
+    $value = CRM_Utils_Array::value('Zahlungszeitraum', $record);
+    switch (strtolower($value)) {
+      case 'monatlich':
+        return 12;
+
+      case 'jährlich':
+      case 'jahrlich':
+        return 1;
+
+      case 'halbjährlich':
+      case 'halbjahrlich':
+        return 2;
+
+      case 'vierteljährlich':
+      case 'vierteljahrlich':
+        return 4;
+
+      default:
+        $this->logger->logError("Unknown Zahlungszeitraum '{$value}', assuming annual collection.", $record);
+        return 1;
+        break;
+    }
+  }
 
   /**
    * Will try to parse the given name and extract the parameters outlined in TM_PATTERN

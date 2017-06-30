@@ -364,9 +364,9 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
          $this->addressValidated($contact_id, $record);
 
          // i.e.: 3) remove from groups
-         $this->removeContactFromGroup($contact_id, $config->getGPGroup('kein ACT'), $record);
-         $this->removeContactFromGroup($contact_id, $config->getGPGroup('ACT nur online'), $record);
-         $this->removeContactFromGroup($contact_id, $config->getGPGroup('Zusendungen nur online'), $record);
+         $this->removeContactFromGroup($contact_id, $config->getGPGroupID('kein ACT'), $record);
+         $this->removeContactFromGroup($contact_id, $config->getGPGroupID('ACT nur online'), $record);
+         $this->removeContactFromGroup($contact_id, $config->getGPGroupID('Zusendungen nur online'), $record);
          break;
 
        case 'kein Telefonkontakt erwünscht':
@@ -379,20 +379,20 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
        case 'keine Kalender senden':
          // Marco: 'Negativleistung "Kalender"'
-         $this->addContactToGroup($contact_id, $config->getGPGroup('kein Kalender'), $record);
+         $this->addContactToGroup($contact_id, $config->getGPGroupID('kein Kalender'), $record);
          $this->logger->logDebug("Added contact [{$contact_id}] to group 'kein Kalender'.", $record);
          break;
 
        case 'nur Vereinsmagazin, sonst keine Post':
        case 'nur Vereinsmagazin mit Spendenquittung':
          // Marco: Positivleistung "Nur ACT"
-         $this->addContactToGroup($contact_id, $config->getGPGroup('Nur ACT'), $record);
+         $this->addContactToGroup($contact_id, $config->getGPGroupID('Nur ACT'), $record);
          $this->logger->logDebug("Added contact [{$contact_id}] to group 'Nur ACT'.", $record);
          break;
 
        case 'nur Vereinsmagazin mit 1 Mailing':
          // Marco: Positivleistung "Nur ACT"
-         $this->addContactToGroup($contact_id, $contact_id, $config->getGPGroup('Nur ACT'), $record);
+         $this->addContactToGroup($contact_id, $contact_id, $config->getGPGroupID('Nur ACT'), $record);
          $this->logger->logDebug("Added contact [{$contact_id}] to group 'Nur ACT'.", $record);
 
          //  + alle Monate bis auf Oktober deaktivieren
@@ -405,7 +405,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
        case 'möchte keine Incentives':
          // Marco: Negativleistung " Geschenke"
-         $this->addContactToGroup($contact_id, $config->getGPGroup('keine Geschenke'), $record);
+         $this->addContactToGroup($contact_id, $config->getGPGroupID('keine Geschenke'), $record);
          $this->logger->logDebug("Added contact [{$contact_id}] to group 'keine Geschenke'.", $record);
          break;
 

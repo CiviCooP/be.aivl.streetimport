@@ -74,7 +74,6 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
    */
   public function getGPGroup($group_name) {
     if (!isset($this->gp_groups[$group_name]) || !is_array($this->gp_groups[$group_name])) {
-      // load custom field data
       try {
         $this->gp_groups[$group_name] = civicrm_api3('Group', 'getsingle', array('title' => $group_name));
       } catch (Exception $e) {
