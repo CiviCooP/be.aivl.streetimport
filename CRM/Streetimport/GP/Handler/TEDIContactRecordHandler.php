@@ -438,7 +438,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
          $this->logger->logDebug("Contact [{$contact_id}]: DM restrictions set to '4'.", $record);
          break;
 
-       case 'Postendung nur bei Notfällen':
+       case 'Postsendung nur bei Notfällen':
          // Marco: Im Leistungstool alle Monate rot einfärben
          $dm_restrictions = $config->getGPCustomFieldKey('dm_restrictions');
          civicrm_api3('Contact', 'create', array(
