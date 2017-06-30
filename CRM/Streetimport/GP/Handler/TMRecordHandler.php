@@ -36,10 +36,7 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
     $campaign_identifier = $this->file_name_data['code'];
     if ($this->isCompatibilityMode($record)) {
       // these are IMB campaign IDs, look up the internal Id
-      $campaign = civicrm_api3('Campaign', 'getsingle', array(
-        'external_identifier' => 'AKTION-' . $campaign_identifier,
-        'return' => 'id'));
-      return $campaign['id'];
+      return $this->getCampaignIDbyExternalIdentifier('AKTION-' . $campaign_identifier);
 
     } else {
       // this should be an internal campaign id, with prefix 'C'

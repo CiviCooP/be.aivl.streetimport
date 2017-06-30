@@ -323,19 +323,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     // |             Email Entity                  |
     // ---------------------------------------------
     if (!empty($record['email'])) {
-      $email = trim($record['email']);
-      // see if it's already there
-      $existing_emails = civicrm_api3('Email', 'get', array('email' => $email, 'contact_id' => $contact_id));
-      if ($existing_emails['count'] > 0) {
-        $this->logger->logDebug("Contact [{$contact_id}] already has email '{$email}'", $record);
-      } else {
-        civicrm_api3('Email', 'create', array(
-          'contact_id'       => $contact_id,
-          'email'            => $email,
-          'location_type_id' => $config->getLocationTypeId()));
-        $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Email Added'), NULL, $record);
-        $this->logger->logDebug("Contact [{$contact_id}] email updated: {$email}", $record);
-      }
+      $this->addDetail($record, $contact_id, 'Email', array('email' => $record['email']), TRUE);
     }
   }
 

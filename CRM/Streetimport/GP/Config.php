@@ -57,6 +57,7 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
     return array(
       new CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler($logger),
       new CRM_Streetimport_GP_Handler_TEDIContactRecordHandler($logger),
+      new CRM_Streetimport_GP_Handler_DDRecordHandler($logger),
     );
   }
 

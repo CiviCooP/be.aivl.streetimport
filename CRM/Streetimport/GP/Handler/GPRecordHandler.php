@@ -20,6 +20,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   protected $_response_activity_id = NULL;
   protected $_update_activity_id = NULL;
   protected $_contract_changes_produced = FALSE;
+  protected $_external_identifier_to_campaign_id = array();
 
   /**
    * This event is triggered AFTER the last record of a datasource has been processed
@@ -63,6 +64,74 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       return NULL;
     }
   }
+
+  /**
+   * add a detail entity (Phone, Email, Website, ) to a contact
+   *
+   * @param $record          the data record (for logging)
+   * @param $contact_id      the contact
+   * @param $entity          the entity type to be created, i.e. 'Phone'
+   * @param $data            the data, e.g. ['phone' => '23415425']
+   * @param $create_activity should a 'contact changed' activity be created?
+   * @param $create_data     data to be used if a new entity has to be created.
+   *                           if no location is set, $config->getLocationTypeId() will be used
+   * @return the id of the entity (either created or found)
+   */
+  protected function addDetail($record, $contact_id, $entity, $data, $create_activity=FALSE, $create_data=array()) {
+    // first: try to find it
+    $search = civicrm_api3($entity, 'get', $data + array(
+      'contact_id' => $contact_id,
+      'return'     => 'id'));
+    if ($search['count'] > 0) {
+      // this entity already exists, log it:
+      $print_value = implode('|', array_values($data));
+      $this->logger->logDebug("Contact [{$contact_id}] already has {$entity} '{$print_value}'", $record);
+
+      // return it
+      return reset($search['values'])['id'];
+
+    } else {
+      // not found: create it
+      $config = CRM_Streetimport_Config::singleton();
+
+      // prepare data
+      $create_data = $data + $create_data;
+      $create_data['contact_id'] = $contact_id;
+      if (empty($create_data['location_type_id'])) {
+        $create_data['location_type_id'] = $config->getLocationTypeId();
+      }
+
+      // create a new  entity
+      $new_entity = civicrm_api3($entity, 'create', $create_data);
+
+      // log it
+      $print_value = implode('|', array_values($data));
+      $this->logger->logDebug("Contact [{$contact_id}] new {$entity} added: {$print_value}", $record);
+
+      // create activity if requested
+      if ($create_activity) {
+        $this->createContactUpdatedActivity($contact_id, "Contact {$entity} Added", NULL, $record);
+      }
+
+      // return
+      return $new_entity['id'];
+    }
+  }
+
+  /**
+   * look up campaign id with external identifier (cached)
+   */
+  protected function getCampaignIDbyExternalIdentifier($external_identifier) {
+    if (!array_key_exists($external_identifier, $this->_external_identifier_to_campaign_id)) {
+      $campaign = civicrm_api3('Campaign', 'getsingle', array(
+        'external_identifier' => $external_identifier,
+        'return'              => 'id'));
+      $this->_external_identifier_to_campaign_id[$external_identifier] = $campaign['id'];
+    }
+
+    return $this->_external_identifier_to_campaign_id[$external_identifier];
+  }
+
 
   /**
    * disable a contact with everything that entails
