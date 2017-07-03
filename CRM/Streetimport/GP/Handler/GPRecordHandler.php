@@ -80,6 +80,10 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    * @return the id of the entity (either created or found)
    */
   protected function addDetail($record, $contact_id, $entity, $data, $create_activity=FALSE, $create_data=array()) {
+    // make sure they're not empty...
+    $print_value = implode('|', array_values($data));
+    if (empty($print_value)) return;
+
     // first: try to find it
     $search = civicrm_api3($entity, 'get', $data + array(
       'contact_id' => $contact_id,

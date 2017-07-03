@@ -16,16 +16,13 @@
 class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Handler_GPRecordHandler {
 
   /** file name pattern as used by TM company */
-  protected static $DD_PATTERN = '#(?P<org>[a-zA-Z\-]+)_(?P<agency>\w+)_(?P<date>\d{8})[.](csv|CSV)$#';
+  protected static $DD_PATTERN = '#(?P<org>[a-zA-Z\-]+)_Spender_(?P<agency>\w+)_(?P<date>\d{8})[.](csv|CSV)$#';
 
   /** stores the parsed file name */
   protected $file_name_data = 'not parsed';
 
   /** stores the parsed file name */
   protected $_dialoger_cache = array();
-
-  /** store webshop activiy stuff */
-  protected $_webshop_order_activity_id = NULL;
 
   /**
    * Check if the given handler implementation can process the record
@@ -54,7 +51,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     $contact_id = $this->processContact($record);
 
     // STEP 2: create a new contract for the contact
-    $contract_id = $this->createContract($contact_id, $record);
+    $contract_id = $this->createDDContract($contact_id, $record);
 
     // STEP 3: process Features and stuff
     $this->processAdditionalInformation($contact_id, $contract_id, $record);
@@ -69,6 +66,8 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     if ($deprecated_start_date) {
       $this->createManualUpdateActivity($contact_id, "Deprecated value 'Vertrags_Beginn' given: {$deprecated_start_date}", $record);
     }
+
+    $this->logger->logImport($record, true, $config->translate('DD Contact'));
   }
 
 
@@ -76,6 +75,8 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
    * Create/Find the contact and make sure no base data is lost
    */
   protected function processContact($record) {
+    $config = CRM_Streetimport_Config::singleton();
+
     // compile contact data
     $contact_data = array(
       'formal_title'   => CRM_Utils_Array::value('Titel', $record),
@@ -89,6 +90,11 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       'email'          => CRM_Utils_Array::value('Email', $record),
     );
 
+    // set default country
+    if (empty($contact_data['country_id'])) {
+      $contact_data['country_id'] = $config->getDefaultCountryId();
+    }
+
     // postprocess contact data
     $this->resolveFields($contact_data, $record);
 
@@ -97,7 +103,10 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     $contact_id = $contact_match['id'];
 
     // make sure the extra fields are stored
-    $this->addDetail($record, $contact_id, 'Email', array('email' => $record['email']));
+    // TODO: deal with office@dialogdirect.at ?
+    if (!empty(CRM_Utils_Array::value('Email', $record))) {
+      $this->addDetail($record, $contact_id, 'Email', array('email' => CRM_Utils_Array::value('Email', $record)));
+    }
 
     // ...including the phones
     if (!empty(CRM_Utils_Array::value('Telefon', $record))) {
@@ -108,6 +117,8 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       $phone = '+' . CRM_Utils_Array::value('Mobilnummer', $record);
       $this->addDetail($record, $contact_id, 'Phone', array('phone' => $phone), FALSE, array('phone_type_id' => 2));
     }
+
+    return $contact_id;
   }
 
   /**
@@ -200,6 +211,8 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
 
     for ($feature_idx = 1; $feature_idx <= 4; $feature_idx++) {
       $feature = CRM_Utils_Array::value("Leistung{$feature_idx}", $record);
+
+      // if empty do nothing
       if (empty($feature)) continue;
 
       // process T-Shirt weborders
@@ -207,33 +220,37 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         // create a webshop activity (Activity type: ID 75)  with the status "scheduled"
         //  and in the field "order_type" option value 11 "T-Shirt"
         $this->createWebshopActivity($contact_id, $record, array(
-          $config->getGPCustomField('order_type')        => 11, // T-Shirt
-          $config->getGPCustomField('shirt_type')        => $match['shirt_type'],
-          $config->getGPCustomField('shirt_size')        => $match['shirt_size'],
-          $config->getGPCustomField('linked_membership') => $contract_id,
+          $config->getGPCustomFieldKey('order_type')        => 11, // T-Shirt
+          $config->getGPCustomFieldKey('order_count')       => 1,  // 1 x T-Shirt
+          $config->getGPCustomFieldKey('shirt_type')        => $match['shirt_type'],
+          $config->getGPCustomFieldKey('shirt_size')        => $match['shirt_size'],
+          $config->getGPCustomFieldKey('linked_membership') => $contract_id,
           ));
 
         continue;
       }
 
       // TODO: more features (Leistungen)?
-    }
 
-    // finally: if nothing matched create an error
-    $this->logger->logError("Unknown feature (Leistung): '{$feature}'. Ignored.", $record);
+
+      // finally: if nothing matched create an error
+      $this->logger->logError("Unknown feature (Leistung): '{$feature}'. Ignored.", $record);
+    }
   }
 
   /**
    * Create a new contract for this contact
    */
-  protected function createContract($contact_id, $record) {
+  protected function createDDContract($contact_id, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+
     //  ---------------------------------------------
     // |           CREATE MANDATE                    |
     //  ---------------------------------------------
     $mandate_data = array(
       'iban'               => CRM_Utils_Array::value('IBAN', $record),
       'bic'                => CRM_Utils_Array::value('BIC', $record),
-      'start_date'         => CRM_Utils_Array::value('Vertrags_Beginn', $record),
+      'start_date'         => date('YmdHis', strtotime(CRM_Utils_Array::value('Vertrags_Beginn', $record, 'now'))),
       'amount'             => CRM_Utils_Array::value('MG_Beitrag_pro_Jahr', $record),
       'frequency_unit'     => 'month',
       'contact_id'         => $contact_id,
@@ -267,8 +284,9 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     // |           CREATE MEMBERSHIP                 |
     //  ---------------------------------------------
     $contract_data = array(
+      'contact_id'                                           => $contact_id,
       'membership_type_id'                                   => $this->getMembershipTypeID($record),
-      'start_date'                                           => CRM_Utils_Array::value('Aufnahmedatum', $record),
+      'start_date'                                           => $this->getDate($record),
       'membership_general.membership_channel'                => CRM_Utils_Array::value('Kontaktart', $record),
       'membership_general.membership_contract'               => CRM_Utils_Array::value('MG_NR_Formular', $record),
       'membership_general.membership_dialoger'               => $this->getDialogerID($record),
@@ -301,7 +319,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
 
     if (!array_key_exists($dialoger_id, $this->_dialoger_cache)) {
       $config = CRM_Streetimport_Config::singleton();
-      $dialoger_id_field = $config->getGPCustomField('dialoger_id');
+      $dialoger_id_field = $config->getGPCustomFieldKey('dialoger_id');
       $dialoger = civicrm_api3('Contact', 'get', array(
         $dialoger_id_field  => $dialoger_id,
         'contact_sub_type'  => 'Dialoger',
@@ -330,14 +348,17 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         break;
 
       case 'Foerderer':
+      case 'Förderer':
         $membership_type_name = 'Förderer';
         break;
 
       case 'Flottenpatenschaft':
+      case 'Flottenpate':
         $membership_type_name = 'Flottenpatenschaft';
         break;
 
       case 'Landwirtschaft':
+      case 'LW':
         $membership_type_name = 'Landwirtschaft';
         break;
 
@@ -362,6 +383,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         break;
 
       case 'Greenpeace for me':
+      case 'greenpeace_for_me':
         $membership_type_name = 'Greenpeace for me';
         break;
 
@@ -381,6 +403,18 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     // not found?
     $this->logger->logError("Unknown Membership type '{$membership_type_name}'.", $record);
     return 1;
+  }
+
+  /**
+   * Extracts the specific activity date for this line
+   */
+  protected function getDate($record) {
+    $raw_date = CRM_Utils_Array::value('Aufnahmedatum', $record);
+    if (empty($raw_date)) {
+      return date('YmdHis');
+    } else {
+      return date('YmdHis', strtotime($raw_date));
+    }
   }
 
   /**

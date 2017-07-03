@@ -53,6 +53,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
   } else {
     // NO filepath given, get one from the directory
     $files = glob($source_folder . DIRECTORY_SEPARATOR . "*.csv");
+    $files += glob($source_folder . DIRECTORY_SEPARATOR . "*.CSV");
     // make sure it's sorted
     sort($files);
   }

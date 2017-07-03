@@ -89,7 +89,7 @@ abstract class CRM_Streetimport_RecordHandler {
 
     // send start event
     foreach ($handlers as $handler) {
-      $handler->startProcessing();
+      $handler->startProcessing($sourceURI);
     }
 
     while ($dataSource->hasNext()) {
@@ -115,7 +115,7 @@ abstract class CRM_Streetimport_RecordHandler {
 
     // send finish event
     foreach ($handlers as $handler) {
-      $handler->finishProcessing();
+      $handler->finishProcessing($sourceURI);
     }
   }
 
