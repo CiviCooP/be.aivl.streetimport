@@ -26,7 +26,8 @@ class CRM_Streetimport_Config {
   private $error_activity_id = NULL;
 
   /** caches */
-  private $_activityCompleteStatusId = NULL;
+  private $_activityCompleteStatusId  = NULL;
+  private $_activityScheduledStatusId = NULL;
 
   /**
    * Singleton method
@@ -304,6 +305,19 @@ class CRM_Streetimport_Config {
       $this->_activityCompleteStatusId = CRM_Streetimport_Utils::getActivityStatusIdWithName('Completed');
     }
     return $this->_activityCompleteStatusId;
+  }
+
+  /**
+   * Method to get the default activity status for import error
+   *
+   * @return int
+   * @access public
+   */
+  public function getActivityScheduledStatusId() {
+    if ($this->_activityScheduledStatusId == NULL) {
+      $this->_activityScheduledStatusId = CRM_Streetimport_Utils::getActivityStatusIdWithName('Scheduled');
+    }
+    return $this->_activityScheduledStatusId;
   }
 
   /**

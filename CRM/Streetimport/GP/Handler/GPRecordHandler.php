@@ -19,6 +19,8 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   protected $_manual_update_required_id = NULL;
   protected $_response_activity_id = NULL;
   protected $_update_activity_id = NULL;
+  protected $_webshop_order_activity_id = NULL;
+
   protected $_contract_changes_produced = FALSE;
   protected $_external_identifier_to_campaign_id = array();
 
@@ -646,6 +648,39 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $activity = $this->createActivity($activityParams, $record);
   }
 
+  /**
+   * Create a "Webshop Order" activity
+   *
+   * @param $contact_id        well....
+   * @param $record            the data record that's being processed
+   * @param $data              additional data (e.g. custom fields) for the activity
+   */
+  public function createWebshopActivity($contact_id, $record, $data) {
+    $config = CRM_Streetimport_Config::singleton();
+
+    // first get contact called activity type
+    if ($this->_webshop_order_activity_id == NULL) {
+      $this->_webshop_order_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'Webshop Order', 'name');
+    }
+
+    if (empty($this->_webshop_order_activity_id)) {
+      $this->logger->logError("Activity type 'Webshop Order' unknown. No activity created.", $record);
+      return;
+    }
+
+    // NOW create the activity
+    $activityParams = array(
+      'activity_type_id'    => $this->_webshop_order_activity_id,
+      'subject'             => 'Webshop Order',
+      'status_id'           => $config->getActivityScheduledStatusId(),
+      'campaign_id'         => $this->getCampaignID($record),
+      'activity_date_time'  => $this->getDate($record),
+      'source_contact_id'   => (int) $config->getCurrentUserID(),
+      'target_contact_id'   => (int) $contact_id,
+    );
+
+    $this->createActivity($activityParams + $data, $record);
+  }
 
   /**
    * Create a "Contact Updated" activity

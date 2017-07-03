@@ -24,6 +24,9 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
   /** stores the parsed file name */
   protected $_dialoger_cache = array();
 
+  /** store webshop activiy stuff */
+  protected $_webshop_order_activity_id = NULL;
+
   /**
    * Check if the given handler implementation can process the record
    *
@@ -50,11 +53,11 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     // STEP 1: match/create contact
     $contact_id = $this->processContact($record);
 
-    // STEP 2: process Features and stuff
-    $this->processAdditionalInformation($contact_id, $record);
+    // STEP 2: create a new contract for the contact
+    $contract_id = $this->createContract($contact_id, $record);
 
-    // STEP 3: create a new contract for the contact
-    $this->createContract($contact_id, $record);
+    // STEP 3: process Features and stuff
+    $this->processAdditionalInformation($contact_id, $contract_id, $record);
 
     // STEP 4: create 'manual check' activity
     $note = trim(CRM_Utils_Array::value('Bemerkungen', $record, ''));
@@ -111,7 +114,22 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
    * Process the additional information for the contact:
    *  groups, tags, contact restrictions, etc.
    */
-  protected function processAdditionalInformation($contact_id, $record) {
+  protected function processAdditionalInformation($contact_id, $contract_id, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+    $acceptedYesValues = $config->getAcceptedYesValues();
+
+    // process 'Informationen_elektronisch' => 'Zusendungen nur online'
+    if (in_array(CRM_Utils_Array::value('Informationen_elektronisch', $record), $acceptedYesValues)) {
+      $this->addContactToGroup($contact_id, $config->getGPGroupID('Zusendungen nur online'), $record);
+    }
+
+    // process 'Informationen_elektronisch' => 'Zusendungen nur online'
+    if (in_array(CRM_Utils_Array::value('Nicht_Kontaktieren', $record), $acceptedYesValues)) {
+      // contact should be disabled
+      // TODO: is that the right thing to do?
+      $this->disableContact($contact_id, 'disable', $record);
+    }
+
     // process 'Interesse1' => DD groups
     $interesse_1 = CRM_Utils_Array::value('Interesse1', $record);
     switch ($interesse_1) {
@@ -149,26 +167,60 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         $this->addContactToGroup($contact_id, $config->getGPGroupID('Meere'), $record);
         break;
 
-      // TODO: extend
+      case 'I_ARKTIS':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Klima/Arktis'), $record);
+        break;
+
+      case 'I_ENERGIE':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Atom/Kohle/Erneuerbare'), $record);
+        break;
+
+      case 'I_KONSUM':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Konsum/Marktcheck'), $record);
+        break;
+
+      case 'I_LANDW':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Landwirtschaft (aka Gentech)'), $record);
+        break;
+
+      case 'I_TOXIC':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Toxics'), $record);
+        break;
+
+      case 'I_WALD':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Wald'), $record);
+        break;
+
+      // TODO: extend?
 
       default:
         $this->logger->logError("Unknown Interesse2 '{$interesse_2}'. Ignored.", $record);
         break;
     }
 
-    // process 'Informationen_elektronisch' => 'Zusendungen nur online'
-    $elektronisch = CRM_Utils_Array::value('Informationen_elektronisch', $record);
-    if ($elektronisch == 'Ja') {
-      $this->addContactToGroup($contact_id, $config->getGPGroupID('Zusendungen nur online'), $record);
+    for ($feature_idx = 1; $feature_idx <= 4; $feature_idx++) {
+      $feature = CRM_Utils_Array::value("Leistung{$feature_idx}", $record);
+      if (empty($feature)) continue;
+
+      // process T-Shirt weborders
+      if (preg_match('#^(?P<shirt_type>M|W)/(?P<shirt_size>[A-Z]{1,2})$#', $feature, $match)) {
+        // create a webshop activity (Activity type: ID 75)  with the status "scheduled"
+        //  and in the field "order_type" option value 11 "T-Shirt"
+        $this->createWebshopActivity($contact_id, $record, array(
+          $config->getGPCustomField('order_type')        => 11, // T-Shirt
+          $config->getGPCustomField('shirt_type')        => $match['shirt_type'],
+          $config->getGPCustomField('shirt_size')        => $match['shirt_size'],
+          $config->getGPCustomField('linked_membership') => $contract_id,
+          ));
+
+        continue;
+      }
+
+      // TODO: more features (Leistungen)?
     }
 
-    // TODO:
-    // Informationen_elektronisch
-    // Nicht_Kontaktieren
-    // Interesse1
-    // Interesse2
-    // Leistung1
-    // Leistung2
+    // finally: if nothing matched create an error
+    $this->logger->logError("Unknown feature (Leistung): '{$feature}'. Ignored.", $record);
   }
 
   /**
@@ -230,6 +282,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
 
     // create
     $membership = civicrm_api3('Contract', 'create', $contract_data);
+    return $membership['id'];
   }
 
 
