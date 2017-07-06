@@ -29,11 +29,11 @@ define('TM_KONTAKT_RESPONSE_KONTAKT_ANRUFSPERRE',   41);
 
 
 
-define('TM_PROJECT_TYPE_CONVERSION',   'umw');
-define('TM_PROJECT_TYPE_UPGRADE',      'upg');
-define('TM_PROJECT_TYPE_REACTIVATION', 'rea');
-define('TM_PROJECT_TYPE_RESEARCH',     'res');
-define('TM_PROJECT_TYPE_SURVEY',       'umf');
+define('TM_PROJECT_TYPE_CONVERSION',   'umw'); // Umwandlung
+define('TM_PROJECT_TYPE_UPGRADE',      'upg'); // Upgrade
+define('TM_PROJECT_TYPE_REACTIVATION', 'rea'); // Reaktivierung
+define('TM_PROJECT_TYPE_RESEARCH',     'rec'); // Recherche
+define('TM_PROJECT_TYPE_SURVEY',       'umf'); // Umfrage
 
 
 /**
