@@ -248,6 +248,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       );
     error_log("Contract.create: " . json_encode($membership_params));
     $membership = civicrm_api3('Contract', 'create', $membership_params);
+    $this->_contract_changes_produced = TRUE;
   }
 
   /**
@@ -589,7 +590,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $activityParams = array(
       'activity_type_id'    => $this->_manual_update_required_id,
       'subject'             => $config->translate($subject),
-      'status_id'           => $config->getActivityCompleteStatusId(),
+      'status_id'           => $config->getImportErrorActivityStatusId(),
       'campaign_id'         => $this->getCampaignID($record),
       'activity_date_time'  => $this->getDate($record),
       'target_contact_id'   => (int) $contact_id,
