@@ -20,6 +20,7 @@ define('TM_KONTAKT_RESPONSE_ZUSAGE_ATOM',           59);
 define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZS',     30);
 define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZSO',    31);
 define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_SMS',    32);
+define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_DONE',   33);
 
 define('TM_KONTAKT_RESPONSE_KONTAKT_DOWNGRADE',     24);
 define('TM_KONTAKT_RESPONSE_KONTAKT_LOESCHEN',      25);
@@ -147,6 +148,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZS:
       case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZSO:
       case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_SMS:
+      case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_DONE:
         // contact wants to cancel his/her contract
         $membership = $this->getContract($record, $contact_id);
         $this->cancelContract($membership, $record);
