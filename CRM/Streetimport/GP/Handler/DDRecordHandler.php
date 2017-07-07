@@ -136,9 +136,9 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
 
     // process 'Informationen_elektronisch' => 'Zusendungen nur online'
     if (in_array(CRM_Utils_Array::value('Nicht_Kontaktieren', $record), $acceptedYesValues)) {
-      // contact should be disabled
-      // TODO: is that the right thing to do?
-      $this->disableContact($contact_id, 'disable', $record);
+      // contact should be set to inactive
+      civicrm_api3('Contact', 'setinactive', array(
+        'contact_id' => $contact_id));
     }
 
     // process 'Interesse1' => DD groups
