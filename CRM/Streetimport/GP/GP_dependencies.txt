@@ -1,0 +1,9 @@
+Dependencies
+------------
+org.project60.sepa
+org.project60.banking
+org.project60.bic
+de.systopia.contract
+de.systopia.contactinactive
+de.systopia.xcm
+de.systopia.identitytracker (soon)

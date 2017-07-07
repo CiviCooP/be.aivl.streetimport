@@ -349,12 +349,19 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
 
       case 'Foerderer':
       case 'Förderer':
+      case 'foerderer':
         $membership_type_name = 'Förderer';
         break;
 
       case 'Flottenpatenschaft':
       case 'Flottenpate':
+      case 'flottenpate':
         $membership_type_name = 'Flottenpatenschaft';
+        break;
+
+      case 'Könige der Wälder':
+      case 'koenigwald':
+        $membership_type_name = 'Könige der Wälder';
         break;
 
       case 'Landwirtschaft':
@@ -379,6 +386,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         break;
 
       case 'Atom-Eingreiftrupp':
+      case 'atom_eingreif':
         $membership_type_name = 'Atom-Eingreiftrupp';
         break;
 
