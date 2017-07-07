@@ -23,6 +23,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
   protected $_contract_changes_produced = FALSE;
   protected $_external_identifier_to_campaign_id = array();
+  protected $_external_identifier_to_contact_id = array();
 
   /**
    * This event is triggered AFTER the last record of a datasource has been processed
@@ -51,20 +52,24 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   protected function getContactIDbyExternalID($external_identifier) {
     if (empty($external_identifier)) return NULL;
 
-    // look up contact via external_identifier
-    // TODO: use identity tracker!
-    $contacts = civicrm_api3('Contact', 'get', array(
-      'external_identifier' => $external_identifier,
-      'return'              => 'id'));
-    if ($contacts['count'] == 1) {
-      return $contacts['id'];
-    } elseif ($contacts['count'] > 1) {
-      // not unique? this shouldn't happen
-      return NULL;
-    } else {
-      // NOT found
-      return NULL;
+    if (!array_key_exists($external_identifier, $this->_external_identifier_to_contact_id)) {
+      // TODO: use identity tracker!
+
+      // look up contact via external_identifier
+      $contacts = civicrm_api3('Contact', 'get', array(
+        'external_identifier' => $external_identifier,
+        'return'              => 'id'));
+      if ($contacts['count'] == 1) {
+        $this->_external_identifier_to_contact_id[$external_identifier] = $contacts['id'];
+      } elseif ($contacts['count'] > 1) {
+        // not unique? this shouldn't happen
+        $this->_external_identifier_to_contact_id[$external_identifier] = NULL;
+      } else {
+        // NOT found
+        $this->_external_identifier_to_contact_id[$external_identifier] = NULL;
+      }
     }
+    return $this->_external_identifier_to_contact_id[$external_identifier];
   }
 
   /**
