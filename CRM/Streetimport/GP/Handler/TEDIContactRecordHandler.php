@@ -209,7 +209,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     // Add a note if requested
     // FIELDS: BemerkungFreitext
     if (!empty($record['BemerkungFreitext'])) {
-      $this->createNote($contact_id, $config->translate('TM Import Note'), $record['BemerkungFreitext'], $record);
+      $this->createManualUpdateActivity($contact_id, $record['BemerkungFreitext'], $record);
     }
 
     // If "X" then set  "rts_counter" in table "civicrm_value_address_statistics"  to "0"
