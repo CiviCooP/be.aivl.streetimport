@@ -277,7 +277,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $record['BIC']),
       'membership_payment.to_ba'                             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
       );
-    error_log("Contract.create: " . json_encode($membership_params));
+    // error_log("Contract.create: " . json_encode($membership_params));
     $membership = civicrm_api3('Contract', 'create', $membership_params);
     $this->_contract_changes_produced = TRUE;
   }
@@ -368,7 +368,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'membership_payment.cycle_day'         => $config->getNextCycleDay($new_start_date),
       // no 'end_date' in contracts any more
       );
-    error_log("Contract.modify: " . json_encode($contract_modification));
+    // error_log("Contract.modify: " . json_encode($contract_modification));
     civicrm_api3('Contract', 'modify', $contract_modification);
     $this->_contract_changes_produced = TRUE;
     $this->logger->logDebug("Update for membership [{$contract_id}] scheduled.", $record);
@@ -406,7 +406,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         'membership_cancellation.membership_cancel_reason' => 'MS02',
         'date'                                             => date('Y-m-d H:i:s', strtotime($record['EinzugsEndeDatum'])),
         );
-      error_log("Contract.modify: " . json_encode($contract_modification));
+      // error_log("Contract.modify: " . json_encode($contract_modification));
       civicrm_api3('Contract', 'modify', $contract_modification);
       $this->_contract_changes_produced = TRUE;
       $this->logger->logDebug("Contract (membership) [{$contract_id}] scheduled for termination.", $record);
@@ -456,7 +456,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'membership_cancellation.membership_cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
       'date'                                             => date('Y-m-d H:i:s', strtotime($this->getDate($record))),
       );
-    error_log("Contract.modify: " . json_encode($contract_modification));
+    // error_log("Contract.modify: " . json_encode($contract_modification));
     civicrm_api3('Contract', 'modify', $contract_modification);
     $this->_contract_changes_produced = TRUE;
     $this->logger->logDebug("Contract (membership) [{$membership['id']}] scheduled for termination.", $record);
