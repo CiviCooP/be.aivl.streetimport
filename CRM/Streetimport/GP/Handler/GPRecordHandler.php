@@ -24,6 +24,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   protected $_contract_changes_produced = FALSE;
   protected $_external_identifier_to_campaign_id = array();
   protected $_external_identifier_to_contact_id = array();
+  protected $_internal_identifier_to_contact_id = array();
 
   /**
    * This event is triggered AFTER the last record of a datasource has been processed
@@ -42,8 +43,26 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    * look up contact id with CiviCRM ID
    */
   protected function getContactIDbyCiviCRMID($contact_id) {
-    // TODO: use identity tracker!
-    return $contact_id;
+    if (!array_key_exists($contact_id, $this->_internal_identifier_to_contact_id)) {
+      if (function_exists('identitytracker_civicrm_install')) {
+        // identitytracker is enabled
+        $contacts = civicrm_api3('Contact', 'findbyidentity', array(
+          'identifier_type' => 'internal',
+          'identifier'      => $contact_id));
+        if ($contacts['count'] == 1) {
+          $current_contact_id = $contacts['id'];
+        } else {
+          // NOT found or multiple
+          $current_contact_id = NULL;
+        }
+
+      } else {
+        // identitytracker is NOT enabled
+        $current_contact_id = $contact_id;
+      }
+      $this->_internal_identifier_to_contact_id[$contact_id] = $current_contact_id;
+    }
+    return $this->_internal_identifier_to_contact_id[$contact_id];
   }
 
   /**
@@ -53,12 +72,19 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     if (empty($external_identifier)) return NULL;
 
     if (!array_key_exists($external_identifier, $this->_external_identifier_to_contact_id)) {
-      // TODO: use identity tracker!
+      if (function_exists('identitytracker_civicrm_install')) {
+        // identitytracker is enabled
+        $contacts = civicrm_api3('Contact', 'findbyidentity', array(
+          'identifier_type' => 'external',
+          'identifier'      => $external_identifier));
+      } else {
+        // identitytracker is NOT enabled
+        $contacts = civicrm_api3('Contact', 'get', array(
+          'external_identifier' => $external_identifier,
+          'return'              => 'id'));
+      }
 
-      // look up contact via external_identifier
-      $contacts = civicrm_api3('Contact', 'get', array(
-        'external_identifier' => $external_identifier,
-        'return'              => 'id'));
+      // evaluate results
       if ($contacts['count'] == 1) {
         $this->_external_identifier_to_contact_id[$external_identifier] = $contacts['id'];
       } elseif ($contacts['count'] > 1) {
