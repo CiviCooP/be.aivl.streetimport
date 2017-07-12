@@ -100,10 +100,10 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
       case TM_PROJECT_TYPE_REACTIVATION:
         $contract = $this->getContract($record, $contact_id);
-        if (empty($contract)) {
-          return $this->logger->logError("Reactivation projects should provide contract ID", $record);
-        }
-        if ($this->isContractActive($contract)) {
+        // if (empty($contract)) {
+        //   return $this->logger->logError("Reactivation projects should provide contract ID", $record);
+        // }
+        if ($contract && $this->isContractActive($contract)) {
           return $this->logger->logError("Reactivation projects should refer to inactive contracts", $record);
         }
         break;
