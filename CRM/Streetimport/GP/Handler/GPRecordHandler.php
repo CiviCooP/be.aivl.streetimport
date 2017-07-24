@@ -25,6 +25,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   protected $_external_identifier_to_campaign_id = array();
   protected $_external_identifier_to_contact_id = array();
   protected $_internal_identifier_to_contact_id = array();
+  protected $_iban_to_bic = array();
 
   /**
    * This event is triggered AFTER the last record of a datasource has been processed
@@ -222,7 +223,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     // validate parameters
     if (    empty($record['IBAN'])
-         || empty($record['BIC'])
+         || $this->getBIC($record, $record['IBAN'])
          || empty($record['JahresBetrag'])
          || empty($record['Einzugsintervall'])) {
       return $this->logger->logError("Couldn't create mandate, information incomplete.", $record);
@@ -242,7 +243,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $mandate_params = array(
       'type'                => 'RCUR',
       'iban'                => $record['IBAN'],
-      'bic'                 => $record['BIC'],
+      'bic'                 => $this->getBIC($record, $record['IBAN']),
       'amount'              => $amount,
       'contact_id'          => $contact_id,
       'currency'            => 'EUR',
@@ -269,7 +270,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'start_date'                                           => $mandate_start_date,
       'campaign_id'                                          => $this->getCampaignID($record),
       'membership_payment.membership_recurring_contribution' => $mandate['entity_id'],
-      'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $record['BIC']),
+      'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $this->getBIC($record, $record['IBAN'])),
       'membership_payment.to_ba'                             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
       );
     // error_log("Contract.create: " . json_encode($membership_params));
@@ -285,7 +286,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     // validate parameters
     if (    empty($record['IBAN'])
-         || empty($record['BIC'])
+         || empty($this->getBIC($record, $record['IBAN']))
          || empty($record['BuchungsBetrag'])) {
       return $this->logger->logError("Couldn't create mandate, information incomplete.", $record);
     }
@@ -301,7 +302,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $mandate_params = array(
       'type'                => 'OOFF',
       'iban'                => $record['IBAN'],
-      'bic'                 => $record['BIC'],
+      'bic'                 => $this->getBIC($record, $record['IBAN']),
       'amount'              => number_format($record['BuchungsBetrag'], 2),
       'contact_id'          => $contact_id,
       'currency'            => 'EUR',
@@ -329,7 +330,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     // validate parameters
     if (    empty($record['IBAN'])
-         || empty($record['BIC'])
+         || empty($this->getBIC($record, $record['IBAN']))
          || empty($record['JahresBetrag'])
          || empty($record['Einzugsintervall'])) {
       return $this->logger->logError("Couldn't create mandate, information incomplete.", $record);
@@ -356,7 +357,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'id'                                   => $contract_id,
       'medium_id'                            => $this->getMediumID(),
       'campaign_id'                          => $this->getCampaignID(),
-      'membership_payment.from_ba'           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $record['BIC']),
+      'membership_payment.from_ba'           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $this->getBIC($record, $record['IBAN'])),
       'membership_payment.to_ba'             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
       'membership_payment.membership_annual' => number_format($annual_amount, 2),
       'membership_payment.frequency'         => $frequency,
@@ -483,6 +484,41 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
          || $contribution_recur['contribution_status_id'] == 5; // in progress
   }
 
+  /**
+   * Get the BIC from a record. If no BIC field is in the record
+   * it'll try to look up the BIC using the 'Little BIC Extension'
+   * If no BIC can be found, an error is logged
+   */
+  public function getBIC($record, $iban, $bic_field='BIC') {
+    if (!empty($record[$bic_field])) {
+      return $record[$bic_field];
+    }
+
+    if (empty($iban)) {
+      $this->logger->logError("Couldn't resolve BIC, no IBAN given.", $record);
+      return NULL;
+    }
+
+    if (!empty($this->_iban_to_bic[$iban])) {
+      return $this->_iban_to_bic[$iban];
+    }
+
+    $config = CRM_Streetimport_Config::singleton();
+    if (!empty($iban) && $config->isLittleBicExtensionAccessible()) {
+      // use Little BIC extension to look up IBAN
+      $result = civicrm_api3('Bic', 'getfromiban', array('iban' => $iban));
+      if (!empty($result['bic'])) {
+        $this->_iban_to_bic[$iban] = $result['bic'];
+        return $result['bic'];
+      }
+    }
+
+    if (!isset($this->_iban_to_bic[$iban])) {
+      $this->_iban_to_bic[$iban] = '';
+      $this->logger->logError("Couldn't resolve BIC for IBAN '{$iban}'", $record);
+    }
+    return NULL;
+  }
 
   /**
    * take address data and see what to do with it:

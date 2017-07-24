@@ -184,4 +184,11 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
   public function getAllAddressAttributes() {
     return array('postal_code', 'street_address', 'city', 'country_id');
   }
+
+  /**
+   * Check if the "Little BIC Extension" is available
+   */
+  public function isLittleBicExtensionAccessible() {
+    return CRM_Sepa_Logic_Settings::isLittleBicExtensionAccessible();
+  }
 }
