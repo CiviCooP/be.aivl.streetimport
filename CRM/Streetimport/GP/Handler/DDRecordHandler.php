@@ -95,6 +95,11 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       $contact_data['country_id'] = $config->getDefaultCountryId();
     }
 
+    // format the birth date as Y-m-d
+    if (!empty($contact_data['birth_date'])) {
+      $contact_data['birth_date'] = date('Y-m-d', strtotime($contact_data['birth_date']));
+    }
+
     // postprocess contact data
     $this->resolveFields($contact_data, $record);
 
