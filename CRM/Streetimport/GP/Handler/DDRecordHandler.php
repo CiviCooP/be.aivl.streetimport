@@ -254,6 +254,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       'amount'             => CRM_Utils_Array::value('MG_Beitrag_pro_Jahr', $record),
       'frequency_unit'     => 'month',
       'contact_id'         => $contact_id,
+      'financial_type_id'  => 3, // Membership Dues
       'currency'           => 'EUR',
       'type'               => 'RCUR',
       'campaign_id'        => $this->getCampaignID($record),
