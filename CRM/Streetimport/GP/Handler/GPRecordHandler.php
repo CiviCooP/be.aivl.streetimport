@@ -261,11 +261,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_params);
     $mandate = civicrm_api3('SepaMandate', 'getsingle', array('id' => $mandate['id']));
 
-    // make sure the bank account exists
-    $this->addBankAccount($contact_id, 'IBAN', $record['IBAN'], $record, array(
-      'BIC'     => $record['BIC'],
-      'country' => substr($record['IBAN'], 0, 2)));
-
     // NEXT: create membership
     $membership_params = array(
       'contact_id'                                           => $contact_id,
