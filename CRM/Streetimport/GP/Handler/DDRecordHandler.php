@@ -254,7 +254,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     //  ---------------------------------------------
     $mandate_data = array(
       'iban'               => CRM_Utils_Array::value('IBAN', $record),
-      'bic'                => CRM_Utils_Array::value('BIC', $record),
+      'bic'                => $this->getBIC($record, CRM_Utils_Array::value('IBAN', $record)),
       'start_date'         => date('YmdHis', strtotime(CRM_Utils_Array::value('Vertrags_Beginn', $record, 'now'))),
       'amount'             => CRM_Utils_Array::value('MG_Beitrag_pro_Jahr', $record),
       'frequency_unit'     => 'month',
@@ -281,9 +281,24 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     $mandate_data['start_date'] = date('YmdHis', strtotime($mandate_data['start_date']));
     $mandate_data['cycle_day']  = $config->getNextCycleDay($mandate_data['start_date']);
 
+    // check parameters
+    $required_params = array('bic', 'iban', 'start_date', 'cycle_day', 'contact_id');
+    foreach ($required_params as $required_param) {
+      if (empty($mandate_data[$required_param])) {
+        $this->logger->logError("Contract couldn't be created, '{$required_param}' is missing.", $record);
+        return;
+      }
+    }
+
     // create mandate
-    $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_data);
-    $mandate = civicrm_api3('SepaMandate', 'getsingle', array('id' => $mandate['id']));
+    $mandate = NULL;
+    try {
+      $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_data);
+      $mandate = civicrm_api3('SepaMandate', 'getsingle', array('id' => $mandate['id']));
+    } catch (Exception $e) {
+      $this->logger->logError("Contract couldn't be created, error was: " . $e->getMessage(), $record);
+      return;
+    }
 
 
     //  ---------------------------------------------
