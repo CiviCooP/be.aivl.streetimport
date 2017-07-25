@@ -315,6 +315,16 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $record['BIC']),
       'membership_payment.to_ba'                             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
     );
+    $membership_params = array(
+      'contact_id'                                           => $contact_id,
+      'membership_type_id'                                   => $this->getMembershipTypeID($record),
+      'member_since'                                         => $this->getDate($record),
+      'start_date'                                           => $mandate_start_date,
+      'campaign_id'                                          => $this->getCampaignID($record),
+      'membership_payment.membership_recurring_contribution' => $mandate['entity_id'],
+      'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $this->getBIC($record, $record['IBAN'])),
+      'membership_payment.to_ba'                             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
+      );
 
     // process/adjust data:
     $contract_data['start_date'] = date('YmdHis', strtotime($contract_data['start_date']));
@@ -488,15 +498,15 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
   protected function getCampaignID($record) {
     switch ($this->file_name_data['agency']) {
       case 'GP':
-        return $this->getCampaignIDbyExternalIdentifier('AKTION-7874');
+        return $this->getCampaignIDbyExternalIdentifier('DD_DDG');
         break;
 
       case 'DDI':
-        return $this->getCampaignIDbyExternalIdentifier('AKTION-7875');
+        return $this->getCampaignIDbyExternalIdentifier('DD_DDDD');
         break;
 
       case 'WS':
-        return $this->getCampaignIDbyExternalIdentifier('AKTION-7876');
+        return $this->getCampaignIDbyExternalIdentifier('DD_DDWS');
         break;
 
       default:
