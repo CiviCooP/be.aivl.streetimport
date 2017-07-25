@@ -363,34 +363,28 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
   protected function getMembershipTypeID($record) {
     $value = CRM_Utils_Array::value('Vertragstyp', $record);
     $membership_type_name = 'Förderer';
-    switch (strtolower($value)) {
-      case 'KoenigWald':
-        $membership_type_name = 'Könige der Wälder';
-        break;
-
-      case 'Foerderer':
-      case 'Förderer':
+    switch (trim(strtolower($value))) {
+      case 'förderer':
       case 'foerderer':
         $membership_type_name = 'Förderer';
         break;
 
-      case 'Flottenpatenschaft':
-      case 'Flottenpate':
+      case 'flottenpatenschaft':
       case 'flottenpate':
         $membership_type_name = 'Flottenpatenschaft';
         break;
 
-      case 'Könige der Wälder':
+      case 'könige der wälder':
       case 'koenigwald':
         $membership_type_name = 'Könige der Wälder';
         break;
 
-      case 'Landwirtschaft':
-      case 'LW':
+      case 'landwirtschaft':
+      case 'lw':
         $membership_type_name = 'Landwirtschaft';
         break;
 
-      case 'Baumpatenschaft':
+      case 'baumpatenschaft':
         $membership_type_name = 'Baumpatenschaft';
         break;
 
@@ -398,20 +392,20 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         $membership_type_name = 'arctic defender';
         break;
 
-      case 'Eisbärpatenschaft':
+      case 'eisbärpatenschaft':
         $membership_type_name = 'Eisbärpatenschaft';
         break;
 
-      case 'Walpatenschaft':
+      case 'walpatenschaft':
         $membership_type_name = 'Walpatenschaft';
         break;
 
-      case 'Atom-Eingreiftrupp':
+      case 'atom-eingreiftrupp':
       case 'atom_eingreif':
         $membership_type_name = 'Atom-Eingreiftrupp';
         break;
 
-      case 'Greenpeace for me':
+      case 'greenpeace for me':
       case 'greenpeace_for_me':
         $membership_type_name = 'Greenpeace for me';
         break;
