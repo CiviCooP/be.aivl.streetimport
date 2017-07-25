@@ -85,7 +85,7 @@ class CRM_Streetimport_ImportResult {
 
     if ($log_level > $this->logging_threshold) {
       $this->log_entries[] = array(
-        'timestamp' => date('Y-m-d h:i:s'),
+        'timestamp' => date('Y-m-d H:i:s'),
         'id'        => $record_id,
         'log_level' => $log_level,
         'message'   => $message,
@@ -104,7 +104,7 @@ class CRM_Streetimport_ImportResult {
 
     // log to file
     if ($this->log_file && $log_level >= $this->file_threshold) {
-      fputs($this->log_file, date('Y-m-d h:i:s'));
+      fputs($this->log_file, date('Y-m-d H:i:s'));
       fputs($this->log_file, ' ');
       fputs($this->log_file, $log_level_string);
       fputs($this->log_file, ' [');
