@@ -293,6 +293,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     // create mandate
     $mandate = NULL;
     try {
+      // error_log("SepaMandate.createfull: " . json_encode($mandate_data));
       $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_data);
       $mandate = civicrm_api3('SepaMandate', 'getsingle', array('id' => $mandate['id']));
     } catch (Exception $e) {
@@ -307,7 +308,9 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     $contract_data = array(
       'contact_id'                                           => $contact_id,
       'membership_type_id'                                   => $this->getMembershipTypeID($record),
+      'member_since'                                         => $this->getDate($record),
       'start_date'                                           => $this->getDate($record),
+      'campaign_id'                                          => $this->getCampaignID($record),
       'membership_general.membership_channel'                => CRM_Utils_Array::value('Kontaktart', $record),
       'membership_general.membership_contract'               => CRM_Utils_Array::value('MG_NR_Formular', $record),
       'membership_general.membership_dialoger'               => $this->getDialogerID($record),
@@ -315,21 +318,12 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $record['BIC']),
       'membership_payment.to_ba'                             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
     );
-    $membership_params = array(
-      'contact_id'                                           => $contact_id,
-      'membership_type_id'                                   => $this->getMembershipTypeID($record),
-      'member_since'                                         => $this->getDate($record),
-      'start_date'                                           => $mandate_start_date,
-      'campaign_id'                                          => $this->getCampaignID($record),
-      'membership_payment.membership_recurring_contribution' => $mandate['entity_id'],
-      'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $this->getBIC($record, $record['IBAN'])),
-      'membership_payment.to_ba'                             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
-      );
 
     // process/adjust data:
     $contract_data['start_date'] = date('YmdHis', strtotime($contract_data['start_date']));
 
     // create
+    // error_log("Contract.create: " . json_encode($contract_data));
     $membership = civicrm_api3('Contract', 'create', $contract_data);
     return $membership['id'];
   }

@@ -145,7 +145,7 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
         throw new Exception("There's something wrong with the getNextCycleDay method.");
       }
     }
-    return date('d', $start_date);
+    return (int) date('d', $start_date);
   }
 
   /**
