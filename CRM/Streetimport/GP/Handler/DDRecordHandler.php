@@ -394,6 +394,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         break;
 
       case 'arctic defender':
+      case 'arctic_defender':
         $membership_type_name = 'arctic defender';
         break;
 
