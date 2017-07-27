@@ -67,6 +67,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       $this->createManualUpdateActivity($contact_id, "Deprecated value 'Vertrags_Beginn' given: {$deprecated_start_date}", $record);
     }
 
+    civicrm_api3('Contract', 'process_scheduled_modifications', array());
     $this->logger->logImport($record, true, $config->translate('DD Contact'));
   }
 
