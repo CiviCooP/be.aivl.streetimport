@@ -14,8 +14,8 @@
     <url desc="Support">http://www.civicoop.org</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
-  <releaseDate>2017-07-25</releaseDate>
-  <version>2.1.GP-beta5-dev5</version>
+  <releaseDate>2017-07-27</releaseDate>
+  <version>2.2.GP-dev6</version>
   <develStage>beta</develStage>
   <compatibility>
     <ver>4.6</ver>
