@@ -738,7 +738,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     // NOW create the activity
     $activityParams = array(
       'activity_type_id'    => $this->_webshop_order_activity_id,
-      'subject'             => 'Webshop Order',
+      'subject'             => CRM_Utils_Array::value('subject', $data, 'Webshop Order'),
       'status_id'           => $config->getActivityScheduledStatusId(),
       'campaign_id'         => $this->getCampaignID($record),
       'activity_date_time'  => $this->getDate($record),
