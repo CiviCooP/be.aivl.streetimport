@@ -170,7 +170,8 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
           'label'           => $this->config->translate('Contact Called'),
           'is_active'       => 1
           ));
-        $this->_contact_called_activity_id = $activity['id'];
+        $activity = civicrm_api3('OptionValue', 'getsingle', array('id' => $activity['id'], 'return' => 'value'));
+        $this->_contact_called_activity_id = $activity['value'];
       }
     }
 
