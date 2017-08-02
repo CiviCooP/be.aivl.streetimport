@@ -2,8 +2,7 @@
 /*-------------------------------------------------------------+
 | GP StreetImporter Record Handlers                            |
 | Copyright (C) 2017 SYSTOPIA                                  |
-| Author: M. McAndrew (michaelmcandrew@thirdsectordesign.org)  |
-|         B. Endres (endres -at- systopia.de)                  |
+| Author: B. Endres (endres -at- systopia.de)                  |
 | http://www.systopia.de/                                      |
 +--------------------------------------------------------------*/
 
@@ -431,27 +430,27 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    */
   public function cancelContract($membership, $record, $params = array()) {
     try {
-    $config = CRM_Streetimport_Config::singleton();
-    $end_date = date('YmdHis', strtotime('yesterday')); // end_date has to be now, not $this->getDate()
+      $config = CRM_Streetimport_Config::singleton();
+      $end_date = date('YmdHis', strtotime('yesterday')); // end_date has to be now, not $this->getDate()
 
-    // first load the membership
-    if (empty($membership)) {
-      return $this->logger->logError("Contract (membership) [{$membership['id']}] NOT FOUND.", $record);
-    }
+      // first load the membership
+      if (empty($membership)) {
+        return $this->logger->logError("Contract (membership) [{$membership['id']}] NOT FOUND.", $record);
+      }
 
-    // now check if it's still active
-    if (!$this->isContractActive($membership)) {
-      $this->logger->logError("Contract (membership) [{$membership['id']}] is not active.", $record);
-    }
+      // now check if it's still active
+      if (!$this->isContractActive($membership)) {
+        $this->logger->logError("Contract (membership) [{$membership['id']}] is not active.", $record);
+      }
 
       // finally call contract extension
-    $contract_modification = array(
-      'action'                                           => 'cancel',
-      'id'                                               => $membership['id'],
-      'medium_id'                                        => $this->getMediumID(),
-      'campaign_id'                                      => $this->getCampaignID(),
-      'membership_cancellation.membership_cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
-      );
+      $contract_modification = array(
+        'action'                                           => 'cancel',
+        'id'                                               => $membership['id'],
+        'medium_id'                                        => $this->getMediumID(),
+        'campaign_id'                                      => $this->getCampaignID(),
+        'membership_cancellation.membership_cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
+        );
 
       // add cancel date if in the future:
       $requested_cancel_date = strtotime($this->getDate($record));
@@ -459,10 +458,10 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         $contract_modification['date'] = date('Y-m-d H:i:00', $requested_cancel_date);
       }
 
-    // error_log("Contract.modify: " . json_encode($contract_modification));
-    civicrm_api3('Contract', 'modify', $contract_modification);
-    $this->_contract_changes_produced = TRUE;
-    $this->logger->logDebug("Contract (membership) [{$membership['id']}] scheduled for termination.", $record);
+      // error_log("Contract.modify: " . json_encode($contract_modification));
+      civicrm_api3('Contract', 'modify', $contract_modification);
+      $this->_contract_changes_produced = TRUE;
+      $this->logger->logDebug("Contract (membership) [{$membership['id']}] scheduled for termination.", $record);
     } catch (Exception $e) {
       $this->logger->logError("Contract (membership) [{$membership['id']}] received an exception when trying to terminate it: " . $e->getMessage(), $record);
     }

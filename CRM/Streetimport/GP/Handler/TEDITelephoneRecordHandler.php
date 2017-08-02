@@ -3,7 +3,6 @@
 | GP StreetImporter Record Handlers                            |
 | Copyright (C) 2017 SYSTOPIA                                  |
 | Author: B. Endres (endres -at- systopia.de)                  |
-|         M. McAndrew (michaelmcandrew@thirdsectordesign.org)  |
 | http://www.systopia.de/                                      |
 +--------------------------------------------------------------*/
 
