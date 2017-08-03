@@ -379,8 +379,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
 
     // STEP 2: STOP OLD MANDATE RIGHT AWAY IF REQUESTED
-
-    if (!$record['weiterbuchen']) {
+    if (empty($record['weiterbuchen'])) {
       $old_recurring_contribution_id = civicrm_api3('Membership', 'getvalue', array(
         'id'     => $contract_id,
         'return' => $config->getGPCustomFieldKey('membership_recurring_contribution')));
