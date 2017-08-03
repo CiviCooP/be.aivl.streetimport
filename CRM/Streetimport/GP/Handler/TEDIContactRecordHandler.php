@@ -346,7 +346,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         $config->getGPCustomFieldKey('rts_counter') => 0));
       $this->logger->logDebug("RTS counter for address [{$address_id}] (contact [{$contact_id}]) was reset.", $record);
     } else {
-      $this->logger->logError("RTS counter couldn't be reset, (primary) address for contact [{$contact_id}] couldn't be identified.", $record);
+      $this->logger->logDebug("RTS counter couldn't be reset, (primary) address for contact [{$contact_id}] couldn't be identified.", $record);
     }
   }
 
