@@ -272,7 +272,8 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $this->getBIC($record, $record['IBAN'])),
       'membership_payment.to_ba'                             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
       );
-    // error_log("Contract.create: " . json_encode($membership_params));
+
+    $this->logger->logDebug("Calling Contract.create: " . json_encode($membership_params), $record);
     $membership = civicrm_api3('Contract', 'create', $membership_params);
     $this->_contract_changes_produced = TRUE;
   }
@@ -371,7 +372,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       $contract_modification['membership_type_id'] = $new_type;
     }
 
-    $this->logger->logDebug("Contract.modify: " . json_encode($contract_modification), $record);
+    $this->logger->logDebug("Calling Contract.modify: " . json_encode($contract_modification), $record);
     civicrm_api3('Contract', 'modify', $contract_modification);
     $this->_contract_changes_produced = TRUE;
     $this->logger->logDebug("Update for membership [{$contract_id}] scheduled.", $record);
@@ -408,7 +409,8 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         'membership_cancellation.membership_cancel_reason' => 'MS02',
         'date'                                             => date('Y-m-d H:i:s', strtotime($record['EinzugsEndeDatum'])),
         );
-      // error_log("Contract.modify: " . json_encode($contract_modification));
+
+      $this->logger->logDebug("Calling Contract.modify: " . json_encode($contract_modification), $record);
       civicrm_api3('Contract', 'modify', $contract_modification);
       $this->_contract_changes_produced = TRUE;
       $this->logger->logDebug("Contract (membership) [{$contract_id}] scheduled for termination.", $record);
@@ -465,7 +467,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         $contract_modification['date'] = date('Y-m-d H:i:00', $requested_cancel_date);
       }
 
-      // error_log("Contract.modify: " . json_encode($contract_modification));
+      $this->logger->logDebug("Calling Contract.modify: " . json_encode($contract_modification), $record);
       civicrm_api3('Contract', 'modify', $contract_modification);
       $this->_contract_changes_produced = TRUE;
       $this->logger->logDebug("Contract (membership) [{$membership['id']}] scheduled for termination.", $record);

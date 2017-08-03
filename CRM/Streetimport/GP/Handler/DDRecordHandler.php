@@ -330,7 +330,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     $contract_data['start_date'] = date('YmdHis', strtotime($contract_data['start_date']));
 
     // create
-    // error_log("Contract.create: " . json_encode($contract_data));
+    $this->logger->logDebug("Calling Contract.create: " . json_encode($contract_data), $record);
     $membership = civicrm_api3('Contract', 'create', $contract_data);
     return $membership['id'];
   }
