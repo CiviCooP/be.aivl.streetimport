@@ -135,7 +135,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         if (empty($contract_id)) {
           $this->createContract($contact_id, $record);
         } else {
-          $this->updateContract($contract_id, $contact_id, $record);
+          $this->updateContract($contract_id, $contact_id, $record, $this->getMembershipTypeID($record));
         }
         break;
 

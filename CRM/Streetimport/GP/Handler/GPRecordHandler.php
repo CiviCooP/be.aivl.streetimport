@@ -321,7 +321,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    *
    * FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
    */
-  public function updateContract($contract_id, $contact_id, $record) {
+  public function updateContract($contract_id, $contact_id, $record, $new_type = NULL) {
     if (empty($contract_id)) return; // this shoudln't happen
     $config = CRM_Streetimport_Config::singleton();
 
@@ -363,6 +363,12 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'membership_payment.cycle_day'         => $config->getNextCycleDay($new_start_date),
       // no 'end_date' in contracts any more
       );
+
+    // add membership type change (if requested)
+    if ($new_type) {
+      $contract_modification['membership_type_id'] = $new_type;
+    }
+
     // error_log("Contract.modify: " . json_encode($contract_modification));
     civicrm_api3('Contract', 'modify', $contract_modification);
     $this->_contract_changes_produced = TRUE;
