@@ -319,9 +319,12 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    * If contractId is set, then all changes in column U-AE are related to this contractID.
    * if the response in field AM/AN is positive and there is data in columns U-AE.
    *
-   * FIELDS: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
+   * @param $contract_id  the contract/membership ID
+   * @param $record       the record expected to contain the following data: Vertragsnummer  Bankleitzahl  Kontonummer Bic Iban  Kontoinhaber  Bankinstitut  Einzugsstart  JahresBetrag  BuchungsBetrag  Einzugsintervall  EinzugsEndeDatum
+   * @param $new_type     can provide a new membership_type_id
+   * @param $action       the Contract.modfify action: 'update' or 'revive'
    */
-  public function updateContract($contract_id, $contact_id, $record, $new_type = NULL) {
+  public function updateContract($contract_id, $contact_id, $record, $new_type = NULL, $action = 'update') {
     if (empty($contract_id)) return; // this shoudln't happen
     $config = CRM_Streetimport_Config::singleton();
 
@@ -351,7 +354,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $frequency = $record['Einzugsintervall'];
     $amount = number_format($annual_amount / $frequency, 2);
     $contract_modification = array(
-      'action'                               => 'update',
+      'action'                               => $action,
       'date'                                 => $new_start_date,
       'id'                                   => $contract_id,
       'medium_id'                            => $this->getMediumID(),
