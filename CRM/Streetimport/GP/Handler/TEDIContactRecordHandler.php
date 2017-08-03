@@ -456,6 +456,21 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
          break;
 
        default:
+         // maybe it's a T-Shirt?
+         if (preg_match('#^(?P<shirt_type>M|W)/(?P<shirt_size>[A-Z]{1,2})$#', $note, $match)) {
+           // create a webshop activity (Activity type: ID 75)  with the status "scheduled"
+           //  and in the field "order_type" option value 11 "T-Shirt"
+           $this->createWebshopActivity($contact_id, $record, array(
+             'subject' => "order type T-Shirt {$match['shirt_type']}/{$match['shirt_size']} AND number of items 1",
+             $config->getGPCustomFieldKey('order_type')        => 11, // T-Shirt
+             $config->getGPCustomFieldKey('order_count')       => 1,  // 1 x T-Shirt
+             $config->getGPCustomFieldKey('shirt_type')        => $match['shirt_type'],
+             $config->getGPCustomFieldKey('shirt_size')        => $match['shirt_size'],
+             // $config->getGPCustomFieldKey('linked_membership') => $contract_id,
+             ));
+           break;
+         }
+
          return $this->logger->logError("Unkown feature '{$note}' ignored.", $record);
          break;
 
