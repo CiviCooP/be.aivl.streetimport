@@ -352,7 +352,6 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     // send upgrade notification
     $annual_amount = $record['JahresBetrag'];
     $frequency = $record['Einzugsintervall'];
-    $amount = number_format($annual_amount / $frequency, 2);
     $contract_modification = array(
       'action'                               => $action,
       'date'                                 => $new_start_date,
@@ -372,7 +371,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       $contract_modification['membership_type_id'] = $new_type;
     }
 
-    // error_log("Contract.modify: " . json_encode($contract_modification));
+    $this->logger->logDebug("Contract.modify: " . json_encode($contract_modification), $record);
     civicrm_api3('Contract', 'modify', $contract_modification);
     $this->_contract_changes_produced = TRUE;
     $this->logger->logDebug("Update for membership [{$contract_id}] scheduled.", $record);

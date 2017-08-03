@@ -162,6 +162,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         if (empty($contract_id)) {
           $this->logger->logError("Trying to downgrade an nonexisting contract for contact [{$contact_id}]!", $record);
         } else {
+          // TODO: can downgrades cause type changes?
           $this->updateContract($contract_id, $contact_id, $record);
         }
         break;
