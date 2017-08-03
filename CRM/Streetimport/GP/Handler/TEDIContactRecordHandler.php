@@ -79,6 +79,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
      *           VERIFICATION           *
      ***********************************/
     $project_type = strtolower(substr($this->file_name_data['project1'], 0, 3));
+    $modify_command = 'update';
     switch ($project_type) {
       case TM_PROJECT_TYPE_CONVERSION:
         if (!empty($this->getContractID($contact_id, $record))) {
@@ -88,26 +89,26 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
       case TM_PROJECT_TYPE_UPGRADE:
         $contract = $this->getContract($record, $contact_id);
-        // apparently this is not the case
-        // if (empty($contract)) {
-        //   return $this->logger->logError("Update projects should provide contract ID", $record);
-        // }
-        // if (!$this->isContractActive($contract)) {
-        //   return $this->logger->logError("Update projects should refer to active contracts", $record);
-        // }
-        break;
-
-      case TM_PROJECT_TYPE_REACTIVATION:
-        $contract = $this->getContract($record, $contact_id);
-        // if (empty($contract)) {
-        //   return $this->logger->logError("Reactivation projects should provide contract ID", $record);
-        // }
-        if ($contract && $this->isContractActive($contract)) {
-          return $this->logger->logError("Reactivation projects should refer to inactive contracts", $record);
+        if (empty($contract)) {
+          return $this->logger->logError("Couldn't find contract to update", $record);
+        }
+        if (!$this->isContractActive($contract)) {
+          return $this->logger->logError("Update projects should refer to active contracts", $record);
         }
         break;
 
+      case TM_PROJECT_TYPE_REACTIVATION:
       case TM_PROJECT_TYPE_RESEARCH:
+        $contract = $this->getContract($record, $contact_id);
+        if (empty($contract)) {
+          return $this->logger->logError("Couldn't find contract to update", $record);
+        }
+        if ($this->isContractActive($contract)) {
+          return $this->logger->logError("This project should only refer to inactive contracts", $record);
+        }
+        $modify_command = 'revive';
+        break;
+
       case TM_PROJECT_TYPE_SURVEY:
         // Nothing to check here?
         break;
@@ -137,8 +138,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         } else {
           // submit membership type if there's a change
           $membership_type_id = $this->getMembershipTypeID($record);
-          $command = ($project_type == TM_PROJECT_TYPE_REACTIVATION) ? 'revive' : 'update';
-          $this->updateContract($contract_id, $contact_id, $record, $membership_type_id, $command);
+          $this->updateContract($contract_id, $contact_id, $record, $membership_type_id, $modify_command);
         }
         break;
 

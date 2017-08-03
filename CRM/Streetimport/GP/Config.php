@@ -15,6 +15,7 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
   /** custom field cache */
   protected $gp_custom_fields = array();
   protected $gp_groups = array();
+  protected $active_membership_statuses = NULL;
 
   /**
    * Constructor method
@@ -116,8 +117,17 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
    * get a list of statuses considered active
    */
   public function getActiveMembershipStatuses() {
-    // TODO: look up?
-    return array(1,2,3);
+    if ($this->active_membership_statuses === NULL) {
+      $result = civicrm_api3('MembershipStatus', 'get', array(
+        'is_current_member' => 1,
+        'return'            => 'id'));
+      $this->active_membership_statuses = array();
+      foreach ($result['values'] as $status) {
+        $this->active_membership_statuses[] = $status['id'];
+      }
+    }
+
+    return $this->active_membership_statuses;
   }
 
   /**
