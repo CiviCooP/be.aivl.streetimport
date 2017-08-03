@@ -255,7 +255,6 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     $mandate_data = array(
       'iban'               => CRM_Utils_Array::value('IBAN', $record),
       'bic'                => $this->getBIC($record, CRM_Utils_Array::value('IBAN', $record)),
-      'start_date'         => date('YmdHis', strtotime(CRM_Utils_Array::value('Vertrags_Beginn', $record, 'now'))),
       'amount'             => CRM_Utils_Array::value('MG_Beitrag_pro_Jahr', $record),
       'frequency_unit'     => 'month',
       'contact_id'         => $contact_id,
@@ -277,8 +276,16 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     }
     $mandate_data['amount'] = $amount;
 
-    //  - parse start date
-    $mandate_data['start_date'] = date('YmdHis', strtotime($mandate_data['start_date']));
+    // process start date
+    $now = date('YmdHis');
+    if (empty($record['Vertrags_Beginn'])) {
+      $mandate_data['start_date'] = $now;
+    } else {
+      $mandate_data['start_date'] = date('YmdHis', strtotime($record['Vertrags_Beginn']));
+      if ($mandate_data['start_date'] < $now) {
+        $mandate_data['start_date'] = $now;
+      }
+    }
     $mandate_data['cycle_day']  = $config->getNextCycleDay($mandate_data['start_date']);
 
     // check parameters
