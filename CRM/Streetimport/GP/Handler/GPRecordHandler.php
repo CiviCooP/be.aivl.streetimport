@@ -222,7 +222,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     // validate parameters
     if (    empty($record['IBAN'])
-         || $this->getBIC($record, $record['IBAN'])
+         || empty($this->getBIC($record, $record['IBAN']))
          || empty($record['JahresBetrag'])
          || empty($record['Einzugsintervall'])) {
       return $this->logger->logError("Couldn't create mandate, information incomplete.", $record);
