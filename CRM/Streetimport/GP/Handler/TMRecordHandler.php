@@ -52,7 +52,7 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
 
     $membership = civicrm_api3('Membership', 'get', array('id' => $membership_id));
     if ($membership['id']) {
-      return reset($membership);
+      return reset($membership['values']);
     } else {
       return NULL;
     }
