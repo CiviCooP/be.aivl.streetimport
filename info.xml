@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <extension key="be.aivl.streetimport" type="module">
   <file>streetimport</file>
-  <name>Street Recruitment Import AIVL</name>
-  <description>Extension to import Street Recruitment and Welcome Call csv files and generate required CiviCRM entities</description>
+  <name>Bulk Importer</name>
+  <description>Processes TM/DD Files</description>
   <license>AGPL-3.0</license>
   <maintainer>
     <author>SYSTOPIA</author>
@@ -20,7 +20,7 @@
   <compatibility>
     <ver>4.6</ver>
   </compatibility>
-  <comments></comments>
+  <comments>Based on AIVL's Street Recruitment Import</comments>
   <civix>
     <namespace>CRM/Streetimport</namespace>
   </civix>
