@@ -315,8 +315,8 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     $contract_data = array(
       'contact_id'                                           => $contact_id,
       'membership_type_id'                                   => $this->getMembershipTypeID($record),
-      'member_since'                                         => $this->getDate($record),
-      'start_date'                                           => $this->getDate($record),
+      'join_date'                                            => $this->getDate($record),
+      'start_date'                                           => date('YmdHis'), // now
       'campaign_id'                                          => $this->getCampaignID($record),
       'membership_general.membership_channel'                => CRM_Utils_Array::value('Kontaktart', $record),
       'membership_general.membership_contract'               => CRM_Utils_Array::value('MG_NR_Formular', $record),
