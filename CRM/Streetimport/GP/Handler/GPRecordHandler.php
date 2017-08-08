@@ -354,16 +354,16 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $annual_amount = $record['JahresBetrag'];
     $frequency = $record['Einzugsintervall'];
     $contract_modification = array(
-      'action'                               => $action,
-      'date'                                 => $new_start_date,
-      'id'                                   => $contract_id,
-      'medium_id'                            => $this->getMediumID(),
-      'campaign_id'                          => $this->getCampaignID(),
-      'membership_payment.from_ba'           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $this->getBIC($record, $record['IBAN'])),
-      'membership_payment.to_ba'             => CRM_Contract_BankingLogic::getCreditorBankAccount(),
-      'membership_payment.membership_annual' => number_format($annual_amount, 2),
-      'membership_payment.frequency'         => $frequency,
-      'membership_payment.cycle_day'         => $config->getNextCycleDay($new_start_date),
+      'action'                                  => $action,
+      'date'                                    => $new_start_date,
+      'id'                                      => $contract_id,
+      'medium_id'                               => $this->getMediumID(),
+      'campaign_id'                             => $this->getCampaignID(),
+      'membership_payment.from_ba'              => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $this->getBIC($record, $record['IBAN'])),
+      'membership_payment.to_ba'                => CRM_Contract_BankingLogic::getCreditorBankAccount(),
+      'membership_payment.membership_annual'    => number_format($annual_amount, 2),
+      'membership_payment.membership_frequency' => $frequency,
+      'membership_payment.cycle_day'            => $config->getNextCycleDay($new_start_date),
       // no 'end_date' in contracts any more
       );
 
