@@ -410,7 +410,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
        case 'nur Vereinsmagazin mit 1 Mailing':
          // Marco: Positivleistung "Nur ACT"
-         $this->addContactToGroup($contact_id, $contact_id, $config->getGPGroupID('Nur ACT'), $record);
+         $this->addContactToGroup($contact_id, $config->getGPGroupID('Nur ACT'), $record);
          $this->logger->logDebug("Added contact [{$contact_id}] to group 'Nur ACT'.", $record);
 
          //  + alle Monate bis auf Oktober deaktivieren
