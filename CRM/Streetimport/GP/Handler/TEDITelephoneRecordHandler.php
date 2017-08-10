@@ -188,7 +188,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
       'details'             => $this->config->translate('Called on number ') . $this->getPhoneNumber($record),
     );
 
-    $this->createActivity($activityParams, $record, array($this->config->getFundraiserContactID()));
+    $this->createActivity($activityParams, $record);
   }
 
 
