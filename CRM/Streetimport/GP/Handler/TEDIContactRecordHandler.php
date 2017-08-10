@@ -123,8 +123,6 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         if (empty($contract_id)) {
           $this->createContract($contact_id, $record);
         } else {
-          // submit membership type if there's a change
-          $membership_type_id = $this->getMembershipTypeID($record);
           // load the contract
           $contract  = $this->getContract($record, $contact_id);
           if (empty($contract)) {
@@ -137,6 +135,14 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
             } elseif ($modify_command == 'revive' && $is_active) {
               $this->logger->logError("This project should only refer to inactive contracts", $record);
             } else {
+              // submit membership type if there's a change
+              if ($record['Ergebnisnummer'] == TM_KONTAKT_RESPONSE_ZUSAGE_FOERDER) {
+                // this simply means 'carry on' (see GP-1000)
+                $membership_type_id = NULL;
+              } else {
+                $membership_type_id = $this->getMembershipTypeID($record);
+              }
+
               // ALL GOOD: do the upgrade!
               $this->updateContract($contract_id, $contact_id, $record, $membership_type_id, $modify_command);
             }
