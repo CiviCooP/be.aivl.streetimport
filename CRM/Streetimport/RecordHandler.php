@@ -24,6 +24,9 @@ abstract class CRM_Streetimport_RecordHandler {
   /** for cached membership lookup **/
   private $membership_types = NULL;
 
+  /** cache for resolveContactID function */
+  private $_identity_tracker_cache = array();
+
 
   public function __construct($logger) {
     $this->logger = $logger;
@@ -168,6 +171,61 @@ abstract class CRM_Streetimport_RecordHandler {
     }
 
     return NULL;
+  }
+
+  /**
+   * Resolves a CiviCRM contact ID ($type = 'internal') or
+   *  an external_identifier ($type = 'external') using the
+   *  "identity tracker extension" (if installed).
+   * The lookup results are cached
+   */
+  protected function resolveContactID($contact_id, $record, $type = 'internal') {
+    if (empty($contact_id)) {
+      return NULL;
+    }
+
+    // check cache
+    if (isset($this->_identity_tracker_cache[$type][$contact_id])) {
+      return $this->_identity_tracker_cache[$type][$contact_id];
+    }
+
+    $current_contact_id = '';
+
+    if (function_exists('identitytracker_civicrm_install')) {
+      // identitytracker is enabled
+      $contacts = civicrm_api3('Contact', 'findbyidentity', array(
+        'identifier_type' => $type,
+        'identifier'      => $contact_id));
+      if ($contacts['count'] == 1) {
+        $current_contact_id = $contacts['id'];
+      }
+
+    } else {
+      // identitytracker is NOT enabled
+      switch ($type) {
+        case 'internal':
+          $current_contact_id = $contact_id;
+          break;
+
+        case 'external':
+          // look up contact
+          $search = civicrm_api3('Contact', 'get', array(
+            'external_identifier' => $contact_id,
+            'return'              => 'id'));
+          if (!empty($search['id'])) {
+            $current_contact_id = $contact_id;
+          }
+          break;
+
+        default:
+          $this->logger->logError("Unknown reference type '{$type}'.", $record);
+          break;
+      }
+    }
+
+    // store the result
+    $this->_identity_tracker_cache[$type][$contact_id] = $current_contact_id;
+    return $current_contact_id;
   }
 
   /**

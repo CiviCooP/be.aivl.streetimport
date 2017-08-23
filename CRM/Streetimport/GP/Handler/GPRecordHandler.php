@@ -41,6 +41,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
   /**
    * look up contact id with CiviCRM ID
+   * @todo use resolveContactID
    */
   protected function getContactIDbyCiviCRMID($contact_id) {
     if (!array_key_exists($contact_id, $this->_internal_identifier_to_contact_id)) {
@@ -67,6 +68,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
   /**
    * look up contact id with external ID
+   * @todo use resolveContactID
    */
   protected function getContactIDbyExternalID($external_identifier) {
     if (empty($external_identifier)) return NULL;
