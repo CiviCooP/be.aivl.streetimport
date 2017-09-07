@@ -7,7 +7,6 @@
 +--------------------------------------------------------------*/
 
 define('REPETITION_FRAME_DECEASED',   "2 years");
-define('REPETITION_SUBJECT_DECEASED', "TODO");
 
 /**
  * Processes PostRetour barcode lists (GP-331)
@@ -228,6 +227,7 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
         if ($changed) {
           // there is a change, check if it's in the time frame we're looking for
           if (strtotime($record['log_date']) >= strtotime($minimum_date)) {
+            $this->logger->logDebug("Address change relevant (date range)", $record);
             return TRUE;
           }
         }
@@ -243,16 +243,27 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
   protected function getRTSSubject($category) {
     switch (strtolower($category)) {
       case 'unused':
+        return 'Abgabestelle unbenutzt';
       case 'incomplete':
+        return 'Anschrift ungenügend';
       case 'badcode':
+        return 'falsche PLZ';
       case 'rejected':
+        return 'nicht angenommen';
       case 'notretrieved':
+        return 'nicht behoben';
+      case 'rejected':
+        return 'nicht angenommen';
       case 'other':
+        return 'sonstiges';
       case 'unknown':
+        return 'unbekannt';
       case 'moved':
+        return 'verzogen';
       case 'deceased':
+        return 'verstorben';
       default:
-        return 'TODO';
+        return 'sonstiges';
       }
   }
 
