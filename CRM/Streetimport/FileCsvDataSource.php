@@ -33,7 +33,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
   public function reset() {
     $config = CRM_Streetimport_Config::singleton();
 
-    $this->validate_separator();
+    // $this->validate_separator();
     $this->validate_encoding();
     // try loading the given file
     $this->reader  = fopen($this->uri, 'r');
