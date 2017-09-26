@@ -286,7 +286,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         $mandate_data['start_date'] = $now;
       }
     }
-    $mandate_data['cycle_day']  = $config->getNextCycleDay($mandate_data['start_date']);
+    $mandate_data['cycle_day']  = $config->getNextCycleDay($mandate_data['start_date'], $now);
 
     // check parameters
     $required_params = array('bic', 'iban', 'start_date', 'cycle_day', 'contact_id');

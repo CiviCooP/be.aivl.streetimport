@@ -249,7 +249,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'contact_id'          => $contact_id,
       'currency'            => 'EUR',
       'frequency_unit'      => 'month',
-      'cycle_day'           => $config->getNextCycleDay($mandate_start_date),
+      'cycle_day'           => $config->getNextCycleDay($mandate_start_date, $now),
       'frequency_interval'  => (int) (12.0 / $frequency),
       'start_date'          => $mandate_start_date,
       'campaign_id'         => $this->getCampaignID($record),
@@ -365,7 +365,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'membership_payment.to_ba'                => CRM_Contract_BankingLogic::getCreditorBankAccount(),
       'membership_payment.membership_annual'    => number_format($annual_amount, 2),
       'membership_payment.membership_frequency' => $frequency,
-      'membership_payment.cycle_day'            => $config->getNextCycleDay($new_start_date),
+      'membership_payment.cycle_day'            => $config->getNextCycleDay($new_start_date, $now),
       // no 'end_date' in contracts any more
       );
 

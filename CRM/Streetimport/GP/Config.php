@@ -149,21 +149,29 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
   /**
    * calculate the next valid cycle day
    */
-  public function getNextCycleDay($start_date) {
+  public function getNextCycleDay($start_date, $now) {
     // TODO: use SEPA function
-    $buffer_days = 1; // TODO: more?
-    $cycle_days = $this->getCycleDays();
 
+    // find the right start date
+    $buffer_days = 2; // TODO: more?
+    $now                 = strtotime($now);
+    $start_date          = strtotime($start_date);
+    $earliest_start_date = strtotime("+{$buffer_days} day", $now);
+    if ($start_date < $earliest_start_date) {
+      $start_date = $earliest_start_date;
+    }
+
+    // now: find the next valid start day
+    $cycle_days = $this->getCycleDays();
     $safety_counter = 32;
-    $start_date = strtotime("+{$buffer_days} day", strtotime($start_date));
-    while (!in_array(date('d', $start_date), $cycle_days)) {
+    while (!in_array(date('j', $start_date), $cycle_days)) {
       $start_date = strtotime('+ 1 day', $start_date);
       $safety_counter -= 1;
       if ($safety_counter == 0) {
         throw new Exception("There's something wrong with the getNextCycleDay method.");
       }
     }
-    return (int) date('d', $start_date);
+    return (int) date('j', $start_date);
   }
 
   /**
