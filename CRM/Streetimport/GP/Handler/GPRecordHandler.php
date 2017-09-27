@@ -278,6 +278,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $this->logger->logDebug("Calling Contract.create: " . json_encode($membership_params), $record);
     $membership = civicrm_api3('Contract', 'create', $membership_params);
     $this->_contract_changes_produced = TRUE;
+    return $membership['id'];
   }
 
   /**

@@ -80,6 +80,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
      ***********************************/
     $project_type = strtolower(substr($this->file_name_data['project1'], 0, 3));
     $modify_command = 'update';
+    $contract_id = NULL;
     $contract_id_required = FALSE;
     switch ($project_type) {
       case TM_PROJECT_TYPE_CONVERSION:
@@ -127,7 +128,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
           if ($contract_id_required) {
             $this->logger->logError("This record type expects a contract id, but it's missing.", $record);
           } else {
-            $this->createContract($contact_id, $record);
+            $contract_id = $this->createContract($contact_id, $record);
           }
         } else {
           // load the contract
@@ -241,7 +242,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     // FIELDS: Bemerkung1  Bemerkung2  Bemerkung3  Bemerkung4  Bemerkung5 ...
     for ($i=1; $i <= 10; $i++) {
       if (!empty($record["Bemerkung{$i}"])) {
-        $this->processAdditionalFeature($record["Bemerkung{$i}"], $contact_id, $record);
+        $this->processAdditionalFeature($record["Bemerkung{$i}"], $contact_id, $contract_id, $record);
       }
     }
 
@@ -380,7 +381,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    *
    * Those can trigger certain actions within Civi as mentioned in doc "20131107_Responses_Bemerkungen_1-5"
    */
-  public function processAdditionalFeature($note, $contact_id, $record) {
+  public function processAdditionalFeature($note, $contact_id, $contract_id, $record) {
     $config = CRM_Streetimport_Config::singleton();
     $this->logger->logDebug("Contact [{$contact_id}] wants '{$note}'", $record);
     switch ($note) {
@@ -491,7 +492,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
              $config->getGPCustomFieldKey('order_count')       => 1,  // 1 x T-Shirt
              $config->getGPCustomFieldKey('shirt_type')        => $match['shirt_type'],
              $config->getGPCustomFieldKey('shirt_size')        => $match['shirt_size'],
-             // $config->getGPCustomFieldKey('linked_membership') => $contract_id,
+             $config->getGPCustomFieldKey('linked_membership') => $contract_id,
              ));
            break;
          }
