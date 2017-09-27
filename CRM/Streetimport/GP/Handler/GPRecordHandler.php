@@ -253,7 +253,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'frequency_interval'  => (int) (12.0 / $frequency),
       'start_date'          => $mandate_start_date,
       'campaign_id'         => $this->getCampaignID($record),
-      'financial_type_id'   => 3, // Membership Dues
+      'financial_type_id'   => 2, // Membership Dues
       );
     if (!empty($record['EinzugsEndeDatum'])) {
       $mandate_params['end_date'] = date('YmdHis', strtotime($record['EinzugsEndeDatum']));
