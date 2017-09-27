@@ -80,6 +80,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
      ***********************************/
     $project_type = strtolower(substr($this->file_name_data['project1'], 0, 3));
     $modify_command = 'update';
+    $contract_id_required = FALSE;
     switch ($project_type) {
       case TM_PROJECT_TYPE_CONVERSION:
         if (!empty($this->getContractID($contact_id, $record))) {
@@ -89,6 +90,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
       case TM_PROJECT_TYPE_UPGRADE:
         $modify_command = 'update';
+        $contract_id_required = TRUE;
         break;
 
       case TM_PROJECT_TYPE_REACTIVATION:
@@ -121,12 +123,17 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         // this is a conversion/upgrade
         $contract_id = $this->getContractID($contact_id, $record);
         if (empty($contract_id)) {
-          $this->createContract($contact_id, $record);
+          // make sure this is no mistake (see GP-1123)
+          if ($contract_id_required) {
+            $this->logger->logError("This record type expects a contract id, but it's missing.", $record);
+          } else {
+            $this->createContract($contact_id, $record);
+          }
         } else {
           // load the contract
           $contract  = $this->getContract($record, $contact_id);
           if (empty($contract)) {
-            $this->logger->logError("Couldn't find contract to update", $record);
+            $this->logger->logError("Couldn't find contract to update (ID: {$contract_id})", $record);
           } else {
             // check if the 'active' state is right
             $is_active = $this->isContractActive($contract);
