@@ -97,6 +97,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_PROJECT_TYPE_REACTIVATION:
       case TM_PROJECT_TYPE_RESEARCH:
         $modify_command = 'revive';
+        $contract_id_required = TRUE;
         break;
 
       case TM_PROJECT_TYPE_SURVEY:
