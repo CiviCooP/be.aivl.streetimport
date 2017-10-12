@@ -254,7 +254,11 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
    * Extracts the specific activity date for this line
    */
   protected function getDate($record) {
-    return date('YmdHis', strtotime($record['TagDerTelefonie']));
+    if (!empty($record['TagDerTelefonie'])) {
+      return date('YmdHis', strtotime($record['TagDerTelefonie']));
+    } else {
+      return parent::getDate($record);
+    }
   }
 
   /**

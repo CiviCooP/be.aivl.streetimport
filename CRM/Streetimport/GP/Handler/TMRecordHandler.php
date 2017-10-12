@@ -108,6 +108,24 @@ abstract class CRM_Streetimport_GP_Handler_TMRecordHandler extends CRM_Streetimp
   }
 
   /**
+   * Extracts the specific activity date for this line
+   */
+  protected function getDate($record) {
+    if (!empty($this->file_name_data)) {
+      // take date from the file name
+      $file_timestamp = strtotime("{$this->file_name_data['date']}{$this->file_name_data['time']}");
+      if ($file_timestamp) {
+        return date('YmdHis', $file_timestamp);
+      } else {
+        $this->logger->logError("Couldn't parse date '{$this->file_name_data['date']}{$this->file_name_data['time']}' (from filename). Using 'now' instead.", $record);
+      }
+    }
+
+    // fallback is 'now'
+    return date('YmdHis');
+  }
+
+  /**
    * get the medium for created activities
    */
   public function getMediumID() {
