@@ -598,7 +598,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     if ($full_overwrite) {
       // this is a proper address update
-      $address_data['id'] = $address_id;
+      $address_data['id'] = $old_address_id;
       $this->logger->logDebug("Updating address for contact [{$contact_id}]: " . json_encode($address_data), $record);
       civicrm_api3('Address', 'create', $address_data);
       return $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Address Updated'), NULL, $record);
