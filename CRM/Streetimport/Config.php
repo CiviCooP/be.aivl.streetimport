@@ -482,14 +482,18 @@ class CRM_Streetimport_Config {
   }
 
   /**
-   * Method to get the default financial_type id
+   * Method to get the sdd financial_type id
    *
    * @return int
    * @access public
    */
-  public function getDefaultFinancialTypeId() {
+  public function extractSDDFinancialTypeId($mandate_data) {
     $importSettings = $this->getImportSettings();
-    return $importSettings['default_financial_type_id']['value'];
+    if ($mandate_data['type'] == 'OOFF') {
+      return $importSettings['ooff_financial_type_id']['value'];
+    } else {
+      return $importSettings['default_financial_type_id']['value'];
+    }
   }
 
   /**

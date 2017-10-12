@@ -429,7 +429,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $mandate_data['source']             = $config->translate('Street Recruitment');
     $mandate_data['bank_name']          = CRM_Utils_Array::value('Bank Name', $record);
     $mandate_data['campaign_id']        = $this->getCampaignParameter($record);
-    $mandate_data['financial_type_id']  = $config->getDefaultFinancialTypeId();
+    $mandate_data['financial_type_id']  = $config->extractSDDFinancialTypeId($mandate_data);
 
     // don't set $mandate_data['creditor_id'], use default creditor
 

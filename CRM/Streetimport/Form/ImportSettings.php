@@ -18,7 +18,6 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @access public
    */
   public function buildQuickForm() {
-
     $config = CRM_Streetimport_Config::singleton();
     $this->getImportSettings();
     $employeeList = $this->getEmployeeList();
@@ -66,6 +65,9 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           $this->add('select', $settingName, $config->translate($settingValues['label']), $countryList, TRUE);
           break;
         case 'default_financial_type_id':
+          $this->add('select', $settingName, $config->translate($settingValues['label']), $financialTypeList, TRUE);
+          break;
+        case 'ooff_financial_type_id':
           $this->add('select', $settingName, $config->translate($settingValues['label']), $financialTypeList, TRUE);
           break;
         case 'female_gender_id':
@@ -207,6 +209,12 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     }
     if (!isset($fields['membership_type_id']) || empty($fields['membership_type_id'])) {
       $errors['membership_type_id'] = $config->translate('This field can not be empty, you have to select a membership type!');
+    }
+    if (!isset($fields['default_financial_type_id']) || empty($fields['default_financial_type_id'])) {
+      $errors['default_financial_type_id'] = $config->translate('This field can not be empty, you have to select a financial type!');
+    }
+    if (!isset($fields['ooff_financial_type_id']) || empty($fields['ooff_financial_type_id'])) {
+      $errors['ooff_financial_type_id'] = $config->translate('This field can not be empty, you have to select a financial type!');
     }
     if (!isset($fields['phone_phone_type_id']) || empty($fields['phone_phone_type_id'])) {
       $errors['phone_phone_type_id'] = $config->translate('This field can not be empty, you have to select a phone type!');

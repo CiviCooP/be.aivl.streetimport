@@ -65,7 +65,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
       // STEP 6: create SEPA mandate (if Cancel is not YES)
       $acceptedYesValues = $config->getAcceptedYesValues();
       if (!in_array($record['Cancellation'], $acceptedYesValues)) {
-        $mandate_data = $this->extractMandate($record, $donor['id'], $record);
+        $mandate_data = $this->extractMandate($record, $donor['id']);
         if (!empty($mandate_data)) {
           $mandate = $this->createSDDMandate($mandate_data, $record);
           if ($mandate) {

@@ -167,23 +167,10 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       return;
     }
     
-    // ...and the attached contribution
-    try {
-      if ($old_mandate_data['entity_table']=='civicrm_contribution_recur') {
-        $old_contribution = civicrm_api3('ContributionRecur', 'getsingle', array('id' => $old_mandate_data['entity_id']));
-      } elseif ($old_mandate_data['type']=='civicrm_contribution') {
-        $old_contribution = civicrm_api3('Contribution', 'getsingle', array('id' => $old_mandate_data['entity_id']));
-        $old_contribution['amount'] = $old_contribution['total_amount'];
-      } else {
-        $config= CRM_Streetimport_Config::singleton();
-        $this->logger->abort($config->translate("Bad SDD mandate type found. Contact developer"), $record);
-        return NULL;
-      }
-    } catch (Exception $e) {
-      $this->logger->logError($config->translate("Couldn't load contribution or recurring contribution for mandate")
-        .' '.$old_mandate_data['id'].'. '.$config->translate("Mandate possibly corrupt at Welcome Call for").' '
-        .$record['First Name'].' '.$record['Last Name'], $record, $config->translate('No Contribution Entity Found'),"Error");
-      return NULL;      
+    // ...and the attached contribution based on the mandate type
+    $old_contribution = $this->getOldContributionData($old_mandate_data, $record);
+    if (!$old_contribution) {
+      return NULL;
     }
 
     // now, compare new data with old mandate/contribution
@@ -406,31 +393,85 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
   }
 
   /**
-   * Method to update campaign on recurring contribution if required
+   * Method to update campaign on recurring contribution/contribution if required
    *
    * @param array $oldMandateData
    * @param array $newMandateData
    */
   protected function changeCampaign($oldMandateData, $newMandateData, $record) {
     $config = CRM_Streetimport_Config::singleton();
+    if ($oldMandateData['type'] == 'OOFF') {
+      $entity = 'Contribution';
+      $returnValue = 'contribution_campaign_id';
+    } else {
+      $entity = 'ContributionRecur';
+      $returnValue = 'campaign_id';
+    }
     try {
-      // find old campaign
-      $oldCampaignId = civicrm_api3('ContributionRecur', 'getvalue', array(
+      $oldCampaignId = civicrm_api3($entity, 'getvalue', array(
         'id' => $oldMandateData['entity_id'],
-        'return' => 'campaign_id',
+        'return' => $returnValue,
       ));
       if ($newMandateData['campaign_id'] != $oldCampaignId) {
-        civicrm_api3('ContributionRecur', 'create', array(
+        civicrm_api3($entity, 'create', array(
           'id' => $oldMandateData['entity_id'],
           'campaign_id' => $newMandateData['campaign_id'],
         ));
+        $this->logger->logDebug($config->translate("Campaign changed from") . " " . $oldCampaignId . " "
+          . $config->translate("to") . " " . $newMandateData['campaign_id'], $record);
       }
-      $this->logger->logDebug($config->translate("Campaign changed from")." ".$oldCampaignId." "
-        .$config->translate("to")." ".$newMandateData['campaign_id'], $record);
     }
     catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($config->translate("Couldn't find or update recurring contribution with campaign for mandate").' '
+      $this->logger->logError($config->translate("Couldn't find or update (recurring) contribution with campaign for mandate").' '
         .$newMandateData['reference'], $record, "Warning");
+    }
+  }
+
+  /**
+   * Method to get the existing contribution data. This is based on the mandate type:
+   * - if FRST/RCUR, get contribution and recurring contribution
+   * - if OOFF, only get contribution
+   *
+   * @param array $mandateData
+   * @param array $record
+   * @return array
+   *
+   */
+  protected function getOldContributionData($mandateData, $record) {
+    $oldContribution = array();
+    $config = CRM_Streetimport_Config::singleton();
+    switch ($mandateData['entity_table']) {
+      case 'civicrm_contribution_recur':
+        try {
+          $oldContribution = civicrm_api3('ContributionRecur', 'getsingle', array(
+            'id' => $mandateData['entity_id'],
+            ));
+        }
+        catch (CiviCRM_API3_Exception $ex) {
+          $this->logger->logError($config->translate("Couldn't load recurring contribution for mandate")
+            .' '.$mandateData['id'].'. '.$config->translate("Mandate possibly corrupt at Welcome Call for").' '
+            .$record['First Name'].' '.$record['Last Name'], $record, $config->translate('No Contribution Entity Found'),"Error");
+        }
+        return $oldContribution;
+        break;
+      case 'civicrm_contribution':
+        try {
+          $oldContribution = civicrm_api3('Contribution', 'getsingle', array(
+            'id' => $mandateData['entity_id'],
+            ));
+          $oldContribution['amount'] = $oldContribution['total_amount'];
+        }
+        catch (CiviCRM_API3_Exception $ex) {
+          $this->logger->logError($config->translate("Couldn't load contribution for mandate")
+            .' '.$mandateData['id'].'. '.$config->translate("Mandate possibly corrupt at Welcome Call for").' '
+            .$record['First Name'].' '.$record['Last Name'], $record, $config->translate('No Contribution Entity Found'),"Error");
+        }
+        return $oldContribution;
+        break;
+      default:
+        $this->logger->abort($config->translate("Bad SDD mandate type found. Contact developer"), $record);
+        return $oldContribution;
+        break;
     }
   }
 }
