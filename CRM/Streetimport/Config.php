@@ -365,6 +365,16 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Method to retrieve location files DURING processing
+   *
+   * @return string
+   * @access public
+   */
+  public function getProcessingFileLocation() {
+    return $this->getSetting('processing_location');
+  }
+
+  /**
    * Method to retrieve location for processed file
    *
    * @return string
@@ -381,7 +391,7 @@ class CRM_Streetimport_Config {
    * @access public
    */
   public function getFailFileLocation() {
-    return $this->getSetting('processed_location');
+    return $this->getSetting('failed_location');
   }
 
   /**

@@ -26,7 +26,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @access public
    */
   public function buildQuickForm() {
-    $this->settings_list = array('admin_id', 'fundraiser_id', 'phone_phone_type_id', 'mobile_phone_type_id','location_type_id','other_location_type_id','default_country_id','default_financial_type_id','female_gender_id', 'male_gender_id','unknown_gender_id','import_encoding','date_format','import_location', 'processed_location', 'failed_location', 'newsletter_group_id', 'accepted_yes_values');
+    $this->settings_list = array('admin_id', 'fundraiser_id', 'phone_phone_type_id', 'mobile_phone_type_id','location_type_id','other_location_type_id','default_country_id','default_financial_type_id','female_gender_id', 'male_gender_id','unknown_gender_id','import_encoding','date_format','import_location', 'processing_location', 'processed_location', 'failed_location', 'newsletter_group_id', 'accepted_yes_values');
     $config = CRM_Streetimport_Config::singleton();
 
     // contacts
@@ -68,6 +68,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $this->add('select', 'import_encoding', $config->translate('Default Encoding'), $encodingList, TRUE);
     $this->add('select', 'date_format', $config->translate('Default Date Format'), $dateFormatList, TRUE);
     $this->add('text', 'import_location', $config->translate('Import File Location'), array('size' => 50), TRUE);
+    $this->add('text', 'processing_location', $config->translate('Processing Location'), array('size' => 50), TRUE);
     $this->add('text', 'processed_location', $config->translate('Processed File Location'), array('size' => 50), TRUE);
     $this->add('text', 'failed_location', $config->translate('Failed File Location'), array('size' => 50), TRUE);
     $this->add('text', 'accepted_yes_values', $config->translate('List of strings meaning "Yes" (comma separated)'), array('size' => 50), TRUE);
@@ -182,7 +183,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     }
 
     // validate folders
-    $folderElements = array('import_location', 'processed_location', 'failed_location');
+    $folderElements = array('import_location', 'processing_location', 'processed_location', 'failed_location');
     foreach ($folderElements as $folderElement) {
       if (!is_writable($fields[$folderElement])) {
         $errors[$folderElement] = $config->translate('This folder does not exists or you do not have sufficient permissions to write to the folder');
