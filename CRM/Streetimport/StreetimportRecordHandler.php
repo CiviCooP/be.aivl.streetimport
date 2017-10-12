@@ -452,8 +452,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         unset($mandate_data['campaign_id']);
       }
     }
-
-
     try {
       $result = civicrm_api3('SepaMandate', 'createfull', $mandate_data);
       $mandate = $result['values'][$result['id']];
