@@ -62,7 +62,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     }
 
     $deprecated_start_date = trim(CRM_Utils_Array::value('Vertrags_Beginn', $record, ''));
-    if ($deprecated_start_date) {
+    if ($deprecated_start_date && (strtotime($deprecated_start_date) > strtotime('now'))) {
       $this->createManualUpdateActivity($contact_id, "Deprecated value 'Vertrags_Beginn' given: {$deprecated_start_date}", $record);
     }
 
