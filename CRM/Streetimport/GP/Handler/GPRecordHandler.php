@@ -361,7 +361,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'date'                                    => $new_start_date,
       'id'                                      => $contract_id,
       'medium_id'                               => $this->getMediumID(),
-      'campaign_id'                             => $this->getCampaignID(),
+      'campaign_id'                             => $this->getCampaignID($record),
       'membership_payment.from_ba'              => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $this->getBIC($record, $record['IBAN'])),
       'membership_payment.to_ba'                => CRM_Contract_BankingLogic::getCreditorBankAccount(),
       'membership_payment.membership_annual'    => number_format($annual_amount, 2),
@@ -408,7 +408,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         'action'                                           => 'cancel',
         'id'                                               => $contract_id,
         'medium_id'                                        => $this->getMediumID(),
-        'campaign_id'                                      => $this->getCampaignID(),
+        'campaign_id'                                      => $this->getCampaignID($record),
         'membership_cancellation.membership_cancel_reason' => 'MS02',
         'date'                                             => date('Y-m-d H:i:s', strtotime($record['EinzugsEndeDatum'])),
         );
@@ -460,7 +460,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         'action'                                           => 'cancel',
         'id'                                               => $membership['id'],
         'medium_id'                                        => $this->getMediumID(),
-        'campaign_id'                                      => $this->getCampaignID(),
+        'campaign_id'                                      => $this->getCampaignID($record),
         'membership_cancellation.membership_cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
         );
 
