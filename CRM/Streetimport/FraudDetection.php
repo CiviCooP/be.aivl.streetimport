@@ -80,6 +80,14 @@ class CRM_Streetimport_FraudDetection {
     }
     // build url for recruiter contact if set
     if (isset($activityData['recruiter_id']) && !empty($activityData['recruiter_id'])) {
+      try {
+        $activityData['recruiter_name'] = civicrm_api3('Contact', 'getvalue', array(
+          'id' => $activityData['recruiter_id'],
+          'return' => 'display_name',
+        ));
+      } catch (CiviCRM_API3_Exception $ex) {
+        $activityData['recruiter_name'] = "";
+      }
       $activityData['recruiter_url'] = CRM_Utils_System::url('civicrm/contact/view', 'reset=1&cid='.$activityData['recruiter_id'], true);
     }
     // build links for other contacts if set
@@ -104,8 +112,14 @@ class CRM_Streetimport_FraudDetection {
       'target_id' => $activityData['target_id'],
       'subject' => $activityData['warning_message'],
       'activity_date_time' => date('Ymd h:i:s'),
-      'details' => CRM_Streetimport_Utils::renderTemplate('', $activityData),
+      'details' => CRM_Streetimport_Utils::renderTemplate('activities/FraudWarning.tpl', $activityData),
     );
+    try {
+      civicrm_api3('Activity', 'create', $activityParams);
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      CRM_Core_Error::debug_log_message('Could not create fraud detection activity in '.__METHOD__.', error from API Activity create: '.$ex->getMessage());
+    }
   }
 
 }
