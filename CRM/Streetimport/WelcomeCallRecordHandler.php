@@ -144,7 +144,6 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
 
     // first, extract the new mandate information
     $new_mandate_data = $this->extractMandate($record, $donor_id);
-
     // then load the existing mandate
     try {
       $old_mandate_data = civicrm_api3('SepaMandate', 'getsingle', array('reference' => $new_mandate_data['reference']));    
@@ -191,8 +190,8 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // if both dates are in the past, we can ignore the change 
     //   (they're both probably just auto-generated)
     if (!empty($mandate_diff['start_date'])) {
-      if (  $old_contribution['start_date'] > $now
-         || $new_mandate_data['start_date'] > $now ) {
+      if (  $old_contribution['start_date'] < $now
+         && $new_mandate_data['start_date'] < $now ) {
         unset($mandate_diff['start_date']);
       }
     }
