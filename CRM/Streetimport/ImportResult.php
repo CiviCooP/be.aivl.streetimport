@@ -225,7 +225,7 @@ class CRM_Streetimport_ImportResult {
         'activity_date_time' => date('YmdHis'),
         'source_contact_id'  => (int) $this->config->getAdminContactID(),
         'assignee_contact_id'=> (int) $this->config->getAdminContactID(),
-        'details'            => $handler->renderTemplate('activities/ImportError.tpl', $activity_info),
+        'details'            => CRM_Streetimport_Utils::renderTemplate('activities/ImportError.tpl', $activity_info),
       );
 
       try {

@@ -696,7 +696,41 @@ class CRM_Streetimport_Utils {
     return $inDay.'-'.$inMonth.'-'.$inYear;
   }
 
-  static function csvToArray($file, $hasHeaders = true, $delimiter =';'){ // TODO: delimter should be defined in extension config
+  /**
+   * uses SMARTY to render a template
+   *
+   * @return string
+   */
+  public static function renderTemplate($templatePath, $vars) {
+    $smarty = CRM_Core_Smarty::singleton();
+
+    // first backup original variables, since smarty instance is a singleton
+    $oldVars = $smarty->get_template_vars();
+    $backupFrame = array();
+    foreach ($vars as $key => $value) {
+      $key = str_replace(' ', '_', $key);
+      $backupFrame[$key] = isset($oldVars[$key]) ? $oldVars[$key] : NULL;
+    }
+
+    // then assign new variables
+    foreach ($vars as $key => $value) {
+      $key = str_replace(' ', '_', $key);
+      $smarty->assign($key, $value);
+    }
+
+    // create result
+    $result =  $smarty->fetch($templatePath);
+
+    // reset smarty variables
+    foreach ($backupFrame as $key => $value) {
+      $key = str_replace(' ', '_', $key);
+      $smarty->assign($key, $value);
+    }
+
+    return $result;
+  }
+
+  static function csvToArray($file, $hasHeaders = true, $delimiter =';'){ // TODO: delimiter should be defined in extension config
     $pointer = fopen ($file , 'r');
     if($hasHeaders){
       $headers = fgetcsv($pointer, 0, $delimiter);

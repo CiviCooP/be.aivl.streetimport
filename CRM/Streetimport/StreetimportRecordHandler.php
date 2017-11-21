@@ -452,9 +452,11 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         unset($mandate_data['campaign_id']);
       }
     }
+    // fraud detection to check if fraud warning needs to be created
     try {
       $result = civicrm_api3('SepaMandate', 'createfull', $mandate_data);
       $mandate = $result['values'][$result['id']];
+      $this->detectPossibleMandateFraud($mandate, $record);
       $config = CRM_Streetimport_Config::singleton();
       $this->logger->logDebug($config->translate("SDD mandate")." ".$mandate['id']." ".$config->translate("created, reference is")." ".$mandate['reference'], $record);
       return $mandate;
@@ -465,7 +467,56 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
   }
 
+  /**
+   * Method to check for possible fraud with mandate and create fraud warning activity if found
+   *
+   * @param $mandate
+   * @param $record
+   */
+  private function detectPossibleMandateFraud($mandate, $record) {
+    $fraudDetection = new CRM_Streetimport_FraudDetection();
+    $otherContacts = $fraudDetection->checkIbanAlreadyUsedForOtherContact($mandate['iban'], $mandate['contact_id']);
+    if ($otherContacts) {
+      $warningData = $this->extractFraudWarningData($mandate, $record);
+      $warningData['warning_message'] = CRM_Streetimport_Config::singleton()->translate(
+        'IBAN already used for other contacts').' '.implode(', ', $otherContacts);
+      $warningData['other_contacts'] = $otherContacts;
+      $fraudDetection->createFraudWarning($warningData);
+    }
+  }
 
+  /**
+   * Method to extract data for fraud warning activity from mandate and csv-record
+   *
+   * @param $mandate
+   * @param $record
+   * @return array
+   */
+  private function extractFraudWarningData($mandate, $record) {
+    $result = array(
+      'target_id' => $mandate['contact_id'],
+    );
+    // set contribution or contribution recur id based on entity table
+    switch ($mandate['entity_table']) {
+      case 'civicrm_contribution':
+        $result['contribution_id'] = $mandate['entity_id'];
+        break;
+      case 'civicrm_contribution_recur':
+        $result['contribution_recur_id'] = $mandate['entity_id'];
+        break;
+    }
+    try {
+      $recruiter = civicrm_api3('Contact', 'identify', array(
+        'identifier' => $record['Recruiter ID'],
+        'identifier_type' => 'recruiter_id',
+      ));
+      $result['recruiter_id'] = $recruiter['id'];
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      $result['recruiter_id'] = NULL;
+    }
+    return $result;
+  }
 
   /**
    * This function will make sure, that the donor

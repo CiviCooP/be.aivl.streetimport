@@ -2,5 +2,6 @@
   "streetRecruitment":"Straatwerving",
   "welcomeCall":"Welkomstgesprek",
   "followUpCall":"Opvolgingsgesprek",
-  "importError":"Foutieve data import"
+  "importError":"Foutieve data import",
+  "fraudWarning":"Waarschuwing fraude"
 }

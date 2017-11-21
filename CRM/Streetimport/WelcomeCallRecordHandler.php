@@ -67,7 +67,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $concatActivitySubject = $this->concatActivitySubject("Welcome Call", $campaignId);
         $welcomeCallActivityStatusId = $config->getWelcomeCallActivityStatusId();
         $activityDateTime = date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date'])));
-        $activityDetails = $this->renderTemplate('activities/WelcomeCall.tpl', $record);
+        $activityDetails = CRM_Streetimport_Utils::renderTemplate('activities/WelcomeCall.tpl', $record);
         
         $createdActivity = $this->createActivity(array(
           'activity_type_id' => $welcomeCallActvityType,
@@ -125,7 +125,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
             'source_contact_id' => $recruiter['id'],
             'assignee_contact_id' => $fundRaiserId,
             'campaign_id' => $campaignId,
-            'details' => $this->renderTemplate('activities/FollowUpCall.tpl', $record),
+            'details' => CRM_Streetimport_Utils::renderTemplate('activities/FollowUpCall.tpl', $record),
           ), $record);
         }
       }

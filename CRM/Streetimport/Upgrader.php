@@ -10,8 +10,7 @@ class CRM_Streetimport_Upgrader extends CRM_Streetimport_Upgrader_Base
    * @author Erik Hommel (CiviCooP) <erik.hommel@civicoop.org>
    * @date 30 Jun 2015
    */
-  public function upgrade_1001()
-  {
+  public function upgrade_1001() {
     $this->ctx->log->info('Applying update 1001 (remove recruitment type from custom groups)');
     $config = CRM_Streetimport_Config::singleton();
     $customGroupParams = array($config->getStreetRecruitmentCustomGroup(), $config->getWelcomeCallCustomGroup());
@@ -48,6 +47,17 @@ class CRM_Streetimport_Upgrader extends CRM_Streetimport_Upgrader_Base
     // STEP 3: remove contact sub type
     CRM_Core_DAO::executeQuery('DELETE FROM civicrm_contact_type WHERE name = %1',
       array(1 => array('supplier', 'String')));
+    return TRUE;
+  }
+
+  /**
+   * Upgrade 1003 - check task 199097: https://civicoop.plan.io/issues/1990
+   * - add activity type for fraud warning
+   */
+  public function upgrade_1003() {
+    $this->ctx->log->info('Applying update 1003 (add fraud warning)');
+    // add activity type warning fraude if not exists yet
+    CRM_Streetimport_Config::singleton()->setActivityTypes();
     return TRUE;
   }
 

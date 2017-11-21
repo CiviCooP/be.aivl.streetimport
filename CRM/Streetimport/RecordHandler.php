@@ -403,40 +403,6 @@ abstract class CRM_Streetimport_RecordHandler {
   }
 
   /**
-   * uses SMARTY to render a template
-   *
-   * @return string
-   */
-  public function renderTemplate($template_path, $vars) {
-    $smarty = CRM_Core_Smarty::singleton();
-
-    // first backup original variables, since smarty instance is a singleton
-    $oldVars = $smarty->get_template_vars();
-    $backupFrame = array();
-    foreach ($vars as $key => $value) {
-      $key = str_replace(' ', '_', $key);
-      $backupFrame[$key] = isset($oldVars[$key]) ? $oldVars[$key] : NULL;
-    }
-
-    // then assign new variables
-    foreach ($vars as $key => $value) {
-      $key = str_replace(' ', '_', $key);
-      $smarty->assign($key, $value);
-    }
-
-    // create result
-    $result =  $smarty->fetch($template_path);
-
-    // reset smarty variables
-    foreach ($backupFrame as $key => $value) {
-      $key = str_replace(' ', '_', $key);
-      $smarty->assign($key, $value);
-    }
-
-    return $result;
-  }
-
-  /**
    * Method to update the source contact of the membership signup activity
    * (issue #48 on GitHub)
    *

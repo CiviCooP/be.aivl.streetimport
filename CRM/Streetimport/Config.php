@@ -20,6 +20,7 @@ class CRM_Streetimport_Config {
   protected $welcomeCallActivityType = array();
   protected $followUpCallActivityType= array();
   protected $importErrorActivityType = array();
+  protected $fraudWarningActivityType = array();
   protected $streetRecruitmentCustomGroup = array();
   protected $streetRecruitmentCustomFields = array();
   protected $welcomeCallCustomGroup = array();
@@ -281,6 +282,17 @@ class CRM_Streetimport_Config {
    */
   public function getImportErrorActivityType($key= 'value' ) {
     return $this->importErrorActivityType[$key];
+  }
+
+  /**
+   * Method to retrieve fraud warning activity type data
+   *
+   * @param string $key
+   * @return mixed
+   * @access public
+   */
+  public function getFraudWarningActivityType($key= 'value' ) {
+    return $this->fraudWarningActivityType[$key];
   }
 
   /**
@@ -826,7 +838,7 @@ class CRM_Streetimport_Config {
    *
    * @throws Exception when resource file could not be loaded
    */
-  protected function setActivityTypes() {
+  public function setActivityTypes() {
     $jsonFile = $this->resourcesPath.'activity_types.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load activity types configuration file for extension,
