@@ -17,9 +17,10 @@ define('REPETITION_FRAME_DECEASED',   "2 years");
 class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimport_GP_Handler_GPRecordHandler {
 
   /** file name / reference patterns as defined in GP-331 */
-  protected static $FILENAME_PATTERN      = '#^RTS_(?P<category>[a-zA-Z\-]+)[.][a-zA-Z]+$#';
-  protected static $REFERENCE_PATTERN_NEW = '#^(?P<campaign_id>[0-9]{4})C(?P<contact_id>[0-9]{9})$#';
-  protected static $REFERENCE_PATTERN_OLD = '#^(?P<campaign_id>[0-9]{4})(?P<contact_id>[0-9]{6,9})$#';
+  protected static $FILENAME_PATTERN       = '#^RTS_(?P<category>[a-zA-Z\-]+)[.][a-zA-Z]+$#';
+  protected static $REFERENCE_PATTERN_NEW  = '#^(?P<campaign_id>[0-9]{4})C(?P<contact_id>[0-9]{9})$#';
+  protected static $REFERENCE_PATTERN_OLD  = '#^(?P<campaign_id>[0-9]{4})(?P<contact_id>[0-9]{6,9})$#';
+  protected static $REFERENCE_PATTERN_1296 = '#^1(?P<campaign_id>[0-9]{5})(?P<contact_id>[0-9]{10})$#';
 
   /** stores the parsed file name */
   protected $file_name_data = 'not parsed';
@@ -293,7 +294,13 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
   protected function getCampaignID($record) {
     $reference = $this->getReference($record);
     if (preg_match(self::$REFERENCE_PATTERN_NEW, $reference, $matches)) {
-      return (int) $matches['campaign_id'];
+      $campaign_id = ltrim($matches['campaign_id'], '0');
+      return (int) $campaign_id;
+
+    } elseif (preg_match(self::$REFERENCE_PATTERN_1296, $reference, $matches)) {
+      $campaign_id = ltrim($matches['campaign_id'], '0');
+      return (int) $campaign_id;
+
     } elseif (preg_match(self::$REFERENCE_PATTERN_OLD, $reference, $matches)) {
       // look up campaign
       $campaign = civicrm_api3('Campaign', 'get', array(
@@ -317,6 +324,11 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
   protected function getContactID($record) {
     $reference = $this->getReference($record);
     if (preg_match(self::$REFERENCE_PATTERN_NEW, $reference, $matches)) {
+      // use identity tracker
+      $contact_id = ltrim($matches['contact_id'], '0');
+      return $this->resolveContactID($contact_id, $record);
+
+    } elseif (preg_match(self::$REFERENCE_PATTERN_1296, $reference, $matches)) {
       // use identity tracker
       $contact_id = ltrim($matches['contact_id'], '0');
       return $this->resolveContactID($contact_id, $record);
