@@ -401,11 +401,14 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
 
       case 'arctic defender':
       case 'arctic_defender':
+      case 'eisbärpatenschaft':
+      case 'eisbarpatenschaft':
+      case 'eisbaerpatenschaft':
         $membership_type_name = 'arctic defender';
         break;
 
       case 'guardian of the ocean':
-      case 'eisbärpatenschaft':
+      case 'guardian_of_the_ocean':
         $membership_type_name = 'Guardian of the Ocean';
         break;
 
