@@ -356,9 +356,45 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         $dialoger_id_field  => $dialoger_id,
         'contact_sub_type'  => 'Dialoger',
         'return'            => 'id'));
+
       if (empty($dialoger['id'])) {
-        $this->logger->logError("Dialoger '{$dialoger_id}' not found!", $record);
+        $this->logger->logDebug("Dialoger '{$dialoger_id}' not found!", $record);
         $this->_dialoger_cache[$dialoger_id] = '';
+        if (strlen($dialoger_id) < 4 && strlen($dialoger_id) > 5) {
+          $this->logger->logError("Dialoger number '{$dialoger_id}' is not between 4 and 5 digits!", $record);
+
+        } else {
+          // not found, but we have a name => create! (GP-1228)
+          if (!empty($record['Name_des_Mitarbeiters'])) {
+            $dialoger_start_field = $config->getGPCustomFieldKey('dialoger_start_date');
+            $campaign_id    = $this->getCampaignID($record);
+            $contact_source = civicrm_api3('Campaign', 'getvalue', array(
+              'id'     => $campaign_id,
+              'return' => 'title'));
+
+            $dialoger = civicrm_api3('Contact', 'create', array(
+              'contact_type'        => 'Individual',
+              'contact_sub_type'    => 'Dialoger',
+              'last_name'           => trim($record['Name_des_Mitarbeiters']),
+              'first_name'          => trim(CRM_Utils_Array::value('Bemerkungen', $record, '')),
+              'source'              => $contact_source,
+              $dialoger_id_field    => $dialoger_id,
+              $dialoger_start_field => date('Y-m-01'),
+            ));
+
+            // cache result and log
+            $this->logger->logDebug("Created Dialoger '{$dialoger_id}'.", $record);
+            $this->_dialoger_cache[$dialoger_id] = $dialoger['id'];
+            return $dialoger['id'];
+
+          } else {
+            // no name given..
+          }
+        }
+
+        // log the problem
+        $this->logger->logError("Couldn't identify or create Dialoger '{$dialoger_id}'", $record);
+
       } else {
         $this->_dialoger_cache[$dialoger_id] = $dialoger['id'];
       }
