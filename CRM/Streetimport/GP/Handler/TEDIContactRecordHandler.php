@@ -34,6 +34,9 @@ define('TM_PROJECT_TYPE_UPGRADE',      'upg'); // Upgrade
 define('TM_PROJECT_TYPE_REACTIVATION', 'rea'); // Reaktivierung
 define('TM_PROJECT_TYPE_RESEARCH',     'rec'); // Recherche
 define('TM_PROJECT_TYPE_SURVEY',       'umf'); // Umfrage
+define('TM_PROJECT_TYPE_MIDDLE_DONOR', 'mdu'); // Middle-Donor - two subtypes:
+define('TM_PROJECT_TYPE_MD_UPGRADE',   'mdup');//     subtype 1: upgrade
+define('TM_PROJECT_TYPE_MD_CONVERSION','mdum');//     subtype 2: conversion (Umwandlung)
 
 
 /**
@@ -78,6 +81,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     /************************************
      *           VERIFICATION           *
      ***********************************/
+    $project_type_full = strtolower($this->file_name_data['project1']);
     $project_type = strtolower(substr($this->file_name_data['project1'], 0, 3));
     $modify_command = 'update';
     $contract_id = NULL;
@@ -103,6 +107,20 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_PROJECT_TYPE_SURVEY:
         // Nothing to do here?
         break;
+
+      case TM_PROJECT_TYPE_MIDDLE_DONOR:
+        if ($project_type_full == TM_PROJECT_TYPE_MD_UPGRADE) {
+          $modify_command = 'update';
+          $contract_id_required = FALSE;
+          break;
+
+        } elseif ($project_type_full == TM_PROJECT_TYPE_MD_CONVERSION) {
+          // copied from TM_PROJECT_TYPE_CONVERSION
+          if (!empty($this->getContractID($contact_id, $record))) {
+            return $this->logger->logError("Conversion projects shouldn't provide a contract ID", $record);
+          }
+          break;
+        }
 
       default:
         $this->logger->logFatal("Unknown project type {$project_type}. Processing stopped.", $record);
