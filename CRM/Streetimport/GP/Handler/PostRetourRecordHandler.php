@@ -190,6 +190,13 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
    * Check if there has been a change since
    */
   protected function addressChangeRecordedSince($contact_id, $minimum_date, $record) {
+    // check if logging is enabled
+    $logging = new CRM_Logging_Schema();
+    if (!$logging->isEnabled()) {
+      $this->logger->logDebug("Logging not enabled, cannot determine whether records have changed.", $record);
+      return FALSE;
+    }
+
     // query the logging DB
     $dsn = defined('CIVICRM_LOGGING_DSN') ? DB::parseDSN(CIVICRM_LOGGING_DSN) : DB::parseDSN(CIVICRM_DSN);
     $relevant_attributes = array('id','is_primary','street_address','supplemental_address_1','supplemental_address_2','city','postal_code','country_id','log_date');
