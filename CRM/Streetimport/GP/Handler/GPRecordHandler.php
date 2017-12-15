@@ -269,6 +269,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'membership_type_id'                                   => $this->getMembershipTypeID($record),
       'member_since'                                         => $this->getDate($record),
       'start_date'                                           => $mandate_start_date,
+      'join_date'                                            => $this->getDate($record),
       'campaign_id'                                          => $this->getCampaignID($record),
       'membership_payment.membership_recurring_contribution' => $mandate['entity_id'],
       'membership_payment.from_ba'                           => CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $this->getBIC($record, $record['IBAN'])),
