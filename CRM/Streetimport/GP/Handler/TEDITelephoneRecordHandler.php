@@ -90,10 +90,15 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
         } else {
           // delete all identified phones (usually one)
           foreach ($phone_ids as $phone_id) {
-            civicrm_api3('Phone', 'delete', array('id' => $phone_id));
+            try {
+              $this->logger->logDebug("Deleting phone [{$phone_id}] of contact [{$contact_id}]...", $record);
+              civicrm_api3('Phone', 'delete', array('id' => $phone_id));
+            } catch (Exception $e) {
+              $this->logger->logError("Phone [{$phone_id}] of contact [{$contact_id}] couldn't be deleted", $record);
+            }
           }
           $this->createPhoneUpdatedActivity(TM_PHONE_DELETED, $contact_id, $record);
-          $this->logger->logDebug("Phone number of contact [{$contact_id}] was deleted", $record);
+          $this->logger->logDebug("Phone number(s) of contact [{$contact_id}] deleted", $record);
         }
         break;
 
