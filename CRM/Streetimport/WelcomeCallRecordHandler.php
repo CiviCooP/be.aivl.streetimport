@@ -195,6 +195,10 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         unset($mandate_diff['start_date']);
       }
     }
+    // if the start date in the original record is empty we can ignore the change
+    if (isset($record['Start Date']) && empty($record['Start Date'])) {
+      unset($mandate_diff['start_date']);
+    }
 
     // filter the changes, some can be safely ignored
     $ignore_changes_for = array('creation_date', 'contact_id', 'validation_date');
