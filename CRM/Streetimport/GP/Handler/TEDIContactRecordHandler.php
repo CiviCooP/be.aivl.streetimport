@@ -70,6 +70,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
 
     $contact_id = $this->getContactID($record);
     if (empty($contact_id)) {
+      $this->logger->logImport($record, FALSE, $config->translate('TM Contact'));
       return $this->logger->logError("Contact [{$record['id']}] couldn't be identified.", $record);
     }
 
@@ -89,6 +90,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     switch ($project_type) {
       case TM_PROJECT_TYPE_CONVERSION:
         if (!empty($this->getContractID($contact_id, $record))) {
+          $this->logger->logImport($record, FALSE, $config->translate('TM Contact'));
           return $this->logger->logError("Conversion projects shouldn't provide a contract ID", $record);
         }
         break;
@@ -117,6 +119,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         } elseif ($project_type_full == TM_PROJECT_TYPE_MD_CONVERSION) {
           // copied from TM_PROJECT_TYPE_CONVERSION
           if (!empty($this->getContractID($contact_id, $record))) {
+            $this->logger->logImport($record, FALSE, $config->translate('TM Contact'));
             return $this->logger->logError("Conversion projects shouldn't provide a contract ID", $record);
           }
           break;
