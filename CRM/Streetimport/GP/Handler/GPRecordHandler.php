@@ -528,10 +528,14 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     $config = CRM_Streetimport_Config::singleton();
     if (!empty($iban) && $config->isLittleBicExtensionAccessible()) {
       // use Little BIC extension to look up IBAN
-      $result = civicrm_api3('Bic', 'getfromiban', array('iban' => $iban));
-      if (!empty($result['bic'])) {
-        $this->_iban_to_bic[$iban] = $result['bic'];
-        return $result['bic'];
+      try {
+        $result = civicrm_api3('Bic', 'getfromiban', array('iban' => $iban));
+        if (!empty($result['bic'])) {
+          $this->_iban_to_bic[$iban] = $result['bic'];
+          return $result['bic'];
+        }
+      } catch (Exception $e) {
+        $this->logger->logDebug("BIC lookup of '{$iban}' failed.", $record);
       }
     }
 
