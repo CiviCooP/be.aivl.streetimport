@@ -21,7 +21,7 @@ define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_ZSO',    31);
 define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_SMS',    32);
 define('TM_KONTAKT_RESPONSE_KONTAKT_STORNO_DONE',   33);
 
-define('TM_KONTAKT_RESPONSE_KONTAKT_DOWNGRADE',     24);
+define('TM_KONTAKT_RESPONSE_KONTAKT_RESCUE',        24);
 define('TM_KONTAKT_RESPONSE_KONTAKT_LOESCHEN',      25);
 define('TM_KONTAKT_RESPONSE_KONTAKT_STILLEGEN',     26);
 define('TM_KONTAKT_RESPONSE_KONTAKT_VERSTORBEN',    40);
@@ -198,14 +198,14 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         $this->cancelContract($membership, $record);
         break;
 
-      case TM_KONTAKT_RESPONSE_KONTAKT_DOWNGRADE:
-        // this is a downgrade
+      case TM_KONTAKT_RESPONSE_KONTAKT_RESCUE:
+           // this is a downgrade
         $contract_id = $this->getContractID($contact_id, $record);
         if (empty($contract_id)) {
           $this->logger->logError("Trying to downgrade an nonexisting contract for contact [{$contact_id}]!", $record);
         } else {
           // TODO: can downgrades cause type changes?
-          $this->updateContract($contract_id, $contact_id, $record);
+          $this->updateContract($contract_id, $contact_id, $record, NULL, $modify_command);
         }
         break;
 
