@@ -94,7 +94,8 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
               $this->logger->logDebug("Deleting phone [{$phone_id}] of contact [{$contact_id}]...", $record);
               civicrm_api3('Phone', 'delete', array('id' => $phone_id));
             } catch (Exception $e) {
-              $this->logger->logError("Phone [{$phone_id}] of contact [{$contact_id}] couldn't be deleted", $record);
+              $this->logger->logWarning("Couldn't delete phone [{$phone_id}] of contact [{$contact_id}]!", $record);
+              // $this->logger->logError("Phone [{$phone_id}] of contact [{$contact_id}] couldn't be deleted", $record);
             }
           }
           $this->createPhoneUpdatedActivity(TM_PHONE_DELETED, $contact_id, $record);
