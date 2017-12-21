@@ -143,6 +143,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_KONTAKT_RESPONSE_ZUSAGE_WAELDER:
       case TM_KONTAKT_RESPONSE_ZUSAGE_GP4ME:
       case TM_KONTAKT_RESPONSE_ZUSAGE_ATOM:
+      case TM_KONTAKT_RESPONSE_KONTAKT_RESCUE:
         // this is a conversion/upgrade
         $contract_id = $this->getContractID($contact_id, $record);
         if (empty($contract_id)) {
@@ -170,8 +171,9 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
               $this->logger->logError("This project should only refer to inactive contracts", $record);
             } else {
               // submit membership type if there's a change
-              if ($record['Ergebnisnummer'] == TM_KONTAKT_RESPONSE_ZUSAGE_FOERDER) {
-                // this simply means 'carry on' (see GP-1000)
+              if (   $record['Ergebnisnummer'] == TM_KONTAKT_RESPONSE_ZUSAGE_FOERDER
+                  || $record['Ergebnisnummer'] == TM_KONTAKT_RESPONSE_KONTAKT_RESCUE) {
+                // this simply means 'carry on' (see GP-1000/GP-1328)
                 $membership_type_id = NULL;
               } else {
                 $membership_type_id = $this->getMembershipTypeID($record);
@@ -196,17 +198,6 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         // contact wants to cancel his/her contract
         $membership = $this->getContract($record, $contact_id);
         $this->cancelContract($membership, $record);
-        break;
-
-      case TM_KONTAKT_RESPONSE_KONTAKT_RESCUE:
-           // this is a downgrade
-        $contract_id = $this->getContractID($contact_id, $record);
-        if (empty($contract_id)) {
-          $this->logger->logError("Trying to downgrade an nonexisting contract for contact [{$contact_id}]!", $record);
-        } else {
-          // TODO: can downgrades cause type changes?
-          $this->updateContract($contract_id, $contact_id, $record, NULL, $modify_command);
-        }
         break;
 
       case TM_KONTAKT_RESPONSE_KONTAKT_LOESCHEN:
