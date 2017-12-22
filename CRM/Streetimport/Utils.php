@@ -740,4 +740,27 @@ class CRM_Streetimport_Utils {
     }
     return $records;
   }
+
+  /**
+   * Method to check if email address is a fake emailaddress
+   * (in combination with extension be.aivl.emailcorrector)
+   * @param $email
+   * @return bool
+   */
+  public static function isFakeEmailAddress($email) {
+    if (!empty($email)) {
+      // retrieve fake email addresses setting (set by extension be.aivl.emailcorrector)
+      try {
+        $emailCorrector = new CRM_Emailcorrector_EmailCorrect();
+        $fakeEmailAddresses = civicrm_api3('Setting', 'getvalue', array(
+          'name' => $emailCorrector->getFakeSettingName()));
+        if (in_array($email, $fakeEmailAddresses)) {
+          return TRUE;
+        }
+      }
+      catch (CiviCRM_API3_Exception $ex) {
+      }
+    }
+    return FALSE;
+  }
 }

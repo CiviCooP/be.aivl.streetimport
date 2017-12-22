@@ -193,13 +193,17 @@ abstract class CRM_Streetimport_RecordHandler {
   }
 
   /**
-   * Create an email entity with the given data
+   * Create an email entity with the given data (if not a fake email)
    *
    * @return array with email entity
    */
   protected function createEmail($data, $record) {
     // verify data
     if (empty($data['email'])) {
+      return NULL;
+    }
+    // check if fake
+    if (CRM_Streetimport_Utils::isFakeEmailAddress($data['email'])) {
       return NULL;
     }
     $config = CRM_Streetimport_Config::singleton();

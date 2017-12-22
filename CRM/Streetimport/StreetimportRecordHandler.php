@@ -929,7 +929,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $config = CRM_Streetimport_Config::singleton();
     $locationTypeId = $config->getLocationTypeId();
     $emailFromRecord = CRM_Utils_Array::value('Email', $record);
-    if (!empty($emailFromRecord)) {
+    if (!empty($emailFromRecord) && !CRM_Streetimport_Utils::isFakeEmailAddress($emailFromRecord)) {
       $params = array(
         'contact_id' => $contactId,
         'email' => $emailFromRecord);
