@@ -111,6 +111,7 @@ class CRM_Streetimport_FraudDetection {
       'assignee_id' => $this->_fraudWarningAssigneeId,
       'target_id' => $activityData['target_id'],
       'subject' => $activityData['warning_message'],
+      'status_id' => CRM_Streetimport_Utils::getActivityStatusIdWithName('scheduled'),
       'activity_date_time' => date('Ymd h:i:s'),
       'details' => CRM_Streetimport_Utils::renderTemplate('activities/FraudWarning.tpl', $activityData),
     );
