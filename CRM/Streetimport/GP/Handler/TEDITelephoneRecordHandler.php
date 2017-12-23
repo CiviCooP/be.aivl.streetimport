@@ -72,7 +72,7 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
           $this->createManualUpdateActivity($contact_id, "Phone number has changed to: " . $this->getPhoneNumber($record), $record);
           return $this->logger->logError("Phone [{$record['TelID']}] couldn't be identified.", $record);
         } else {
-          // delete all identified phones (usually one)
+          // update all identified phones (usually one)
           foreach ($phone_ids as $phone_id) {
             civicrm_api3('Phone', 'create', array(
               'id'    => $phone_id,
@@ -89,17 +89,22 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
           return $this->logger->logError("Phone [{$record['TelID']}] couldn't be identified.", $record);
         } else {
           // delete all identified phones (usually one)
+          $deleted_count = 0;
           foreach ($phone_ids as $phone_id) {
             try {
               $this->logger->logDebug("Deleting phone [{$phone_id}] of contact [{$contact_id}]...", $record);
               civicrm_api3('Phone', 'delete', array('id' => $phone_id));
+              $deleted_count += 1;
             } catch (Exception $e) {
               $this->logger->logWarning("Couldn't delete phone [{$phone_id}] of contact [{$contact_id}]!", $record);
               // $this->logger->logError("Phone [{$phone_id}] of contact [{$contact_id}] couldn't be deleted", $record);
             }
           }
-          $this->createPhoneUpdatedActivity(TM_PHONE_DELETED, $contact_id, $record);
-          $this->logger->logDebug("Phone number(s) of contact [{$contact_id}] deleted", $record);
+
+          if ($deleted_count > 0) {
+            $this->createPhoneUpdatedActivity(TM_PHONE_DELETED, $contact_id, $record);
+            $this->logger->logDebug("{$deleted_count} phone number(s) of contact [{$contact_id}] deleted", $record);
+          }
         }
         break;
 
