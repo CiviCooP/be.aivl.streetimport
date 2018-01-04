@@ -144,7 +144,6 @@ class CRM_Streetimport_ImportResult {
   /**
    * shortcut for logMessage($message, BE_AIVL_STREETIMPORT_ERROR)
    * Will also create an activity
-   * @param abort  if true, an exception will be raised, stopping the execution
    */
   public function logFatal($message, $record, $title = NULL) {
     $this->logMessage($message, $record, BE_AIVL_STREETIMPORT_FATAL);

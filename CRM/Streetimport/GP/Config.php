@@ -217,4 +217,13 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
   public function isLittleBicExtensionAccessible() {
     return CRM_Sepa_Logic_Settings::isLittleBicExtensionAccessible();
   }
+
+  /**
+   * Should processing of the whole file stop if no handler
+   * was found for a line?
+   */
+  public function stopProcessingIfNoHanderFound() {
+    return TRUE;
+  }
+
 }

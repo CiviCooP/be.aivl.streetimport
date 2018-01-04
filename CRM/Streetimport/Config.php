@@ -598,4 +598,20 @@ class CRM_Streetimport_Config {
       return 1;
     }
   }
+
+  /**
+   * Should processing of the whole file stop if no handler
+   * was found for a line?
+   */
+  public function stopProcessingIfNoHanderFound() {
+    return FALSE;
+  }
+
+  /**
+   * Should it be possible to allow the same line to be processed by
+   *  multiple handlers? If NO it will be stopped after the first match.
+   */
+  public function allowProcessingByMultipleHandlers() {
+    return FALSE;
+  }
 }

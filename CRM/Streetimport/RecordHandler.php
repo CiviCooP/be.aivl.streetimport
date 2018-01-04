@@ -81,6 +81,9 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   public static function processDataSource($dataSource, $handlers = NULL) {
     $config = CRM_Streetimport_Config::singleton();
+    $allowProcessingByMultipleHandlers = $config->allowProcessingByMultipleHandlers();
+    $stopProcessingIfNoHanderFound     = $config->stopProcessingIfNoHanderFound();
+
     if ($handlers==NULL) {
       $handlers = $config->getHandlers($dataSource->logger);
     }
@@ -105,14 +108,19 @@ abstract class CRM_Streetimport_RecordHandler {
           $handler->processRecord($record, $sourceURI);
           $record_processed = TRUE;
 
-          // TODO: if we want to allow multiple processing, this needs to be commented out:
-          break;
+          if (!$allowProcessingByMultipleHandlers) {
+            break;
+          }
         }
       }
 
       if (!$record_processed) {
-        // no handlers found.
-        $dataSource->logger->logImport($record, false, '', $config->translate('No handlers found'));
+        // no handlers found -> BAIL! (whole file will not execute any further)
+        if ($stopProcessingIfNoHanderFound) {
+          return $dataSource->logger->abort($config->translate('No handlers found'), $record);
+        } else {
+          $dataSource->logger->logImport($record, false, '', $config->translate('No handlers found'));
+        }
       }
     }
 
