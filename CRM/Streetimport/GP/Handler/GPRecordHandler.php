@@ -448,12 +448,12 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
       // first load the membership
       if (empty($membership)) {
-        return $this->logger->logError("NO contract (membership) provided, cancellation not possible.", $record);
+        return $this->logger->logWarning("NO contract (membership) provided, cancellation not possible.", $record);
       }
 
       // now check if it's still active
       if (!$this->isContractActive($membership)) {
-        $this->logger->logError("Contract (membership) [{$membership['id']}] is not active.", $record);
+        return $this->logger->logWarning("Contract (membership) [{$membership['id']}] is not active.", $record);
       }
 
       // finally call contract extension
