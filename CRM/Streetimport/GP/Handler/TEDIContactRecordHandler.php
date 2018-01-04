@@ -197,7 +197,11 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_KONTAKT_RESPONSE_KONTAKT_STORNO_DONE:
         // contact wants to cancel his/her contract
         $membership = $this->getContract($record, $contact_id);
-        $this->cancelContract($membership, $record);
+        if ($membership) {
+          $this->cancelContract($membership, $record);
+        } else {
+          $this->logger->logWarning("NO contract (membership) found.", $record);
+        }
         break;
 
       case TM_KONTAKT_RESPONSE_KONTAKT_LOESCHEN:
