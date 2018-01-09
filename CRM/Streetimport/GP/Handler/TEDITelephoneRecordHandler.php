@@ -238,8 +238,11 @@ class CRM_Streetimport_GP_Handler_TEDITelephoneRecordHandler extends CRM_Streeti
    * get the activity date from the file name
    */
   protected function getDate($record) {
-    // there's no date in the file
-    return date('YmdHis');
+    if (!empty($record['Kontaktdatum'])) {
+      return date('YmdHis', strtotime($record['Kontaktdatum']));
+    } else {
+      return date('YmdHis');
+    }
 
     // this is unreliable:
     // return $this->file_name_data['date'] . $this->file_name_data['time'];
