@@ -9,6 +9,7 @@
 define('TM_KONTAKT_RESPONSE_OFFF_SPENDE',            3);
 
 define('TM_KONTAKT_RESPONSE_ZUSAGE_FOERDER',         1);
+define('TM_KONTAKT_RESPONSE_ZUSAGE_GUARDIAN',       51);
 define('TM_KONTAKT_RESPONSE_ZUSAGE_FLOTTE',         53);
 define('TM_KONTAKT_RESPONSE_ZUSAGE_ARKTIS',         54);
 define('TM_KONTAKT_RESPONSE_ZUSAGE_DETOX',          55);
@@ -144,6 +145,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_KONTAKT_RESPONSE_ZUSAGE_GP4ME:
       case TM_KONTAKT_RESPONSE_ZUSAGE_ATOM:
       case TM_KONTAKT_RESPONSE_KONTAKT_RESCUE:
+      case TM_KONTAKT_RESPONSE_ZUSAGE_GUARDIAN:
         // this is a conversion/upgrade
         $contract_id = $this->getContractID($contact_id, $record);
         if (empty($contract_id)) {
@@ -582,6 +584,11 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       case TM_KONTAKT_RESPONSE_ZUSAGE_ATOM:
         $name = 'Atom-Eingreiftrupp';
         break;
+
+      case TM_KONTAKT_RESPONSE_ZUSAGE_GUARDIAN:
+        $name = 'Guardian of the Ocean';
+        break;
+
 
       default:
         $this->logger->logError("No membership type can be derived from result code (Ergebnisnummer) '{$record['Ergebnisnummer']}'.", $record);

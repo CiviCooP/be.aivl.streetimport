@@ -124,6 +124,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
     // ERROR DURING PROCESSING
     } catch (Exception $ex) {
       $result->logMessage("Exception was: " . $ex->getMessage(), NULL, BE_AIVL_STREETIMPORT_ERROR);
+      $result->logMessage("Stacktrace:\n" . $ex->getTraceAsString(), NULL, BE_AIVL_STREETIMPORT_ERROR);
 
       // ERR-STEP 1: try to move the file to FAILED
       $failed_file = $failed_folder . DIRECTORY_SEPARATOR . basename($processing_file);
@@ -226,7 +227,8 @@ function civicrm_api3_streetimport_tm($params) {
       }
     } catch (Exception $ex) {
       // whole import was aborted...
-      $result->logMessage("Exception was: " . $ex->getMessage());
+      $result->logMessage("Exception was: " . $ex->getMessage(), NULL, BE_AIVL_STREETIMPORT_ERROR);
+      $result->logMessage("Stacktrace:\n" . $ex->getTraceAsString(), NULL, BE_AIVL_STREETIMPORT_ERROR);
 
       // move the failed file to the failed folder
       if (!empty($failed_folder)) {
