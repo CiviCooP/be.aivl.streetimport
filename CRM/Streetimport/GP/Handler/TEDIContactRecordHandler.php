@@ -335,7 +335,15 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         'return' => 'contact_type'));
 
       if ($contact['contact_type'] != 'Individual') {
-        $this->logger->logError("Contact [{$contact_id}] is not an Individual and cannot update the following parameters: " . json_encode($contact_base_update), $record);
+        // this is NOT and Individual: create an activity (see GP-1229)
+        unset($contact_base_update['id']);
+        $this->createManualUpdateActivity(
+            $contact_id,
+            "Convert to 'Individual'",
+            $record,
+            'activities/ManualConversion.tpl',
+            array('contact' => $contact, 'update' => $contact_base_update));
+        // $this->logger->logError("Contact [{$contact_id}] is not an Individual and cannot update the following parameters: " . json_encode($contact_base_update), $record);
       } else {
         civicrm_api3('Contact', 'create', $contact_base_update);
         $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Base Data Updated'), NULL, $record);
