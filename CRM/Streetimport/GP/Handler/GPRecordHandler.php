@@ -489,6 +489,14 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   }
 
   /**
+   * This is just a fall-back, most handlers would want to
+   * provide their own function. This one always returns ''.
+   */
+  protected function getMediumID($record) {
+    return '';
+  }
+
+  /**
    * check if the given contract is still active
    */
   public function isContractActive($membership) {
