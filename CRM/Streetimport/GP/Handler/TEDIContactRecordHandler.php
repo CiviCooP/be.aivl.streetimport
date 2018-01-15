@@ -127,7 +127,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
         }
 
       default:
-        $this->logger->logFatal("Unknown project type {$project_type}. Processing stopped.", $record);
+        $this->logger->abort("Unknown project type {$project_type}. Processing stopped.", $record);
         break;
     }
 

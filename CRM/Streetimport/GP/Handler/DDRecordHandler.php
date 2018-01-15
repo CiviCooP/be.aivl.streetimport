@@ -552,7 +552,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         break;
 
       default:
-        $this->logger->logFatal("Unknown agency '{$this->file_name_data['agency']}'. Processing stopped.", $record);
+        $this->logger->abort("Unknown agency '{$this->file_name_data['agency']}'. Processing stopped.", $record);
         return;
     }
   }

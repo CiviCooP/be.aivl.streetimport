@@ -98,7 +98,7 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
         break;
 
       default:
-        $this->logger->logError("Unknown type '{$category}'", $record);
+        $this->logger->abort("Unknown type '{$category}!", $record);
     }
 
     $this->logger->logImport($record, true, $config->translate('DD Contact'));
