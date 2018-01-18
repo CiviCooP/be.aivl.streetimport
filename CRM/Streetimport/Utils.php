@@ -748,6 +748,10 @@ class CRM_Streetimport_Utils {
    * @return bool
    */
   public static function isFakeEmailAddress($email) {
+    // ignore if extension is not implemented
+    if (!class_exists('CRM_Emailcorrector_EmailCorrect')) {
+      return FALSE;
+    }
     if (!empty($email)) {
       // retrieve fake email addresses setting (set by extension be.aivl.emailcorrector)
       try {
