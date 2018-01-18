@@ -41,7 +41,7 @@ class CRM_Streetimport_FraudDetection {
    */
   function checkIbanAlreadyUsedForOtherContact($iban, $contactId) {
     $contacts = array();
-    if (empty($iban || empty($contactId))) {
+    if (empty($iban) || empty($contactId)) {
       throw new Exception('You can not check if an iban is already used with empty parameter iban and/or contact_id in '
         .__METHOD__.', contact your system administrator');
     }
