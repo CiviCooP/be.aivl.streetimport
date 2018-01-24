@@ -232,7 +232,8 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     // get start date
     $now = date('YmdHis');
-    $mandate_start_date = date('YmdHis', strtotime($record['Einzugsstart']));
+    // backdate by 3 days so the collection is not jeopardised (GP-1416)
+    $mandate_start_date = date('YmdHis', strtotime('-3 days', strtotime($record['Einzugsstart'])));
     if (empty($mandate_start_date) || $mandate_start_date < $now) {
       $mandate_start_date = $now;
     }
@@ -348,7 +349,8 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     if (empty($record['Einzugsstart'])) {
       $new_start_date = $now;
     } else {
-      $new_start_date = date('Y-m-d H:i:s', strtotime($record['Einzugsstart']));
+      // backdate by 3 days so the collection is not jeopardised (GP-1416)
+      $new_start_date = date('Y-m-d H:i:s', strtotime('-3 days', strtotime($record['Einzugsstart'])));
       if ($new_start_date < $now) {
         $new_start_date = $now;
       }
