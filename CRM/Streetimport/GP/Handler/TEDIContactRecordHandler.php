@@ -293,7 +293,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     $contact_base_attributes = array(
       'nachname'        => 'last_name',
       'vorname'         => 'first_name',
-      'firma'           => 'current_employer',
+      // 'firma'           => 'current_employer',  => Firma won't be processed any more (GP-1414)
       'Anrede'          => 'prefix_id',
       'geburtsdatum'    => 'birth_date',
       'geburtsjahr'     => $config->getGPCustomFieldKey('birth_year'),
