@@ -651,7 +651,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         $data['prefix_id'] = $prefix_id;
       } else {
         // not found!
-        $this->logger->logError("Couldn't resolve prefix '{$data['prefix_id']}'.", $record);
+        $this->logger->logWarning("Couldn't resolve prefix '{$data['prefix_id']}'.", $record);
         $data['prefix_id'] = '';
       }
     }
