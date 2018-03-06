@@ -412,7 +412,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         'id'                                               => $contract_id,
         'medium_id'                                        => $this->getMediumID($record),
         'campaign_id'                                      => $this->getCampaignID($record),
-        'membership_cancellation.membership_cancel_reason' => 'MS02',
+        'membership_cancellation.membership_cancel_reason' => 'XX02',
         'date'                                             => date('Y-m-d H:i:s', strtotime($record['EinzugsEndeDatum'])),
         );
 
@@ -464,7 +464,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         'id'                                               => $membership['id'],
         'medium_id'                                        => $this->getMediumID($record),
         'campaign_id'                                      => $this->getCampaignID($record),
-        'membership_cancellation.membership_cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'MS02'),
+        'membership_cancellation.membership_cancel_reason' => CRM_Utils_Array::value('cancel_reason', $params, 'XX02'),
         );
 
       // add cancel date if in the future:
