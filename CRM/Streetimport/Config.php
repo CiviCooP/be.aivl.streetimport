@@ -1086,9 +1086,26 @@ class CRM_Streetimport_Config {
     }
     $this->saveImportSettings($params);
   }
+
+  /**
+   * Setting resource path
+   *
+   * @throws Exception
+   */
   private function setResourcesPath() {
-    $container = CRM_Extension_System::singleton()->getFullContainer();
-    $resourcesPath = $container->getPath('be.aivl.streetimport').'/resources/';
+    try {
+      $civiVersion = civicrm_api3('Domain', 'getvalue', array('return' => 'version'));
+    } catch (CiviCRM_API3_Exception $ex) {
+      $civiVersion = '4.7';
+    }
+    if (version_compare($civiVersion, '4.7', '>=')) {
+      $container = CRM_Extension_System::singleton()->getFullContainer();
+      $resourcesPath = $container->getPath('be.aivl.streetimport').'/resources/';
+    }
+    else {
+      $settings = civicrm_api3('Setting', 'Getsingle', array());
+      $resourcesPath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
+    }
     if (!is_dir($resourcesPath) || !file_exists($resourcesPath)) {
       throw new Exception(ts('Could not find the folder '.$resourcesPath
         .' which is required for extension be.aivl.streetimport in '.__METHOD__
