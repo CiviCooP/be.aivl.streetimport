@@ -28,11 +28,11 @@ abstract class CRM_Streetimport_DataSource {
     $this->uri = $uri;
     if ($mapping == NULL) {
       // load default mapping
-      // TODO: move to config
-      $settings = civicrm_api3('Setting', 'Getsingle', array());
-      $mappings_path = $settings['extensionsDir'].'/be.aivl.streetimport/resources/default_mapping.json';
-      $mappings_contenct = file_get_contents($mappings_path);
-      $mapping = json_decode($mappings_contenct, true);
+      $config = CRM_Streetimport_Config::singleton();
+      $resourcesPath = $config->getResourcesPath();
+      $mappings_path = $resourcesPath.'default_mapping.json';
+      $mappings_content = file_get_contents($mappings_path);
+      $mapping = json_decode($mappings_content, true);
     }
     $this->mapping = $mapping;
   }

@@ -10,7 +10,7 @@ class CRM_Streetimport_Config {
 
   private static $_singleton;
 
-  protected $resourcesPath = null;
+  private $_resourcesPath = null;
   protected $aivlLegalName = null;
   protected $importSettings = array();
   protected $recruiterContactSubType = array();
@@ -51,9 +51,7 @@ class CRM_Streetimport_Config {
    * @param string $context
    */
   function __construct($context) {
-
-    $settings = civicrm_api3('Setting', 'Getsingle', array());
-    $this->resourcesPath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
+    $this->setResourcesPath();
     $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
     $this->streetRecruitmentImportType = 1;
     $this->welcomeCallImportType = 2;
@@ -88,6 +86,14 @@ class CRM_Streetimport_Config {
     $this->setTranslationFile();
   }
 
+  /**
+   * Getter for resources path
+   *
+   * @return null
+   */
+  public function getResourcesPath() {
+    return $this->_resourcesPath;
+  }
   /**
    * Getter for default phone type id
    */
@@ -822,7 +828,7 @@ class CRM_Streetimport_Config {
           $this->importSettings[$key]['value'] = $value;
         }
       }
-      $fileName = $this->resourcesPath . 'import_settings.json';
+      $fileName = $this->_resourcesPath . 'import_settings.json';
       try {
         $fh = fopen($fileName, 'w');
         fwrite($fh, json_encode($this->importSettings));
@@ -838,8 +844,8 @@ class CRM_Streetimport_Config {
    *
    * @throws Exception when resource file could not be loaded
    */
-  public function setActivityTypes() {
-    $jsonFile = $this->resourcesPath.'activity_types.json';
+  protected function setActivityTypes() {
+    $jsonFile = $this->_resourcesPath.'activity_types.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load activity types configuration file for extension,
       contact your system administrator!');
@@ -867,7 +873,7 @@ class CRM_Streetimport_Config {
    * @throws Exception when resource file could not be loaded
    */
   protected function setRelationshipTypes() {
-    $jsonFile = $this->resourcesPath.'relationship_types.json';
+    $jsonFile = $this->_resourcesPath.'relationship_types.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load relationship types configuration file for extension,
       contact your system administrator!');
@@ -891,7 +897,7 @@ class CRM_Streetimport_Config {
    */
   protected function setContactSubTypes()
   {
-    $jsonFile = $this->resourcesPath . 'contact_sub_types.json';
+    $jsonFile = $this->_resourcesPath . 'contact_sub_types.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load contact sub types configuration file for extension,
       contact your system administrator!');
@@ -915,7 +921,7 @@ class CRM_Streetimport_Config {
    * @access protected
    */
   protected function setOptionGroups() {
-    $jsonFile = $this->resourcesPath.'option_groups.json';
+    $jsonFile = $this->_resourcesPath.'option_groups.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load option_groups configuration file for extension,
       contact your system administrator!');
@@ -938,7 +944,7 @@ class CRM_Streetimport_Config {
    * @throws Exception when resource file could not be loaded
    */
   protected function setGroups() {
-    $jsonFile = $this->resourcesPath . 'groups.json';
+    $jsonFile = $this->_resourcesPath . 'groups.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load groups configuration file for extension,
       contact your system administrator!');
@@ -963,7 +969,7 @@ class CRM_Streetimport_Config {
    * @access protected
    */
   protected function setCustomData() {
-    $jsonFile = $this->resourcesPath.'custom_data.json';
+    $jsonFile = $this->_resourcesPath.'custom_data.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load custom data configuration file for extension, contact your system administrator!');
     }
@@ -1050,7 +1056,7 @@ class CRM_Streetimport_Config {
    * @access protected
    */
   protected function setImportSettings() {
-    $jsonFile = $this->resourcesPath.'import_settings.json';
+    $jsonFile = $this->_resourcesPath.'import_settings.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load import_settings configuration file for extension, contact your system administrator!');
     }
@@ -1065,7 +1071,7 @@ class CRM_Streetimport_Config {
    */
   protected function setTranslationFile() {
     $config = CRM_Core_Config::singleton();
-    $jsonFile = $this->resourcesPath.$config->lcMessages.'_translate.json';
+    $jsonFile = $this->_resourcesPath.$config->lcMessages.'_translate.json';
     if (file_exists($jsonFile)) {
       $translateJson = file_get_contents($jsonFile);
       $this->translatedStrings = json_decode($translateJson, true);
@@ -1097,5 +1103,32 @@ class CRM_Streetimport_Config {
       $params[$settingValue['name']] = $settingValue['value'];
     }
     $this->saveImportSettings($params);
+  }
+
+  /**
+   * Setting resource path
+   *
+   * @throws Exception
+   */
+  private function setResourcesPath() {
+    try {
+      $civiVersion = civicrm_api3('Domain', 'getvalue', array('return' => 'version'));
+    } catch (CiviCRM_API3_Exception $ex) {
+      $civiVersion = '4.7';
+    }
+    if (version_compare($civiVersion, '4.7', '>=')) {
+      $container = CRM_Extension_System::singleton()->getFullContainer();
+      $resourcesPath = $container->getPath('be.aivl.streetimport').'/resources/';
+    }
+    else {
+      $settings = civicrm_api3('Setting', 'Getsingle', array());
+      $resourcesPath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
+    }
+    if (!is_dir($resourcesPath) || !file_exists($resourcesPath)) {
+      throw new Exception(ts('Could not find the folder '.$resourcesPath
+        .' which is required for extension be.aivl.streetimport in '.__METHOD__
+        .'.It does not exist or is not a folder, contact your system administrator'));
+    }
+    $this->_resourcesPath = $resourcesPath;
   }
 }
