@@ -8,7 +8,6 @@
  */
 class CRM_Streetimport_PrefixRule {
 
-  private $_resourcePath = NULL;
   private $_prefixRules = array();
   private $_maleGenderId = NULL;
   private $_femaleGenderId = NULL;
@@ -37,7 +36,6 @@ class CRM_Streetimport_PrefixRule {
       }
     } catch (CiviCRM_API3_Exception $ex) {}
     $settings = civicrm_api3('Setting', 'Getsingle', array());
-    $this->_resourcePath = $settings['extensionsDir'].'/be.aivl.streetimport/resources/';
     $this->getFromJson();
   }
 
@@ -47,7 +45,9 @@ class CRM_Streetimport_PrefixRule {
    * @throws Exception when json file not found
    */
   private function getFromJson() {
-    $jsonFile = $this->_resourcePath.'prefix_rules.json';
+    $config = CRM_Streetimport_Config::singleton();
+    $resourcesPath = $config->getResourcesPath();
+    $jsonFile = $resourcesPath.'prefix_rules.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load prefix_rules configuration file for extension in '.__METHOD__.
         ', contact your system administrator!');
@@ -188,7 +188,9 @@ class CRM_Streetimport_PrefixRule {
    * @throws Exception if unable to write the json file
    */
   private function writeToJson() {
-    $fileName = $this->_resourcePath . 'prefix_rules.json';
+    $config = CRM_Streetimport_Config::singleton();
+    $resourcesPath = $config->getResourcesPath();
+    $fileName = $resourcesPath . 'prefix_rules.json';
     try {
       $fh = fopen($fileName, 'w');
       fwrite($fh, json_encode($this->_prefixRules, JSON_PRETTY_PRINT));
