@@ -91,6 +91,9 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
         if ($lastDeceased) {
           // there is another 'deceased' event in the last two years
           $this->disableContact($contact_id, 'deceased', $record);
+
+          // should still increase RTS counter (see GP-1593)
+          $this->increaseRTSCounter($primary_address, $record);
         } else {
           $this->increaseRTSCounter($primary_address, $record);
         }
