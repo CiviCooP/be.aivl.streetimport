@@ -7,6 +7,8 @@
  */
 class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_StreetimportRecordHandler {
 
+  private $_replaceCausedByField = NULL;
+
   /** 
    * Check if the given handler implementation can process the record
    *
@@ -137,175 +139,90 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
 
   /**
    * process SDD mandate
+   *
+   * @param array $record
+   * @param int $donorId
+   * @return mixed
    */
-  protected function processMandate($record, $donor_id) {
+  protected function processMandate($record, $donorId) {
     $config = CRM_Streetimport_Config::singleton();
-    $now = strtotime("now");
-
     // first, extract the new mandate information
-    $new_mandate_data = $this->extractMandate($record, $donor_id);
-    // then load the existing mandate
-    try {
-      $old_mandate_data = civicrm_api3('SepaMandate', 'getsingle', array('reference' => $new_mandate_data['reference']));    
-      if (!isset($old_mandate_data['end_date'])) {
-        $old_mandate_data['end_date'] = '';
-      }
-    } catch (Exception $e) {
-      $this->logger->logError($config->translate("SDD mandate")." ".$new_mandate_data['reference']." "
-        .$config->translate("not found for donor")." ".$donor_id.". ".$config->translate("Mandate not updated at Welcome Call for").
-        " ".$record['First Name']." ".$record['Last Name'], $record, $config->translate("SDD Mandate not found"),"Error");
-      return NULL;
-    }
-
+    $newMandateData = $this->extractMandate($record, $donorId);
+    $oldMandateData = $this->getOldMandateData($newMandateData['reference'], $record, $donorId);
     // if this is a cancellation, nothing else matters:
     $acceptedYesValues = $config->getAcceptedYesValues();
     if (in_array($record['Cancellation'], $acceptedYesValues)) {
-        CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'],
-                                                    date('YmdHis', strtotime("today")),
-                                                    $cancel_reason=$config->translate("Cancelled after welcome call."));
-      return;
+      CRM_Sepa_BAO_SEPAMandate::terminateMandate($oldMandateData['id'], date('YmdHis', strtotime("today")),
+        $cancelReason = $config->translate("Cancelled after welcome call."));
+      return NULL;
     }
-    
-    // ...and the attached contribution based on the mandate type
-    $old_contribution = $this->getOldContributionData($old_mandate_data, $record);
-    if (!$old_contribution) {
+    // if any changes to campaign, update recurring contribution (issue 1139) <https://civicoop.plan.io/issues/1139>
+    if (isset($newMandateData['campaign_id'])) {
+      $this->changeCampaign($oldMandateData, $newMandateData, $record);
+      unset($newMandateData['campaign_id']);
+    }
+    // if OOFF just process changes
+    if ($oldMandateData['type'] == ' OOFF') {
+      $this->processOOFFChanges($newMandateData, $oldMandateData, $record);
+    }
+    else {
+      if ($this->requiresNewMandate($newMandateData, $oldMandateData) == FALSE) {
+        $this->processRCURChanges($newMandateData, $oldMandateData, $record);
+      }
+      else {
+        $this->replaceMandate($oldMandateData, $newMandateData, $record);
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Method to replace mandate with new one
+   *
+   * @param $oldMandateData
+   * @param $newMandateData
+   * @param $record
+   * @return null
+   * @throws CiviCRM_API3_Exception
+   */
+  private function replaceMandate($oldMandateData, $newMandateData, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+    // step 1: find new reference (append letters)
+    for ($suffix = ord('a'); $suffix < ord('z'); $suffix++) {
+      $newReferenceNumber = $newMandateData['reference'] . chr($suffix);
+      $countQuery = civicrm_api3('SepaMandate', 'getcount', array('reference' => $newReferenceNumber));
+      if ($countQuery['result'] == 0) {
+        break;
+      } else {
+        $newReferenceNumber = NULL; // this number is in use
+      }
+    }
+    if (empty($newReferenceNumber)) {
+      $this->logger->logError(sprintf($config->translate("Couldn't create reference for amended mandate '%s'."), $newMandateData['reference']), $record, "Error");
       return NULL;
     }
 
-    // now, compare new data with old mandate/contribution
-    $mandate_diff = array();
-    foreach ($new_mandate_data as $key => $value) {
-      if (isset($old_mandate_data[$key])) {
-        if ($new_mandate_data[$key] != $old_mandate_data[$key]) {
-          $mandate_diff[$key] = $new_mandate_data[$key];
-        }
-      }
-      if (isset($old_contribution[$key])) {
-        if ($new_mandate_data[$key] != $old_contribution[$key]) {
-          $mandate_diff[$key] = $new_mandate_data[$key];
-        }
+    // step 2: create new mandate
+    $newMandateData['reference'] = $newReferenceNumber;
+    $newMandate = $this->createSDDMandate($newMandateData, $record);
+
+    // step 3: stop old mandate (if cancel date is in the past set to today)
+    $cancelDate = new DateTime();
+    if (!empty($newMandateData['end_date'])) {
+      $endDate = new DateTime($newMandateData['end_date']);
+      if ($endDate > $cancelDate) {
+        $cancelDate = $endDate;
       }
     }
+    $cancelReason = $config->translate('Replaced with') . ' ' . $newReferenceNumber . ' ' . $config->translate('due to the following change in the Welcome Call')
+      . ': ' . $this->_replaceCausedByField;
+    CRM_Sepa_BAO_SEPAMandate::terminateMandate( $oldMandateData['id'], $cancelDate->format('Ymd'), $cancelReason);
 
-    // if both dates are in the past, we can ignore the change 
-    //   (they're both probably just auto-generated)
-    if (!empty($mandate_diff['start_date'])) {
-      if (  $old_contribution['start_date'] < $now
-         && $new_mandate_data['start_date'] < $now ) {
-        unset($mandate_diff['start_date']);
-      }
+    // step 4: save bank account if it has changed:
+    if ($oldMandateData['iban'] != $newMandateData['iban'] || $oldMandateData['bic'] != $newMandateData['bic']) {
+      $this->saveBankAccount($newMandateData, $record);
     }
-    // if the start date in the original record is empty we can ignore the change
-    if (isset($record['Start Date']) && empty($record['Start Date'])) {
-      unset($mandate_diff['start_date']);
-    }
-
-    // filter the changes, some can be safely ignored
-    $ignore_changes_for = array('creation_date', 'contact_id', 'validation_date');
-    foreach ($ignore_changes_for as $field) unset($mandate_diff[$field]);
-    //  => this should only happen if the donor ID lookup failed...
-
-    if (empty($mandate_diff)) {
-      $this->logger->logDebug($config->translate("No SDD mandate update required"), $record);
-      return;
-    }
-
-    // if only the attributes amount and/or campaign and/or end_date have changed
-    $require_new_mandate = $mandate_diff;
-    unset($require_new_mandate['amount']);
-    unset($require_new_mandate['end_date']);
-    unset($require_new_mandate['date']);
-    unset($require_new_mandate['campaign_id']);
-    unset($mandate_diff['date']);
-    unset($require_new_mandate['validation_date']);
-    unset($require_new_mandate['campaign_id']);
-
-    // if any changes to campaign, update recurring contribution (issue 1139) <https://civicoop.plan.io/issues/1139>
-    if (isset($new_mandate_data['campaign_id'])) {
-      $this->changeCampaign($old_mandate_data, $new_mandate_data, $record);
-      unset($mandate_diff['campaign_id']);
-      unset($new_mandate_data['campaign_id']);
-    }
-
-    if (empty($require_new_mandate)) {
-      // CHANGES ONLY TO end_date and/or amount
-      if (!empty($mandate_diff['amount'])) {
-        CRM_Sepa_BAO_SEPAMandate::adjustAmount(     $old_mandate_data['id'], 
-                                                    $new_mandate_data['amount']);
-      }
-
-
-      if (!empty($mandate_diff['end_date'])) {
-        CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], 
-                                                    $new_mandate_data['end_date'], 
-                                                    $cancel_reason=$config->translate("Update end date via welcome call."));
-      }
-
-      if (!empty($mandate_diff['validation_date'])) {
-        // update validation date
-        $new_validation_date = strtotime($new_mandate_data['validation_date']);
-        $new_signature_date  = strtotime($new_mandate_data['date']);
-        civicrm_api3('SepaMandate', 'create', array( 
-                  'id'              => $old_mandate_data['id'], 
-                  'validation_date' => date("YmdHis", $new_validation_date),
-                  'date'            => date("YmdHis", $new_signature_date),
-                  ));
-      }
-
-      if (!empty($mandate_diff['campaign_id'])) {
-        // update campaign
-        civicrm_api3('SepaMandate', 'create', array(
-          'id' => $old_mandate_data['id'],
-          'campaign_id' => $new_mandate_data['campaign_id'],
-        ));
-      }
-
-    } else {
-      // MORE/OTHER CHANGES -> create new mandate
-      // step 1: find new reference (append letters)
-      for ($suffix=ord('a'); $suffix < ord('z'); $suffix++) {
-        $new_reference_number = $new_mandate_data['reference'] . chr($suffix);
-        $count_query = civicrm_api3('SepaMandate', 'getcount', array('reference' => $new_reference_number));
-        if ($count_query['result'] == 0) {
-          break;
-        } else {
-          $new_reference_number = NULL; // this number is in use
-        }
-      }
-      if (empty($new_reference_number)) {
-        $this->logger->logError(sprintf($config->translate("Couldn't create reference for amended mandate '%s'."), $new_mandate_data['reference']), $record, "Error");
-        return;
-      }
-
-      // step 2: create new mandate
-      $new_mandate_data['reference'] = $new_reference_number;
-      $new_mandate = $this->createSDDMandate($new_mandate_data, $record);
-      
-      // step 3: stop old mandate
-      $cancel_date = $now;
-      if (!empty($new_mandate_data['end_date'])) {
-        $cancel_date = strtotime($new_mandate_data['end_date']);
-        $cancel_date = max($now, $cancel_date);
-      }
-      $cancel_date_str = date('Y-m-d');
-      $changesParts = array();
-      $ignoreDiffs = array('date', 'validation_date', 'end_date', 'amount');
-      foreach ($mandate_diff as $diffKey => $diffValue) {
-        if (!in_array($diffKey, $ignoreDiffs)) {
-          $changesParts[] = $diffKey;
-        }
-      }
-      $cancelReason = $config->translate('Replaced with').' '.$new_reference_number.' '
-        .$config->translate('due to the following changes in the Welcome Call').': '
-        .implode('; ', $changesParts);
-      CRM_Sepa_BAO_SEPAMandate::terminateMandate( $old_mandate_data['id'], $cancel_date_str, $cancelReason);
-
-      // step 4: save bank account if it has changed:
-      if (!empty($mandate_diff['iban']) || !empty($mandate_diff['bic'])) {
-        $this->saveBankAccount($new_mandate_data, $record);
-      }
-      return $new_mandate;
-    }
+    return $newMandate;
   }
 
   /**
@@ -431,50 +348,216 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
   }
 
   /**
-   * Method to get the existing contribution data. This is based on the mandate type:
-   * - if FRST/RCUR, get contribution and recurring contribution
-   * - if OOFF, only get contribution
+   * Method to determine if new mandate is required. This is the case if one of the values in the array forcesNewMandate is different
    *
-   * @param array $mandateData
-   * @param array $record
-   * @return array
-   *
+   * @param array $newMandateData
+   * @param array $oldMandateData
+   * @return bool
    */
-  protected function getOldContributionData($mandateData, $record) {
-    $oldContribution = array();
+  private function requiresNewMandate($newMandateData, $oldMandateData) {
+    $newFields = array(
+      'iban',
+      'frequency_interval',
+      'frequency_unit'
+    );
+    foreach ($newFields as $newField) {
+      if ($oldMandateData[$newField] != $newMandateData[$newField]) {
+        $this->_replaceCausedByField = $newField;
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Method to process mandate changes (also into recurring contributions
+   *
+   * @param $newMandateData
+   * @param $oldMandataData
+   * @param $record
+   */
+  private function processRCURChanges($newMandateData, $oldMandataData, $record) {
     $config = CRM_Streetimport_Config::singleton();
-    switch ($mandateData['entity_table']) {
-      case 'civicrm_contribution_recur':
-        try {
-          $oldContribution = civicrm_api3('ContributionRecur', 'getsingle', array(
-            'id' => $mandateData['entity_id'],
-            ));
-        }
-        catch (CiviCRM_API3_Exception $ex) {
-          $this->logger->logError($config->translate("Couldn't load recurring contribution for mandate")
-            .' '.$mandateData['id'].'. '.$config->translate("Mandate possibly corrupt at Welcome Call for").' '
-            .$record['First Name'].' '.$record['Last Name'], $record, $config->translate('No Contribution Entity Found'),"Error");
-        }
-        return $oldContribution;
-        break;
-      case 'civicrm_contribution':
-        try {
-          $oldContribution = civicrm_api3('Contribution', 'getsingle', array(
-            'id' => $mandateData['entity_id'],
-            ));
-          $oldContribution['amount'] = $oldContribution['total_amount'];
-        }
-        catch (CiviCRM_API3_Exception $ex) {
-          $this->logger->logError($config->translate("Couldn't load contribution for mandate")
-            .' '.$mandateData['id'].'. '.$config->translate("Mandate possibly corrupt at Welcome Call for").' '
-            .$record['First Name'].' '.$record['Last Name'], $record, $config->translate('No Contribution Entity Found'),"Error");
-        }
-        return $oldContribution;
-        break;
-      default:
-        $this->logger->abort($config->translate("Bad SDD mandate type found. Contact developer"), $record);
-        return $oldContribution;
-        break;
+    // if amount changed, process into recurring contribution
+    if ($newMandateData['amount'] != $oldMandataData['amount']) {
+      CRM_Sepa_BAO_SEPAMandate::adjustAmount($oldMandataData['id'], $newMandateData['amount']);
+    }
+    // if end date set, terminate mandate per end date
+    if (isset($newMandateData['end_date']) && !empty($newMandateData['end_date'])) {
+      CRM_Sepa_BAO_SEPAMandate::terminateMandate($oldMandataData['id'], $newMandateData['end_date'], $config->translate('Update end date via welcome call.'));
+    }
+    // in other cases, update data with API
+    $sepaParams = array();
+    $recurParams = array();
+    $recurFields = array(
+      'cycle_day',
+      'source',
+      'start_date',
+    );
+    $sepaFields = array(
+      'bic',
+      'creation_date',
+      'validation_date',
+    );
+    foreach ($sepaFields as $sepaField) {
+      if ($newMandateData[$sepaField] != $oldMandataData[$sepaField]) {
+        $sepaParams[$sepaField] = $newMandateData[$sepaField];
+      }
+    }
+    foreach ($recurFields as $recurField) {
+      if ($newMandateData[$recurField] != $oldMandataData[$recurField]) {
+        $recurParams[$recurField] = $newMandateData[$recurField];
+      }
+    }
+    if (!empty($sepaParams)) {
+      $sepaParams['id'] = $oldMandataData['id'];
+      $this->saveSepaChanges($sepaParams, $record, $newMandateData);
+      // process bank account if bic changed
+      if ($newMandateData['bic'] != $oldMandataData['bic']) {
+        $this->saveBankAccount($newMandateData, $record);
+      }
+    }
+    if (!empty($recurParams)) {
+      $recurParams['id'] = $oldMandataData['entity_id'];
+      $this->saveRecurChanges($recurParams, $record, $newMandateData);
+    }
+  }
+
+  /**
+   * Save changes to sepa mandate
+   *
+   * @param $sepaParams
+   * @param $record
+   * @param $newMandateData
+   */
+  private function saveSepaChanges($sepaParams, $record, $newMandateData) {
+    $config = CRM_Streetimport_Config::singleton();
+    try {
+      civicrm_api3('SepaMandate', 'create', $sepaParams);
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError($config->translate("Couldn't update mandate with reference") . ' '
+        . $newMandateData['reference'], $record, "Error");
+    }
+  }
+
+  /**
+   * Save changes to recurring contribution
+   *
+   * @param $recurParams
+   * @param $record
+   * @param $newMandateData
+   */
+  private function saveRecurChanges($recurParams, $record, $newMandateData) {
+    $config = CRM_Streetimport_Config::singleton();
+    try {
+      civicrm_api3('ContributionRecur', 'create', $recurParams);
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError($config->translate("Couldn't update recurring contribution with id ")  . $recurParams['id']
+        . $config->translate(" for mandate reference ") . " " . $newMandateData['reference'], $record, "Error");
+    }
+  }
+
+  /**
+   * Method to get old mandate data
+   *
+   * @param $reference
+   * @param $record
+   * @param $donorId
+   * @return array
+   */
+  private function getOldMandateData($reference, $record, $donorId) {
+    $config = CRM_Streetimport_Config::singleton();
+    try {
+      $oldMandateData = civicrm_api3('SepaMandate', 'getsingle', array('reference' => $reference));
+      if (!isset($oldMandateData['end_date'])) {
+        $oldMandateData['end_date'] = '';
+      }
+      // add either contribution or recurring contribution data
+      switch ($oldMandateData['entity_table']) {
+        case 'civicrm_contribution_recur':
+          $this->addRecurringData($oldMandateData, $record);
+          break;
+
+        case 'civicrm_contribution':
+          $this->addContributionData($oldMandateData, $record);
+          break;
+      }
+      return $oldMandateData;
+    } catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError($config->translate("SDD mandate") . " " . $reference . " " . $config->translate("not found for donor") .
+        " " . $donorId . ". " . $config->translate("Mandate not updated at Welcome Call for") . " " . $record['First Name'] .
+        " " . $record['Last Name'], $record, $config->translate("SDD Mandate not found"), "Error");
+      return array();
+    }
+  }
+
+  /**
+   * Method to retrieve the recurring contribution data for mandate (if RCUR)
+   *
+   * @param array $oldMandateData
+   * @param array $record
+   */
+  private function addRecurringData(&$oldMandateData, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+    try {
+      $recurring = civicrm_api3('ContributionRecur', 'getsingle', array('id' => $oldMandateData['entity_id']));
+      if (isset($recurring['frequency_unit'])) {
+        $oldMandateData['frequency_unit'] = $recurring['frequency_unit'];
+      }
+      if (isset($recurring['frequency_interval'])) {
+        $oldMandateData['frequency_interval'] = $recurring['frequency_interval'];
+      }
+      if (isset($recurring['cycle_day'])) {
+        $oldMandateData['cycle_day'] = $recurring['cycle_day'];
+      }
+      if (isset($recurring['amount'])) {
+        $oldMandateData['amount'] = $recurring['amount'];
+      }
+      if (isset($recurring['campaign_id'])) {
+        $oldMandateData['campaign_id'] = $recurring['campaign_id'];
+      }
+      if (isset($recurring['financial_type_id'])) {
+        $oldMandateData['financial_type_id'] = $recurring['financial_type_id'];
+      }
+      if (isset($recurring['start_date'])) {
+        $oldMandateData['start_date'] = $recurring['start_date'];
+      }
+      if (isset($recurring['end_date'])) {
+        $oldMandateData['end_date'] = $recurring['end_date'];
+      }
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError($config->translate('Could not find a recurring contribution for mandate ' . $oldMandateData['reference']),
+        $record, $config->translate('No recurring contribution found', ' Warning'));
+    }
+
+  }
+
+  /**
+   * Method to get the contribution for the mandate (if OOFF)
+   *
+   * @param array $oldMandateData
+   * @param array $record
+   */
+  private function addContributionData(&$oldMandateData, $record) {
+    $config = CRM_Streetimport_Config::singleton();
+    try {
+      $contribution = civicrm_api3('Contribution', 'getsingle', array('id' => $oldMandateData['entity_id']));
+      if (isset($contribution['financial_type_id'])) {
+        $oldMandateData['financial_type_id'] = $contribution['financial_type_id'];
+      }
+      if (isset($contribution['total_amount'])) {
+        $oldMandateData['amount'] = $contribution['total_amount'];
+      }
+      if (isset($contribution['campaign_id'])) {
+        $oldMandateData['campaign_id'] = $contribution['campaign_id'];
+      }
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      $this->logger->logError($config->translate('Could not find a (one off) contribution for mandate ' . $oldMandateData['reference']),
+        $record, $config->translate('No (one off) contribution found', ' Warning'));
     }
   }
 }
