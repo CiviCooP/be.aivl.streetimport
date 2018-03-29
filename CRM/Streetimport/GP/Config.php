@@ -147,6 +147,18 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
   }
 
   /**
+   * Get a (SQL-ready) comma-separated list of
+   * activity IDs that can be a trigger for Response activities
+   */
+  public function getResponseTriggerTypes() {
+    // TODO: look up?
+    // 101 => Outgoing Call
+    // 106 => Contact Called
+    //  53 => Action
+    return '101,106,53';
+  }
+
+  /**
    * calculate the next valid cycle day
    */
   public function getNextCycleDay($start_date, $now) {

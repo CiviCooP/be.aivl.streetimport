@@ -726,16 +726,16 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     // first get Response activity type
     if ($this->_response_activity_id == NULL) {
-      $this->_response_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'Response', 'name');
+      $this->_response_activity_id = $config->getResponseActivityType();
       if (empty($this->_response_activity_id)) {
         // couldn't be found => create
         $activity = civicrm_api3('OptionValue', 'create', array(
           'option_group_id' => 'activity_type',
           'name'            => 'Response',
-          'label'           => $config->translate('Manual Update Required'),
+          'label'           => $config->translate('Response'),
           'is_active'       => 1
           ));
-        $this->_response_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'Response', 'name');
+        $this->_response_activity_id = $config->getResponseActivityType();
       }
     }
 
@@ -756,7 +756,43 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       // 'assignee_contact_id' => (int) $config->getFundraiserContactID(),
     );
 
+    $this->addResponseParent($activityParams);
     $activity = $this->createActivity($activityParams, $record);
+  }
+
+  /**
+   * try to find the responses trigger activity and set it
+   * as parent_id
+   * @see https://redmine.greenpeace.at/issues/1083
+   */
+  public function addResponseParent(&$response_data) {
+    // only touch this if there isn't a parent ID set yet
+    if (!empty($response_data['parent_id'])) return;
+
+    // try to find an activity of one of the trigger types to relate to
+    $config = CRM_Streetimport_Config::singleton();
+    $trigger_types_list = $config->getResponseTriggerTypes();
+    if (empty($trigger_types_list)) return;
+
+    // TODO: CAUTION: WORK IN PROGRESS:
+    $parent_id = CRM_Core_DAO::singleValueQuery("
+      SELECT parent.id
+      FROM civicrm_activity response
+      LEFT JOIN civicrm_activity_contact ac ON ac.activity_id = response.id  AND ac.record_type_id = 3
+      LEFT JOIN civicrm_activity_contact pc ON pc.contact_id = ac.contact_id AND ac.record_type_id = 3
+      LEFT JOIN civicrm_activity parent ON parent.id = pc.activity_id
+      WHERE response.id = 2809973
+        AND parent.id <> response.id
+        AND parent.campaign_id = response.campaign_id
+        AND parent.activity_date_time < response.activity_date_time
+        AND DATEDIFF(response.activity_date_time, parent.activity_date_time) < 90
+        AND parent.activity_type_id IN ({$trigger_types_list})
+      ORDER BY parent.activity_date_time DESC
+      LIMIT 1");
+
+    if ($parent_id) {
+      $response_data['parent_id'] = $parent_id;
+    }
   }
 
   /**

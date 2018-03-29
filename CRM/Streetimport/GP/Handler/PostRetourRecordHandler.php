@@ -142,7 +142,10 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
    * Add a new RTS activity
    */
   protected function addRTSActvity($contact_id, $category, $record) {
-    civicrm_api3('Activity', 'create', array(
+    $subject = $this->getRTSSubject($category);
+    $date    = date('YmdHis');
+    $this->createResponseActivity($contact_id, $subject, $record, $date);
+    $response_activity_data = array(
       'activity_type_id'    => CRM_Streetimport_GP_Config::getResponseActivityType(),
       'target_id'           => $contact_id,
       'subject'             => $this->getRTSSubject($category),
@@ -150,6 +153,8 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
       'campaign_id'         => $this->getCampaignID($record),
       'status_id'           => 2, // completed
       ));
+    $this->addResponseParent($response_activity_data);
+    civicrm_api3('Activity', 'create', $response_activity_data);
   }
   /**
    * Find the last RTS activity
