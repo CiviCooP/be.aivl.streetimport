@@ -20,7 +20,6 @@ class CRM_Streetimport_AIVL_Form_ImportSettings extends CRM_Core_Form {
   public function buildQuickForm() {
     $config = CRM_Streetimport_Config::singleton();
     $this->getImportSettings();
-    error_log(json_encode($this->importSettings));
     $employeeList = $this->getEmployeeList();
     $groupList = $this->getGroupList();
     $membershipTypeList = $this->getMembershipTypeList();
