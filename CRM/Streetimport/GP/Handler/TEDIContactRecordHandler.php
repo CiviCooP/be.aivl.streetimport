@@ -329,7 +329,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       // check if contact is really individual
       $contact = civicrm_api3('Contact', 'getsingle', array(
         'id'     => $contact_id,
-        'return' => 'contact_type'));
+        'return' => 'contact_type,first_name,last_name,birth_date'));
 
       if ($contact['contact_type'] != 'Individual') {
         // this is NOT and Individual: create an activity (see GP-1229)
@@ -342,9 +342,46 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
             array('contact' => $contact, 'update' => $contact_base_update));
         // $this->logger->logError("Contact [{$contact_id}] is not an Individual and cannot be updated. A manual update activity has been created.", $record);
       } else {
-        civicrm_api3('Contact', 'create', $contact_base_update);
-        $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Base Data Updated'), NULL, $record);
-        $this->logger->logDebug("Contact [{$contact_id}] base data updated: " . json_encode($contact_base_update), $record);
+
+        // make sure we're not changing first_name,last_name,birth_date
+        //  so we cannot accidentally change the IDENTITY of the contact
+        //  Filling the attributes is ok, though
+        $potential_identify_change = FALSE;
+        $identity_parameters = array('contact_type','first_name','last_name','birth_date');
+        foreach ($identity_parameters as $identity_parameter) {
+          $current_value = CRM_Utils_Array::value($identity_parameter, $contact);
+          $future_value  = CRM_Utils_Array::value($identity_parameter, $contact_base_update);
+          if (!empty($current_value) && !empty($future_value)) {
+            if ($identity_parameter == 'birth_date') {
+              $current_value = date('Y-m-d', strtotime($current_value));
+              $future_value  = date('Y-m-d', strtotime($future_value));
+            } else {
+              $current_value = trim(strtolower($current_value));
+              $future_value  = trim(strtolower($future_value));
+            }
+            if ($current_value != $future_value) {
+              // a change of the identity related parameters was requested
+              $potential_identify_change = TRUE;
+              // break;
+            }
+          }
+        }
+
+        if ($potential_identify_change) {
+          unset($contact_base_update['id']);
+          $this->createManualUpdateActivity(
+              $contact_id,
+              "Potential Identity Change",
+              $record,
+              'activities/IdentityChange.tpl',
+              array('contact' => $contact, 'update' => $contact_base_update));
+          $this->logger->logDebug("Detected potential identity change for contact [{$contact_id}]...flagged.", $record);
+
+        } else {
+          civicrm_api3('Contact', 'create', $contact_base_update);
+          $this->createContactUpdatedActivity($contact_id, $config->translate('Contact Base Data Updated'), NULL, $record);
+          $this->logger->logDebug("Contact [{$contact_id}] base data updated: " . json_encode($contact_base_update), $record);
+        }
       }
     }
 
