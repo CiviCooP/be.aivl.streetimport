@@ -1,5 +1,5 @@
 <h2>Potential identity change detected</h2>
-<p>When changing first name, last name or birth date, the contact's identity could be compromised. Please processed this change manually, and with caution:</p>
+<p>When changing first name, last name or birth date, the contact's identity could be compromised. Please process this change manually, and with caution:</p>
 <table>
   <thead>
     <tr>
