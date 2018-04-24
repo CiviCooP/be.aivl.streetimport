@@ -159,7 +159,11 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // if any changes to campaign, update recurring contribution (issue 1139) <https://civicoop.plan.io/issues/1139>
     if (isset($newMandateData['campaign_id'])) {
       $this->changeCampaign($oldMandateData, $newMandateData, $record);
-      unset($newMandateData['campaign_id']);
+    }
+    else {
+      if (isset($oldMandateData['campaign_id'])) {
+        $newMandateData['campaign_id'] = $oldMandateData['campaign_id'];
+      }
     }
     // if OOFF just process changes
     if ($oldMandateData['type'] == ' OOFF') {
@@ -358,8 +362,9 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $newFields = array(
       'iban',
       'frequency_interval',
-      'frequency_unit'
+      'frequency_unit',
     );
+    // if campaign is empty, get campaign from the old one
     foreach ($newFields as $newField) {
       if ($oldMandateData[$newField] != $newMandateData[$newField]) {
         $this->_replaceCausedByField = $newField;
