@@ -1087,4 +1087,58 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $amount = (float) $amountString;
     return round($amount, 2);
   }
+
+  /**
+   * Method to check if the donor's latest street import activity allows the current one coming in
+   * - if current coming in is street recruitment, either no activity at all or latest is welcome call is OK
+   * - if current coming in is welcome call, latest activity has to be street recruitment
+   *
+   * @param $donor
+   * @param $type
+   * @return string $errorMessage
+   * @access protected
+   */
+  public function donorAlreadyHasIncomingActivity($donor, $type) {
+    $config = CRM_Streetimport_Config::singleton();
+    $streetRecruitmentTypeId = $config->getStreetRecruitmentActivityType('value');
+    $welcomeCallTypeId = $config->getWelcomeCallActivityType('value');
+    // get the latest streetimport activity for the contact
+    $query = "SELECT act.activity_type_id
+      FROM civicrm_activity_contact AS actcont
+      JOIN civicrm_activity AS act ON actcont.activity_id = act.id
+      WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3 
+      AND act.is_test = %4 AND act.is_deleted = %4 AND act.activity_type_id IN (%5, %6)
+      ORDER BY act.created_date DESC LIMIT 1";
+    $params = array(
+      1 => array(3, 'Integer'),
+      2 => array($donor['id'], 'Integer'),
+      3 => array(1, 'Integer'),
+      4 => array(0, 'Integer'),
+      5 => array($streetRecruitmentTypeId, 'Integer'),
+      6 => array($welcomeCallTypeId, 'Integer'),
+    );
+    $latestActivityTypeId = CRM_Core_DAO::singleValueQuery($query, $params);
+    // check depending on incoming type
+    switch ($type) {
+      // if street recruitment, either no activity or latest is welcome call then it is fine else problem
+      case 'StreetRecruitment':
+        if ($latestActivityTypeId && $latestActivityTypeId == $welcomeCallTypeId) {
+          return 'Donor already has a street recruitment as its latest street import activity';
+        }
+        break;
+        // if welcome call, latest activity has to be streetrecruitment else problem
+      case 'WelcomeCall':
+        if (!$latestActivityTypeId) {
+          return 'Donor has no street recruitment when trying to add a welcome call';
+        }
+        else {
+          if ($latestActivityTypeId == $welcomeCallTypeId) {
+            return 'Donor already has a welcome call as its latest street import activity';
+          }
+        }
+        break;
+    }
+    return NULL;
+  }
+
 }
