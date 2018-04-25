@@ -1102,13 +1102,24 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $config = CRM_Streetimport_Config::singleton();
     $streetRecruitmentTypeId = $config->getStreetRecruitmentActivityType('value');
     $welcomeCallTypeId = $config->getWelcomeCallActivityType('value');
-    // get the latest streetimport activity for the contact
-    $query = "SELECT act.activity_type_id
+    // get the latest streetimport activity for the contact ordered by create_date if it exists or
+    // by activity_date_time for earlier versions
+    if (CRM_Core_DAO::checkFieldExists('civicrm_activity', 'created_date')) {
+      $query = "SELECT act.activity_type_id
       FROM civicrm_activity_contact AS actcont
       JOIN civicrm_activity AS act ON actcont.activity_id = act.id
       WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3 
       AND act.is_test = %4 AND act.is_deleted = %4 AND act.activity_type_id IN (%5, %6)
       ORDER BY act.created_date DESC LIMIT 1";
+    }
+    else {
+      $query = "SELECT act.activity_type_id
+      FROM civicrm_activity_contact AS actcont
+      JOIN civicrm_activity AS act ON actcont.activity_id = act.id
+      WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3 
+      AND act.is_test = %4 AND act.is_deleted = %4 AND act.activity_type_id IN (%5, %6)
+      ORDER BY act.activity_date_time DESC LIMIT 1";
+    }
     $params = array(
       1 => array(3, 'Integer'),
       2 => array($donor['id'], 'Integer'),
