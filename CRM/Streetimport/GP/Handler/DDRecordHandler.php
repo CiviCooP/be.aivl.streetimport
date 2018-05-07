@@ -220,23 +220,35 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       // if empty do nothing
       if (empty($feature)) continue;
 
-      // process T-Shirt weborders
-      if (preg_match('#^(?P<shirt_type>M|W)/(?P<shirt_size>[A-Z]{1,2})$#', $feature, $match)) {
-        // create a webshop activity (Activity type: ID 75)  with the status "scheduled"
-        //  and in the field "order_type" option value 11 "T-Shirt"
-        $this->createWebshopActivity($contact_id, $record, array(
-          'subject' => "order type T-Shirt {$match['shirt_type']}/{$match['shirt_size']} AND number of items 1",
-          $config->getGPCustomFieldKey('order_type')        => 11, // T-Shirt
-          $config->getGPCustomFieldKey('order_count')       => 1,  // 1 x T-Shirt
-          $config->getGPCustomFieldKey('shirt_type')        => $match['shirt_type'],
-          $config->getGPCustomFieldKey('shirt_size')        => $match['shirt_size'],
-          $config->getGPCustomFieldKey('linked_membership') => $contract_id,
+      // process T-Shirt weborder
+      try {
+        if (preg_match('#^(?P<shirt_type>M|W)/(?P<shirt_size>[A-Z]{1,2})/(?P<shirt_name>.+)?$#', $feature, $match)) {
+          // create a webshop activity (Activity type: ID 75)  with the status "scheduled"
+          $this->createWebshopActivity($contact_id, $record, array(
+              'subject' => "order type {$match['shirt_name']} {$match['shirt_type']}/{$match['shirt_size']} AND number of items 1",
+              $config->getGPCustomFieldKey('order_type')  => $match['shirt_name'],
+              $config->getGPCustomFieldKey('order_count') => 1,  // 1 x T-Shirt
+              $config->getGPCustomFieldKey('shirt_type')  => $match['shirt_type'],
+              $config->getGPCustomFieldKey('shirt_size')  => $match['shirt_size'],
+              $config->getGPCustomFieldKey('linked_membership') => $contract_id,
           ));
-        continue;
+          continue;
+
+        } elseif (preg_match('#^(?P<shirt_type>M|W)/(?P<shirt_size>[A-Z]{1,2})$#', $feature, $match)) {
+          // LEGACY: create a webshop activity with Type T-Shirt (11)
+          $this->createWebshopActivity($contact_id, $record, array(
+              'subject' => "order type T-Shirt {$match['shirt_type']}/{$match['shirt_size']} AND number of items 1",
+              $config->getGPCustomFieldKey('order_type')  => 11, // T-Shirt
+              $config->getGPCustomFieldKey('order_count') => 1,  // 1 x T-Shirt
+              $config->getGPCustomFieldKey('shirt_type')  => $match['shirt_type'],
+              $config->getGPCustomFieldKey('shirt_size')  => $match['shirt_size'],
+              $config->getGPCustomFieldKey('linked_membership') => $contract_id,
+          ));
+          continue;
+        }
+      } catch (Exception $ex) {
+        $this->logger->logError("Couldn't create T-Shirt order from feature: '{$feature}'. Error was: " . $ex->getMessage(), $record);
       }
-
-      // TODO: more features (Leistungen)?
-
 
       // finally: if nothing matched create an error
       $this->logger->logError("Unknown feature (Leistung): '{$feature}'. Ignored.", $record);
