@@ -764,7 +764,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
    *
    * @param $contact_id        well....
    * @param $record            the data record that's being processed
-   * @param $data              additional data (e.g. custom fields) for the activity
+   * @param $data array        additional data (e.g. custom fields) for the activity
    */
   public function createWebshopActivity($contact_id, $record, $data) {
     $config = CRM_Streetimport_Config::singleton();
