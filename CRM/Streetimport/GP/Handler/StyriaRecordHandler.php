@@ -103,7 +103,7 @@ class CRM_Streetimport_GP_Handler_StyriaRecordHandler extends CRM_Streetimport_G
 
     // create signature activity
     civicrm_api3('Activity', 'create', array(
-//      'source_contact_id'   => $contact['id'],
+      'source_contact_id'   => CRM_Core_Session::singleton()->getLoggedInContactID(),
       'activity_type_id'    => $petition['activity_type_id'],
       'status_id'           => CRM_Core_OptionGroup::getValue('activity_status', 'Completed'),
       'medium_id'           => 2, // Phone
