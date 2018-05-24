@@ -68,6 +68,18 @@
     "collapse_display":0,
     "is_active":1,
     "fields":{
+      "new_import_file":{
+        "name":"new_import_file",
+        "label":"Importbestand",
+        "data_type":"String",
+        "html_type":"Text",
+        "is_searchable":1,
+        "is_search_range":0,
+        "is_view":1,
+        "column_name":"new_import_file",
+        "weight":-170,
+        "is_active":1
+      },
       "new_date_import":{
         "name":"new_date_import",
         "label":"Importdatum",
@@ -265,6 +277,18 @@
     "collapse_display":0,
     "is_active":1,
     "fields":{
+      "wc_import_file":{
+        "name":"wc_import_file",
+        "label":"Importbestand",
+        "data_type":"String",
+        "html_type":"Text",
+        "is_searchable":1,
+        "is_search_range":0,
+        "is_view":1,
+        "column_name":"wc_import_file",
+        "weight":-170,
+        "is_active":1
+      },
       "wc_date_import":{
         "name":"wc_date_import",
         "label":"Importdatum",

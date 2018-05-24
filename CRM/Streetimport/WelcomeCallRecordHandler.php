@@ -234,6 +234,9 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $frequencyUnit = $this->getFrequencyUnit($record['Frequency Unit']);
     $areasOfInterest = $this->getAreasOfInterest($record['Interests']);
     $customData = array();
+    if (isset($record['source'])) {
+      $customData['wc_import_file'] = array('value' => $record['source'], 'type' => 'String');
+    }
     $customData['wc_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
       $customData['wc_follow_up_call'] = array('value' => 1, 'type' => 'Integer');

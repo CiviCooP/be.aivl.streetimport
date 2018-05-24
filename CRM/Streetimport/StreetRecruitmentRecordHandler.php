@@ -142,6 +142,9 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $frequencyUnit = $this->getFrequencyUnit($record['Frequency Unit']);
     $areasOfInterest = $this->getAreasOfInterest($record['Interests']);
     $customData = array();
+    if (isset($record['source'])) {
+      $customData['new_import_file'] = array('value' => $record['source'], 'type' => 'String');
+    }
     $customData['new_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
       $customData['new_follow_up_call'] = array('value' => 1, 'type' => 'Integer');

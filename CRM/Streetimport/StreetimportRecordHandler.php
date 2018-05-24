@@ -760,8 +760,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       if (!empty($valueArray['value'])) {
         $setValues[] = $key . ' = %' . $index;
         $setParams[$index] = array($valueArray['value'], $valueArray['type']);
-        if ($key == 'new_sdd_freq_interval') {
-        }
         $index++;
       }
     }
