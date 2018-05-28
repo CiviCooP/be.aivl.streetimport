@@ -90,10 +90,17 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
         $lastDeceased = $this->findLastRTS($contact_id, $record, REPETITION_FRAME_DECEASED, 'deceased');
         if ($lastDeceased) {
           // there is another 'deceased' event in the last two years
-          $this->disableContact($contact_id, 'deceased', $record);
 
           // should still increase RTS counter (see GP-1593)
           $this->increaseRTSCounter($primary_address, $record);
+
+          // set the deceased date
+          civicrm_api3('Contact', 'create', array(
+              'id'            => $contact_id,
+            // 'is_deleted'  => 1, // Marco said (27.03.2017): don't delete right away
+              'deceased_date' => $this->getDate($record),
+              'is_deceased'   => 1));
+
         } else {
           $this->increaseRTSCounter($primary_address, $record);
         }
