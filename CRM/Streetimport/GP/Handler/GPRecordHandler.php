@@ -200,7 +200,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
         // disabled (verstorben) means deceased + tagged
         civicrm_api3('Contact', 'create', array(
           'id'            => $contact_id,
-          'is_deleted'    => 1, // Marco said (27.03.2017): don't delete right away, but GP-1567 says: do it
+          //'is_deleted'    => 1, // Marco said (27.03.2017): don't delete right away, but GP-1567 says: don't do it!
           'deceased_date' => $this->getDate($record),
           'is_deceased'   => 1));
         $this->cancelAllContracts($contact_id, 'XX13', $record);
