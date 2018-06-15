@@ -304,10 +304,11 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     }
 
     // compile and create SEPA mandate
+    $bic = $this->getBIC($record, $record['IBAN']);
     $mandate_params = array(
       'type'                => 'OOFF',
       'iban'                => $record['IBAN'],
-      'bic'                 => $this->getBIC($record, $record['IBAN']),
+      'bic'                 => $bic,
       'amount'              => number_format($record['BuchungsBetrag'], 2),
       'contact_id'          => $contact_id,
       'currency'            => 'EUR',
@@ -315,6 +316,11 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'campaign_id'         => $this->getCampaignID($record),
       'financial_type_id'   => 1, // Donation
       );
+
+    // add up bank account (see GP-1701)
+    $bank_account = CRM_Contract_BankingLogic::getOrCreateBankAccount($contact_id, $record['IBAN'], $bic);
+    $mandate_params['contribution_information.from_ba'] = $bank_account;
+    CRM_Contract_CustomData::resolveCustomFields($mandate_params);
 
     // create mandate
     $mandate = civicrm_api3('SepaMandate', 'createfull', $mandate_params);
