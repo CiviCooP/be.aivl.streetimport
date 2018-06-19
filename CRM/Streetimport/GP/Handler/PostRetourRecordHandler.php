@@ -161,30 +161,39 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
       'status_id'           => 2, // completed
       ));
   }
+
   /**
    * Find the last RTS activity
+   *
+   * @return array last RTS activity of the given TYPE or NULL
    */
   protected function findLastRTS($contact_id, $record, $search_frame = NULL, $category = NULL) {
-    $query = array(
-      'activity_type_id'    => CRM_Streetimport_GP_Config::getResponseActivityType(),
-      'return'              => 'id,activity_date_time',
-      'is_deleted'          => 0,
-      'is_current_revision' => 1,
-      'is_test'             => 0,
-      'options'             => array('sort'  => 'activity_date_time desc',
-                                     'limit' => 1));
+    $activity_type_id = CRM_Streetimport_GP_Config::getResponseActivityType();
+    $subject = $this->getRTSSubject($category);
+    $SEARCH_FRAME_CLAUSE = '';
     if ($search_frame) {
-      $query['activity_date_time'] = array('>=' => date("YmdHis", strtotime("now - {$search_frame}")));
-    }
-    if ($category) {
-      $query['subject'] = $this->getRTSSubject($category);
+      $SEARCH_FRAME_CLAUSE = "AND activity.activity_date_time >= " . date("YmdHis", strtotime("now - {$search_frame}"));
     }
 
-    // run the query
-    $search = civicrm_api3('Activity', 'get', $query);
-    if ($search['count']) {
-      return reset($search['values']);
+    $last_rts_id = CRM_Core_DAO::singleValueQuery("
+    SELECT activity.id
+    FROM civicrm_activity activity
+    LEFT JOIN civicrm_activity_contact ac ON ac.activity_id = activity.id 
+    WHERE activity.activity_type_id = %1
+      AND activity.subject = %2
+      AND ac.contact_id = %3
+      {$SEARCH_FRAME_CLAUSE}
+    ORDER BY activity.activity_date_time DESC
+    LIMIT 1;", array(
+         1 => array($activity_type_id, 'Integer'),
+         2 => array($subject,          'String'),
+         3 => array($contact_id,       'Integer')));
+
+    if ($last_rts_id) {
+      $this->logger->logDebug("Found RTS ({$category}): [{$last_rts_id}]", $record);
+      return civicrm_api3('Activity', 'getsingle', array('id' => $last_rts_id));
     } else {
+      $this->logger->logDebug("No RTS ({$category}) found.", $record);
       return NULL;
     }
   }
