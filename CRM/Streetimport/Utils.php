@@ -513,22 +513,54 @@ class CRM_Streetimport_Utils {
     if (empty($orgCustomField)) {
       throw new Exception($config->translate("CustomField recruiting_organization_id not found. Please reinstall."));
     }
-    $query = 'SELECT entity_id FROM '.$tableName.' WHERE '.$donorCustomField['column_name'].' = %1 AND '.$orgCustomField['column_name'].' = %2';
+    $query = 'SELECT cd.entity_id, cc.contact_type, cc.employer_id
+      FROM civicrm_value_external_donor_id AS cd
+      JOIN civicrm_contact AS cc ON cd.entity_id = cc.id WHERE cd.'.$donorCustomField['column_name'].' = %1 AND cd.'.$orgCustomField['column_name'].' = %2';
     $params = array(
       1 => array($donorId, 'Positive'),
       2 => array($recruitingOrganizationId, 'Positive'));
 
     $dao = CRM_Core_DAO::executeQuery($query, $params);
-    if ($dao->N > 1) {
-      throw new Exception($config->translate('More than one contact found for donor ID').': '.$donorId);
-    }
-
-    if ($dao->fetch()) {
-      return $dao->entity_id;
+    // more than 2 never allowed
+    if ($dao->N > 2) {
+      throw new Exception($config->translate('More than 2 contacts found for donor ID').': '.$donorId);
     }
     else {
-      return NULL;
-	}
+      if ($dao->N > 1) {
+        $orgId = NULL;
+        $indId = NULL;
+        $indEmployerId = NULL;
+        while ($dao->fetch()) {
+          switch($dao->contact_type) {
+            case 'Individual':
+              $indId = $dao->entity_id;
+              $indEmployerId = $dao->employer_id;
+              break;
+
+            case 'Organization':
+              $orgId = $dao->entity_id;
+              break;
+          }
+        }
+        if ($indId && $orgId) {
+          if ($orgId != $indEmployerId) {
+            // 2 contacts only allowed if one is Individual and other is linked Organization
+            throw new Exception($config->translate('Individual and Organization found for donor ID where Organization is NOT employer of Individual').': '.$donorId);
+
+          }
+          else {
+            return $indId;
+          }
+        } else {
+          throw new Exception($config->translate('More than 2 contacts found for donor ID').': '.$donorId);
+        }
+      } else {
+        if ($dao->fetch()) {
+          return $dao->entity_id;
+        }
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -767,4 +799,69 @@ class CRM_Streetimport_Utils {
     }
     return FALSE;
   }
+
+  /**
+   * Method to format the organisation number
+   *
+   * @param $organisationNumber
+   * @return string
+   */
+  public static function formatOrganisationNumber($organisationNumber) {
+    // first check if the first 2 positions are "BE"
+    if (substr($organisationNumber,0,2) == "BE") {
+      $result = self::formatBelgianPart(substr($organisationNumber,2));
+    }
+    else {
+      // if total is numeric
+      if (is_numeric($organisationNumber)){
+        $result = 'BE' . self::formatBelgianPart($organisationNumber);
+      }
+      else {
+        // in all other cases do nothing
+        $result = $organisationNumber;
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * Method to get company id and name with mandate reference if
+   * mandate contact is organization (used in welcome call)
+   *
+   * @param $mandateReference
+   * @return array
+   */
+  public static function getCompanyInfoWithMandateRef($mandateReference) {
+    $result = array();
+    $query = "SELECT cc.id AS company_id, cc.display_name AS company_name
+      FROM civicrm_sdd_mandate AS sdd JOIN civicrm_contact AS cc ON sdd.contact_id = cc.id
+      WHERE reference = %1 AND cc.contact_type = %2";
+    $dao = CRM_Core_DAO::executeQuery($query, array(
+      1 => array(trim($mandateReference), 'String'),
+      2 => array('Organization', 'String'),
+      ));
+    if ($dao->fetch()) {
+      $result = array(
+        'company_id' => $dao->company_id,
+        'company_name' => $dao->company_name,
+      );
+    }
+    return $result;
+  }
+
+  /**
+   * If belgian organisation number and 9 chars, add leading zero
+   *
+   * @param $organisationNumber
+   * @return string
+   */
+  private static function formatBelgianPart($organisationNumber) {
+    if (strlen($organisationNumber) == 9) {
+      return '0'.$organisationNumber;
+    }
+    else {
+      return $organisationNumber;
+    }
+  }
+
 }

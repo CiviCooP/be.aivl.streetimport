@@ -21,6 +21,7 @@ class CRM_Streetimport_Config {
   protected $followUpCallActivityType= array();
   protected $importErrorActivityType = array();
   protected $fraudWarningActivityType = array();
+  protected $organizationDiscrepancyActivityType = array();
   protected $streetRecruitmentCustomGroup = array();
   protected $streetRecruitmentCustomFields = array();
   protected $welcomeCallCustomGroup = array();
@@ -44,6 +45,10 @@ class CRM_Streetimport_Config {
   protected $loadingTypes = array();
   protected $defaultPhoneTypeId = NULL;
   protected $defaultLocationTypeId = NULL;
+  protected $_identityOptionGroupName = NULL;
+  protected $_companyIdentityOptionValueName = NULL;
+  private $_scheduledActivityStatusId = NULL;
+  private $_targetRecordTypeId = NULL;
 
   /**
    * Constructor method
@@ -75,15 +80,54 @@ class CRM_Streetimport_Config {
     }
     $this->setContactSubTypes();
     $this->setRelationshipTypes();
+    $this->setActivityStatus();
+    $this->setRecordTypes();
     $this->setActivityTypes();
     $this->setOptionGroups();
     $this->setCustomData();
+    $this->setContactIdentities();
     $this->setImportSettings();
     if ($context == 'install') {
       $this->setDefaultEmployeeTypes();
     }
     $this->setGroups();
     $this->setTranslationFile();
+  }
+
+  /**
+   * Getter for scheduled activity status id
+   *
+   * @return null
+   */
+  public function getScheduledActivityStatusId() {
+    return $this->_scheduledActivityStatusId;
+  }
+
+  /**
+   * Getter for target record type id
+   *
+   * @return null
+   */
+  public function getTargetRecordTypeId() {
+    return $this->_targetRecordTypeId;
+  }
+
+  /**
+   * Getter for company number identity option value name
+   *
+   * @return null
+   */
+  public function getCompanyIdentityOptionValueName() {
+    return $this->_companyIdentityOptionValueName;
+  }
+
+  /**
+   * Getter for identity option group name
+   *
+   * @return null
+   */
+  public function getIdentityOptionGroupName() {
+    return $this->_identityOptionGroupName;
   }
 
   /**
@@ -299,6 +343,17 @@ class CRM_Streetimport_Config {
    */
   public function getFraudWarningActivityType($key= 'value' ) {
     return $this->fraudWarningActivityType[$key];
+  }
+
+  /**
+   * Method to retrieve organization discrepancy activity type data
+   *
+   * @param string $key
+   * @return mixed
+   * @access public
+   */
+  public function getOrganizationDiscrepancyActivityType($key= 'value' ) {
+    return $this->organizationDiscrepancyActivityType[$key];
   }
 
   /**
@@ -975,9 +1030,6 @@ class CRM_Streetimport_Config {
     }
     $customDataJson = file_get_contents($jsonFile);
     $customData = json_decode($customDataJson, true);
-    //CRM_Core_Error::debug('customData', $customData);
-    //exit();
-
     foreach ($customData as $customGroupName => $customGroupData) {
       $propertyCustomGroup = $customGroupName.'CustomGroup';
       $customGroup = CRM_Streetimport_Utils::getCustomGroupWithName($customGroupName);
@@ -1130,5 +1182,88 @@ class CRM_Streetimport_Config {
         .'.It does not exist or is not a folder, contact your system administrator'));
     }
     $this->_resourcesPath = $resourcesPath;
+  }
+
+  /**
+   * Set contact identities (to be used with contact identity tracker)
+   */
+  private function setContactIdentities() {
+    $this->_identityOptionGroupName ='contact_id_history_type';
+    $this->_companyIdentityOptionValueName = 'aivl_comp_number';
+    // create company number contact identity type if it does not exist
+    try {
+      $count = civicrm_api3('OptionValue', 'getcount', array(
+        'option_group_id' => $this->_identityOptionGroupName,
+        'name' => $this->_companyIdentityOptionValueName,
+      ));
+      if ($count == 0) {
+        $optionValue = civicrm_api3('OptionValue', 'create', array(
+          'option_group_id' => $this->_identityOptionGroupName,
+          'name' => $this->_companyIdentityOptionValueName,
+          'label' => 'Company Number',
+          'is_active' => 1,
+        ));
+        // add identity tracker setting for company number
+        $current = unserialize(Civi::settings()->get('identitytracker_mapping'));
+        foreach ($this->aivlOrganizationDataCustomFields as $customFieldId => $customField) {
+          if ($customField['name'] == 'aivl_organization_id') {
+            if (!empty($current)) {
+              $new = $current + array($customFieldId, $optionValue['values'][$optionValue['id']]['value']);
+            } else {
+              $new = array($customFieldId=> $optionValue['values'][$optionValue['id']]['value']);
+            }
+            civicrm_api3('Setting', 'create', array('identitytracker_mapping' => $new));
+          }
+        }
+      }
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      CRM_Core_Error::debug_log_message('Problem getting or creating the company number contact identity in '
+        . __METHOD__ .' , message from API OptionValue: ' . $ex->getMessage());
+    }
+  }
+
+  /**
+   * Method to set the activity status
+   */
+  public function setActivityStatus() {
+    try {
+      $actStatuses = civicrm_api3('OptionValue', 'get', array(
+        'option_group_id' => 'activity_status',
+        'options' => array('limit' => 0),
+      ));
+      foreach ($actStatuses['values'] as $optionValueId => $optionValue) {
+        switch ($optionValue['name']) {
+          case 'Scheduled':
+            $this->_scheduledActivityStatusId = $optionValue['value'];
+            break;
+        }
+      }
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      CRM_Core_Error::debug_log_message('Could not find activity statuses in with OptionValue get in ' . __METHOD__);
+    }
+  }
+
+  /**
+   * Method to set the record types (activity contact)
+   */
+  public function setRecordTypes() {
+    try {
+      $recordTypes = civicrm_api3('OptionValue', 'get', array(
+        'option_group_id' => 'activity_contacts',
+        'options' => array('limit' => 0),
+      ));
+      foreach ($recordTypes['values'] as $optionValueId => $optionValue) {
+        switch ($optionValue['name']) {
+          case 'Activity Targets':
+            $this->_targetRecordTypeId = $optionValue['value'];
+            break;
+        }
+      }
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      CRM_Core_Error::debug_log_message('Could not find activity contact record types in with OptionValue get in ' . __METHOD__);
+    }
   }
 }

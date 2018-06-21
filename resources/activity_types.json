@@ -3,5 +3,6 @@
   "welcomeCall":"Welkomstgesprek",
   "followUpCall":"Opvolgingsgesprek",
   "importError":"Foutieve data import",
-  "fraudWarning":"Waarschuwing fraude"
+  "fraudWarning":"Waarschuwing fraude",
+  "organizationDiscrepancy":"Inconsistentie organisatie/persoon in Straatwerving of Welkomstgesprek"
 }

@@ -7,6 +7,9 @@
  */
 abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimport_RecordHandler {
 
+  // property with company info if we have a company
+  public $_genericActivityTplInfo = array();
+
   /**
    * look up the recruiting organisation
    *
@@ -145,12 +148,25 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $donor = $this->createContact($contactData, $record);
     if (!empty($donor)) {
       $this->setDonorID($donor['id'], $record['DonorID'], $recruitingOrganisation['id'], $record);
+      $donor['mandate_contact_id'] = $donor['id'];
 
       // issue 677 - add organization details if required
       if (in_array(CRM_Utils_Array::value('Organization Yes/No', $record), $config->getAcceptedYesValues())) {
         $organization = new CRM_Streetimport_Contact();
         $newOrganization = $organization->createOrganizationFromImportData($donor['id'], CRM_Utils_Array::value('Notes', $record));
-        if (!isset($newOrganization['id'])) {
+        if (is_array($newOrganization)) {
+          if (!isset($newOrganization['id'])) {
+            $this->logger->logError($newOrganization, $record, $config->translate("Create Organization for Donor Error"), "Warning");
+          }
+          else {
+            $this->setDonorID($newOrganization['id'], $record['DonorID'], $recruitingOrganisation['id'], $record);
+            $donor['mandate_contact_id'] = $newOrganization['id'];
+            $this->_genericActivityTplInfo = array(
+              'company_id' => $newOrganization['id'],
+              'company_name' => $newOrganization['display_name'],
+            );
+          }
+        } else {
           $this->logger->logError($newOrganization, $record, $config->translate("Create Organization for Donor Error"), "Warning");
         }
       }
@@ -1151,3 +1167,4 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
   }
 
 }
+

@@ -93,6 +93,17 @@
         "weight":-160,
         "is_active":1
       },
+      "new_org_mandate":{
+        "name":"new_org_mandate",
+        "label":"Mandaat op organisatie?",
+        "data_type":"Boolean",
+        "html_type":"Radio",
+        "is_searchable":1,
+        "is_view":1,
+        "column_name":"new_org_mandate",
+        "weight":-155,
+        "is_active":1
+      },
       "new_follow_up_call":{
         "name":"new_follow_up_call",
         "label":"Opvolgingsgesprek?",
@@ -300,6 +311,17 @@
         "date_format":"dd-mm-yy",
         "column_name":"wc_date_import",
         "weight":-160,
+        "is_active":1
+      },
+      "wc_org_mandate":{
+        "name":"wc_org_mandate",
+        "label":"Mandaat op organisatie?",
+        "data_type":"Boolean",
+        "html_type":"Radio",
+        "is_searchable":1,
+        "is_view":1,
+        "column_name":"wc_org_mandate",
+        "weight":-155,
         "is_active":1
       },
       "wc_follow_up_call":{

@@ -7,7 +7,7 @@
  */
 class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_StreetimportRecordHandler {
 
-  /** 
+  /**
    * Check if the given handler implementation can process the record
    *
    * @param $record  an array of key=>value pairs
@@ -65,7 +65,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
           'source_contact_id' => $recruiter['id'],
           //'assignee_contact_id'=> $recruiter['id'],
           'campaign_id' => $campaignId,
-          'details' => CRM_Streetimport_Utils::renderTemplate('activities/StreetRecruitment.tpl', $record),
+          'details' => CRM_Streetimport_Utils::renderTemplate('activities/StreetRecruitment.tpl', $this->_genericActivityTplInfo),
         ), $record);
         // add custom data to the created activity
         $this->createActivityCustomData($createdActivity->id, $config->getStreetRecruitmentCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
@@ -73,7 +73,7 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
         // STEP 6: create SEPA mandate (if Cancel is not YES)
         $acceptedYesValues = $config->getAcceptedYesValues();
         if (!in_array($record['Cancellation'], $acceptedYesValues)) {
-          $mandate_data = $this->extractMandate($record, $donor['id']);
+          $mandate_data = $this->extractMandate($record, $donor['mandate_contact_id']);
           if (!empty($mandate_data)) {
             $mandate = $this->createSDDMandate($mandate_data, $record);
             if ($mandate) {
@@ -144,6 +144,14 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     $customData = array();
     if (isset($record['source'])) {
       $customData['new_import_file'] = array('value' => $record['source'], 'type' => 'String');
+    }
+    if (isset($record['Organization Yes/No'])) {
+      if (in_array($record['Organization Yes/No'], $acceptedYesValues)) {
+        $customData['new_org_mandate'] = array('value' => 1, 'type' => 'Integer');
+      }
+      else {
+        $customData['new_org_mandate'] = array('value' => 1, 'type' => 'Integer');
+      }
     }
     $customData['new_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
