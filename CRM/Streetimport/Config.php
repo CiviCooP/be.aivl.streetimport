@@ -1204,7 +1204,9 @@ class CRM_Streetimport_Config {
           'is_active' => 1,
         ));
         // add identity tracker setting for company number
-        $current = unserialize(Civi::settings()->get('identitytracker_mapping'));
+        $query = "SELECT value FROM civicrm_setting WHERE name = %1";
+        $idTrackerValue = CRM_Core_DAO::singleValueQuery($query, array(1 => array('identitytracker_mapping', 'String')));
+        $current = unserialize($idTrackerValue);
         foreach ($this->aivlOrganizationDataCustomFields as $customFieldId => $customField) {
           if ($customField['name'] == 'aivl_organization_id') {
             if (!empty($current)) {
