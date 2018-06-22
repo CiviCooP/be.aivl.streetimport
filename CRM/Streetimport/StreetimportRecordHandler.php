@@ -376,7 +376,9 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         $bic = $result['bic'];
         if (empty($mandate_data['bank_name'])) {
           // set bank name, if not given by file
-          $mandate_data['bank_name'] = $bic['title'];
+          if (isset($bic['title'])) {
+            $mandate_data['bank_name'] = $bic['title'];
+          }
         }
         $this->logger->logMessage("Successfully looked up BIC '$bic' with IBAN '$iban'.", $record);
       } catch (CiviCRM_API3_Exception $ex) {
