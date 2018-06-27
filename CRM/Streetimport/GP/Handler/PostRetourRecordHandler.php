@@ -169,7 +169,14 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
    */
   protected function findLastRTS($contact_id, $record, $search_frame = NULL, $category = NULL) {
     $activity_type_id = CRM_Streetimport_GP_Config::getResponseActivityType();
-    $subject = $this->getRTSSubject($category);
+
+    $SUBJECT_CLAUSE = 'AND (TRUE OR activity.subject = %2)'; // probably need to have the %2 token..
+    $subject = '';
+    if ($category) {
+      $SUBJECT_CLAUSE = 'AND activity.subject = %2';
+      $subject = $this->getRTSSubject($category);
+    }
+
     $SEARCH_FRAME_CLAUSE = '';
     if ($search_frame) {
       $SEARCH_FRAME_CLAUSE = "AND activity.activity_date_time >= " . date("YmdHis", strtotime("now - {$search_frame}"));
@@ -180,7 +187,7 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
     FROM civicrm_activity activity
     LEFT JOIN civicrm_activity_contact ac ON ac.activity_id = activity.id 
     WHERE activity.activity_type_id = %1
-      AND activity.subject = %2
+      {$SUBJECT_CLAUSE}
       AND ac.contact_id = %3
       {$SEARCH_FRAME_CLAUSE}
     ORDER BY activity.activity_date_time DESC
