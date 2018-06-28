@@ -90,7 +90,17 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
         $lastDeceased = $this->findLastRTS($contact_id, $record, REPETITION_FRAME_DECEASED, 'deceased');
         if ($lastDeceased) {
           // there is another 'deceased' event in the last two years
-          $this->disableContact($contact_id, 'deceased', $record);
+
+          // should still increase RTS counter (see GP-1593)
+          $this->increaseRTSCounter($primary_address, $record);
+
+          // set the deceased date
+          civicrm_api3('Contact', 'create', array(
+              'id'            => $contact_id,
+            // 'is_deleted'  => 1, // Marco said (27.03.2017): don't delete right away
+              'deceased_date' => $this->getDate($record),
+              'is_deceased'   => 1));
+
         } else {
           $this->increaseRTSCounter($primary_address, $record);
         }
@@ -151,30 +161,46 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
       'status_id'           => 2, // completed
       ));
   }
+
   /**
    * Find the last RTS activity
+   *
+   * @return array last RTS activity of the given TYPE or NULL
    */
   protected function findLastRTS($contact_id, $record, $search_frame = NULL, $category = NULL) {
-    $query = array(
-      'activity_type_id'    => CRM_Streetimport_GP_Config::getResponseActivityType(),
-      'return'              => 'id,activity_date_time',
-      'is_deleted'          => 0,
-      'is_current_revision' => 1,
-      'is_test'             => 0,
-      'options'             => array('sort'  => 'activity_date_time desc',
-                                     'limit' => 1));
-    if ($search_frame) {
-      $query['activity_date_time'] = array('>=' => date("YmdHis", strtotime("now - {$search_frame}")));
-    }
+    $activity_type_id = CRM_Streetimport_GP_Config::getResponseActivityType();
+
+    $SUBJECT_CLAUSE = 'AND (TRUE OR activity.subject = %2)'; // probably need to have the %2 token..
+    $subject = '';
     if ($category) {
-      $query['subject'] = $this->getRTSSubject($category);
+      $SUBJECT_CLAUSE = 'AND activity.subject = %2';
+      $subject = $this->getRTSSubject($category);
     }
 
-    // run the query
-    $search = civicrm_api3('Activity', 'get', $query);
-    if ($search['count']) {
-      return reset($search['values']);
+    $SEARCH_FRAME_CLAUSE = '';
+    if ($search_frame) {
+      $SEARCH_FRAME_CLAUSE = "AND activity.activity_date_time >= " . date("YmdHis", strtotime("now - {$search_frame}"));
+    }
+
+    $last_rts_id = CRM_Core_DAO::singleValueQuery("
+    SELECT activity.id
+    FROM civicrm_activity activity
+    LEFT JOIN civicrm_activity_contact ac ON ac.activity_id = activity.id 
+    WHERE activity.activity_type_id = %1
+      {$SUBJECT_CLAUSE}
+      AND ac.contact_id = %3
+      {$SEARCH_FRAME_CLAUSE}
+    ORDER BY activity.activity_date_time DESC
+    LIMIT 1;", array(
+         1 => array($activity_type_id, 'Integer'),
+         2 => array($subject,          'String'),
+         3 => array($contact_id,       'Integer')));
+
+    if ($last_rts_id) {
+      $this->logger->logDebug("Found RTS ({$category}): [{$last_rts_id}]", $record);
+      return civicrm_api3('Activity', 'getsingle', array('id' => $last_rts_id));
     } else {
+      $this->logger->logDebug("No RTS ({$category}) found.", $record);
       return NULL;
     }
   }
