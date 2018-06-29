@@ -197,6 +197,7 @@ class CRM_Streetimport_GPPL_Handler_BankAuthorizationHandler extends CRM_Streeti
     $updateParams = [
       'id' => $membershipId,
       'start_date' => date('Y-m-d', $time),
+      'skip_handler' => TRUE, // tell de.systopia.contract to ignore this
     ];
     civicrm_api3('Membership', 'Create', $updateParams);
   }
