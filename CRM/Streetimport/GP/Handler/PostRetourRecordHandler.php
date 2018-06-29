@@ -19,7 +19,7 @@ class CRM_Streetimport_GP_Handler_PostRetourRecordHandler extends CRM_Streetimpo
   /** file name / reference patterns as defined in GP-331 */
   protected static $FILENAME_PATTERN       = '#^RTS_(?P<category>[a-zA-Z\-]+)(_[0-9]*)?[.][a-zA-Z]+$#';
   protected static $REFERENCE_PATTERN_NEW  = '#^0?(?P<campaign_id>[0-9]{4})C(?P<contact_id>[0-9]{9})$#';
-  protected static $REFERENCE_PATTERN_OLD  = '#^(?P<campaign_id>[0-9]{4})(?P<contact_id>[0-9]{6,9})$#';
+  protected static $REFERENCE_PATTERN_OLD  = '#^(?P<campaign_id>[0-9]{4})(?P<contact_id>[0-9]{8})$#';
   protected static $REFERENCE_PATTERN_1296 = '#^1(?P<campaign_id>[0-9]{5})(?P<contact_id>[0-9]{9})$#';
 
   /** stores the parsed file name */
