@@ -272,9 +272,12 @@ class CRM_Streetimport_GPPL_Handler_BankAuthorizationHandler extends CRM_Streeti
     $this->_cancellationReasons[] = $reason;
   }
 
-  private function _getActivityType($name, $label) {
+  private function _getActivityType($name, $label = NULL) {
     $activityType = CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_type_id', $name);
     if (empty($activityType)) {
+      if (is_null($label)) {
+        $label = $name;
+      }
       civicrm_api3('OptionValue', 'create', [
         'option_group_id' => 'activity_type',
         'name' => $name,
