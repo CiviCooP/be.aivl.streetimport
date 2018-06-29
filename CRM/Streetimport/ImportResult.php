@@ -60,7 +60,7 @@ class CRM_Streetimport_ImportResult {
     if ($success) {
       $this->import_success[$record_id] = NULL;
       $this->logMessage(
-        $this->config->translate("Successfully imported record of type")." ". $type,
+        $this->config->translate("Successfully imported record of type")." ". $type . ': ' . $message,
         $record,
         BE_AIVL_STREETIMPORT_DEBUG);
     } else {

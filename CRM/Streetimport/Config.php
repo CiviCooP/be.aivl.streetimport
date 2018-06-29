@@ -581,8 +581,11 @@ class CRM_Streetimport_Config {
    */
   public static function getDomains() {
     // TODO: refer to an option group
-    return array('GP'   => 'GP',
-                 'AIVL' => 'AIVL');
+    return [
+      'GP' => 'Greenpeace Austria',
+      'GPPL' => 'Greenpeace Poland',
+      'AIVL' => 'Amnesty International Flanders',
+    ];
   }
 
   /**
