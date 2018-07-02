@@ -85,7 +85,7 @@ class CRM_Streetimport_GPPL_Handler_BankAuthorizationHandler extends CRM_Streeti
         }
       }
       else {
-        $this->_createActivity($record, $membership['id'], $membership['contact_id'], 'Contract_Authorization_Refused', $record['response_code'] . ' - ' . $record['response_description'], $now);
+        $this->_createActivity($record, $membership['id'], $membership['contact_id'], 'Contract_Authorization_Refused', $record['response_code'] . ' - ' . $record['response_description'], $now, ((int) $config->getFundraiserContactID()));
         // refused
         if ($membership['status_id'] == $config->getPausedMembershipStatus()) {
           // this is slightly non-obvious. We need to resume the contract before
@@ -193,7 +193,6 @@ class CRM_Streetimport_GPPL_Handler_BankAuthorizationHandler extends CRM_Streeti
   }
 
   private function _resetMembershipStartDate($membershipId, $time) {
-    // TODO: should probably not reset start_date for memberships that are being reauthorized?
     $updateParams = [
       'id' => $membershipId,
       'start_date' => date('Y-m-d', $time),
@@ -224,11 +223,11 @@ class CRM_Streetimport_GPPL_Handler_BankAuthorizationHandler extends CRM_Streeti
   private function _reviveContract($membershipId, $time) {
     $config = CRM_Streetimport_Config::singleton();
     $reviveModification = array(
-      // TODO: do we need medium? Campaign?
       'action' => 'revive',
       'date' => date('Y-m-d H:i:s', $time),
       'id' => $membershipId,
       'membership_payment.cycle_day' => $config->getNextCycleDay(date('Y-m-d H:i:s', $time), $time),
+      'medium_id' => $this->_getMediumID(),
     );
     civicrm_api3('Contract', 'Modify', $reviveModification);
   }
@@ -237,11 +236,11 @@ class CRM_Streetimport_GPPL_Handler_BankAuthorizationHandler extends CRM_Streeti
     $reason = 'AUTH' . $responseCode;
     $this->_ensureCancellationReasonExists($reason);
     $cancelModification = array(
-      // TODO: do we need medium? Campaign?
       'action' => 'cancel',
       'id' => $membershipId,
       'membership_cancellation.membership_cancel_reason' => $reason,
       'date' => date('Y-m-d H:i:s', $time),
+      'medium_id' => $this->_getMediumID(),
     );
     try {
       civicrm_api3('Contract', 'Modify', $cancelModification);
@@ -291,7 +290,7 @@ class CRM_Streetimport_GPPL_Handler_BankAuthorizationHandler extends CRM_Streeti
     return $activityType;
   }
 
-  private function _createActivity($record, $membershipId, $contactId, $activityType, $responseDescription, $time) {
+  private function _createActivity($record, $membershipId, $contactId, $activityType, $responseDescription, $time, $assignTo = NULL) {
     $config = CRM_Streetimport_Config::singleton();
     $activityParams = [
       'activity_type_id' => $this->_getActivityType($activityType),
@@ -301,9 +300,16 @@ class CRM_Streetimport_GPPL_Handler_BankAuthorizationHandler extends CRM_Streeti
       'target_contact_id' => $contactId,
       'source_record_id' => $membershipId,
       'source_contact_id' => (int) $config->getCurrentUserID(),
-      'assignee_contact_id' => (int) $config->getFundraiserContactID(),
+      'medium_id' => $this->_getMediumID(),
     ];
-    $this->createActivity($activityParams, $record, [$config->getFundraiserContactID()]);
+    if (!is_null($assignTo)) {
+      $activityParams['assignee_contact_id'] = $assignTo;
+    }
+    $this->createActivity($activityParams, $record);
+  }
+
+  private function _getMediumID() {
+    return CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'medium_id', 'back_office');
   }
 
 }
