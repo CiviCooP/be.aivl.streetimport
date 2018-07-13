@@ -77,6 +77,21 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
   protected function processContact($record) {
     $config = CRM_Streetimport_Config::singleton();
 
+    // phone numbers come in separate landline and mobile columns, but we'd
+    // rather trust com.cividesk.normalize to determine the correct phone type
+    $phone1 = null;
+    $phone2 = null;
+    if (!empty(CRM_Utils_Array::value('Mobilnummer', $record))) {
+      $phone1 = $this->_normalizePhoneNumber(CRM_Utils_Array::value('Mobilnummer', $record));
+    }
+    if (!empty(CRM_Utils_Array::value('Telefon', $record))) {
+      if (is_null($phone1)) {
+        $phone1 = $this->_normalizePhoneNumber(CRM_Utils_Array::value('Telefon', $record));
+      } else {
+        $phone2 = $this->_normalizePhoneNumber(CRM_Utils_Array::value('Telefon', $record));
+      }
+    }
+
     // compile contact data
     $contact_data = array(
       'formal_title'   => CRM_Utils_Array::value('Titel', $record),
@@ -88,6 +103,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
       'city'           => CRM_Utils_Array::value('Ort', $record),
       'street_address' => trim(CRM_Utils_Array::value('Straße', $record, '') . ' ' . CRM_Utils_Array::value('HNR', $record, '')),
       'email'          => CRM_Utils_Array::value('Email', $record),
+      'phone'          => $phone1,
     );
 
     // set default country
@@ -107,20 +123,15 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
     $contact_match = civicrm_api3('Contact', 'getorcreate', $contact_data);
     $contact_id = $contact_match['id'];
 
-    // make sure the extra fields are stored
+    // add the second phone number (if there is one)
+    if (!is_null($phone2)) {
+      $this->addDetail($record, $contact_id, 'Phone', ['phone' => $phone2], FALSE, ['phone_type_id' => 1]);
+    }
+
+    // store email
     // TODO: deal with office@dialogdirect.at ?
     if (!empty(CRM_Utils_Array::value('Email', $record))) {
       $this->addDetail($record, $contact_id, 'Email', array('email' => CRM_Utils_Array::value('Email', $record)));
-    }
-
-    // ...including the phones
-    if (!empty(CRM_Utils_Array::value('Telefon', $record))) {
-      $phone = '+' . CRM_Utils_Array::value('Telefon', $record);
-      $this->addDetail($record, $contact_id, 'Phone', array('phone' => $phone), FALSE, array('phone_type_id' => 1));
-    }
-    if (!empty(CRM_Utils_Array::value('Mobilnummer', $record))) {
-      $phone = '+' . CRM_Utils_Array::value('Mobilnummer', $record);
-      $this->addDetail($record, $contact_id, 'Phone', array('phone' => $phone), FALSE, array('phone_type_id' => 2));
     }
 
     return $contact_id;

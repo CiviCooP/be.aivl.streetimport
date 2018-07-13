@@ -833,4 +833,17 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     $this->createActivity($activityParams, $record);
   }
+
+  protected function _normalizePhoneNumber($phone) {
+    if (method_exists('CRM_Utils_Normalize', 'normalize_phone')) {
+      $normalized_phone = [
+        'phone' => $phone,
+        'phone_type_id' => 1
+      ];
+      $normalizer = new CRM_Utils_Normalize();
+      $normalizer->normalize_phone($normalized_phone);
+      return $normalized_phone['phone'];
+    }
+    return $phone;
+  }
 }
