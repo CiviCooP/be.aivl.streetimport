@@ -836,6 +836,11 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
   protected function _normalizePhoneNumber($phone) {
     if (method_exists('CRM_Utils_Normalize', 'normalize_phone')) {
+      if (in_array(substr($phone, 0, 2), ['43', '49'])) {
+        // For numbers starting with AT or DE country code and without a prefix
+        // (i.e. 43680123456), add the prefix so normalize can handle the number
+        $phone = '+' . $phone;
+      }
       $normalized_phone = [
         'phone' => $phone,
         'phone_type_id' => 1
