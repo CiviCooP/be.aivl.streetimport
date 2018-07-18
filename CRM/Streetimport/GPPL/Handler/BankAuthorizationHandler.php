@@ -253,7 +253,10 @@ class CRM_Streetimport_GPPL_Handler_BankAuthorizationHandler extends CRM_Streeti
   }
 
   private function _loadCancellationReasons() {
-    $results = civicrm_api3('OptionValue', 'get', ['option_group_id' => 'contract_cancel_reason']);
+    $results = civicrm_api3('OptionValue', 'get', [
+      'option_group_id' => 'contract_cancel_reason',
+      'options' => ['limit' => 0],
+    ]);
     foreach ($results['values'] as $result) {
       $this->_cancellationReasons[] = $result['value'];
     }
