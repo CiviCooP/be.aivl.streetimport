@@ -422,7 +422,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     }
 
     if (!empty($record['Land'])) {
-      $address_update['country_id'] = $this->_getCountryByISOCode($record['Land']);
+      $address_update['country_id'] = $record['Land'];
     }
 
     // hand this data over to a dedicated alogorithm
