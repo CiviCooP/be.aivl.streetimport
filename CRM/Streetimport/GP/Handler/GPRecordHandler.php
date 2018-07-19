@@ -25,6 +25,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
   protected $_external_identifier_to_contact_id = array();
   protected $_internal_identifier_to_contact_id = array();
   protected $_iban_to_bic = array();
+  protected $_country_iso_to_id = array();
 
   /**
    * This event is triggered AFTER the last record of a datasource has been processed
@@ -832,5 +833,32 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
     );
 
     $this->createActivity($activityParams, $record);
+  }
+
+  /**
+   * Returns the country_id for a country identified by $isoCode, or NULL if the
+   * ISO code does not exist
+   *
+   * @param $isoCode
+   *
+   * @return integer|null
+   */
+  protected function _getCountryByISOCode($isoCode) {
+    // avoid looking up empty iso codes
+    if (empty($isoCode)) {
+      return NULL;
+    }
+    if (array_key_exists($isoCode, $this->_country_iso_to_id)) {
+      return $this->_country_iso_to_id[$isoCode];
+    }
+    try {
+      $this->_country_iso_to_id[$isoCode] = civicrm_api3('Country', 'getvalue', [
+        'return' => 'id',
+        'iso_code' => $isoCode,
+      ]);
+    } catch (CiviCRM_API3_Exception $e) {
+      $this->_country_iso_to_id[$isoCode] = NULL;
+    }
+    return $this->_country_iso_to_id[$isoCode];
   }
 }
