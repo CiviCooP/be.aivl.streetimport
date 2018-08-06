@@ -155,8 +155,7 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
         $wrongColumnNames[] = $columnName;
       }
     }
-
-    // check if we have wrong column names    
+    // check if we have wrong column names
     if (count($wrongColumnNames) > 0) {
       $config = CRM_Streetimport_Config::singleton();
       $this->logger->abort($config->translate("File")." ".$this->uri." "
