@@ -145,11 +145,9 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
     if (isset($record['source'])) {
       $customData['new_import_file'] = array('value' => $record['source'], 'type' => 'String');
     }
+    $customData['new_org_mandate'] = array('value' => 0, 'type' => 'Integer');
     if (isset($record['Organization Yes/No'])) {
       if (in_array($record['Organization Yes/No'], $acceptedYesValues)) {
-        $customData['new_org_mandate'] = array('value' => 1, 'type' => 'Integer');
-      }
-      else {
         $customData['new_org_mandate'] = array('value' => 1, 'type' => 'Integer');
       }
     }

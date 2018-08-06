@@ -40,6 +40,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // STEP 3: look up / create donor
     // issue 2822 - check consistency for organization/person mandate pattern comparing to street recruitment
     $contact = new CRM_Streetimport_Contact();
+    //$orgDiscrepancy = array();
     $orgDiscrepancy = $contact->checkOrganizationPersonConsistency($record);
     if ($orgDiscrepancy['valid'] == FALSE) {
       $discrepancyInfo = array(
@@ -106,7 +107,9 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $this->createActivityCustomData($createdActivity->id, $config->getWelcomeCallCustomGroup('table_name'), $this->buildActivityCustomData($record), $record);
 
         // STEP 7: update SEPA mandate if required
-        $this->processMandate($record, $donor['mandate_contact_id']);
+        if (isset($donor['mandate_contact_id'])) {
+          $this->processMandate($record, $donor['mandate_contact_id']);
+        }
 
         // STEP 8: add to newsletter group if requested
         if ($this->isTrue($record, "Newsletter")) {
@@ -264,11 +267,9 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     if (isset($record['source'])) {
       $customData['wc_import_file'] = array('value' => $record['source'], 'type' => 'String');
     }
+    $customData['wc_org_mandate'] = array('value' => 0, 'type' => 'Integer');
     if (isset($record['Organization Yes/No'])) {
       if (in_array($record['Organization Yes/No'], $acceptedYesValues)) {
-        $customData['wc_org_mandate'] = array('value' => 1, 'type' => 'Integer');
-      }
-      else {
         $customData['wc_org_mandate'] = array('value' => 1, 'type' => 'Integer');
       }
     }
