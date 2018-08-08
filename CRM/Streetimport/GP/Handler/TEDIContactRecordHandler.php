@@ -76,7 +76,7 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     }
 
     // apply contact base data updates if provided
-    // FIELDS: nachname  vorname firma TitelAkademisch TitelAdel TitelAmt  Anrede  geburtsdatum  geburtsjahr strasse hausnummer  hausnummernzusatz PLZ Ort email
+    // FIELDS: nachname  vorname firma TitelAkademisch TitelAdel TitelAmt  Anrede  geburtsdatum  geburtsjahr strasse hausnummer  hausnummernzusatz Land PLZ Ort email
     $this->performContactBaseUpdates($contact_id, $record);
 
 
@@ -129,6 +129,11 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
       default:
         $this->logger->abort("Unknown project type {$project_type}. Processing stopped.", $record);
         break;
+    }
+
+    if (!empty($record['Land']) && is_null($this->_getCountryByISOCode($record['Land']))) {
+      $this->logger->logImport($record, FALSE, $config->translate('TM Contact'));
+      return $this->logger->logError("Invalid Country for Contact [{$record['id']}]: '{$record['Land']}'", $record);
     }
 
 
@@ -414,6 +419,10 @@ class CRM_Streetimport_GP_Handler_TEDIContactRecordHandler extends CRM_Streetimp
     }
     if (!empty($street_address)) {
       $address_update['street_address'] = $street_address;
+    }
+
+    if (!empty($record['Land'])) {
+      $address_update['country_id'] = $record['Land'];
     }
 
     // hand this data over to a dedicated alogorithm
