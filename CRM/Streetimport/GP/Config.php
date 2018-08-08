@@ -154,7 +154,8 @@ class CRM_Streetimport_GP_Config extends CRM_Streetimport_Config {
     // TODO: use SEPA function
 
     // find the right start date
-    $buffer_days = 2; // TODO: more?
+    $creditor = CRM_Sepa_Logic_Settings::defaultCreditor();
+    $buffer_days = (int) CRM_Sepa_Logic_Settings::getSetting("pp_buffer_days") + (int) CRM_Sepa_Logic_Settings::getSetting("batching.FRST.notice", $creditor->id);
     $now                 = strtotime($now);
     $start_date          = strtotime($start_date);
     $earliest_start_date = strtotime("+{$buffer_days} day", $now);

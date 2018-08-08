@@ -74,12 +74,16 @@ class CRM_Streetimport_GP_Handler_StyriaRecordHandler extends CRM_Streetimport_G
       }
     }
 
+    if (array_key_exists('phone', $contact_data)) {
+      $contact_data['phone'] = $this->_normalizePhoneNumber($contact_data['phone']);
+    }
+
     // resolve via XCM
     $contact = civicrm_api3('Contact', 'getorcreate', $contact_data);
 
     // run it again with the second phone number (if there is one)
     if (!empty($record['telefon2'])) {
-      $contact_data['phone'] = trim($record['telefon2']);
+      $contact_data['phone'] = $this->_normalizePhoneNumber(trim($record['telefon2']));
       $contact = civicrm_api3('Contact', 'getorcreate', $contact_data);
     }
     $this->logger->logDebug("Contact [{$contact['id']}] created/identified.", $record);
