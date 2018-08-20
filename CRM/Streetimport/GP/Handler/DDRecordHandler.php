@@ -563,6 +563,7 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
   protected function getCampaignID($record) {
     switch ($this->file_name_data['agency']) {
       case 'GP':
+      case 'FGP':
         return $this->getCampaignIDbyExternalIdentifier('DD_DDG');
         break;
 
