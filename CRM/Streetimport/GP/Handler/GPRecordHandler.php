@@ -351,6 +351,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
 
     // find out update date
     $now = date('Y-m-d H:i:s');
+    $defer_payment_start = 1;
     if (empty($record['Einzugsstart'])) {
       $new_start_date = $now;
     } else {
@@ -359,6 +360,8 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       if ($new_start_date < $now) {
         $new_start_date = $now;
       }
+      // GP-1790: Force debit to start with $new_start_date
+      $defer_payment_start = 0;
     }
 
     // send upgrade notification
@@ -375,6 +378,7 @@ abstract class CRM_Streetimport_GP_Handler_GPRecordHandler extends CRM_Streetimp
       'membership_payment.membership_annual'    => number_format($annual_amount, 2),
       'membership_payment.membership_frequency' => $frequency,
       'membership_payment.cycle_day'            => $config->getNextCycleDay($new_start_date, $now),
+      'membership_payment.defer_payment_start'  => $defer_payment_start,
       // no 'end_date' in contracts any more
       );
 
