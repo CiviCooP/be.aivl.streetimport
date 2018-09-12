@@ -20,11 +20,11 @@ class CRM_Streetimport_FileCsvDataSource extends CRM_Streetimport_DataSource {
   protected $next    = NULL;
   protected $line_nr = 0;
 
-  public function __construct($uri, $logger, $mapping = NULL) {
+  public function __construct($uri, $logger, $mapping = NULL, $encoding = NULL, $delimiter = NULL) {
     CRM_Streetimport_DataSource::__construct($uri, $logger, $mapping);
     $config = CRM_Streetimport_Config::singleton();
-    $this->encoding = $config->getSetting('import_encoding', 'UTF8');
-    $this->delimiter = $config->getSetting('import_delimiter', ';');
+    $this->encoding = $encoding ?: $config->getSetting('import_encoding', 'UTF8');
+    $this->delimiter = $delimiter ?: $config->getSetting('import_delimiter', ';');
   }
 
   /**

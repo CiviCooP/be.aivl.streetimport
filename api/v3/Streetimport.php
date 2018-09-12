@@ -51,6 +51,22 @@ function civicrm_api3_streetimport_importcsvfile($params) {
     $failed_folder = rtrim($config->getFailFileLocation(), DIRECTORY_SEPARATOR);
   }
 
+  if (empty($params['file_extension'])) {
+    $extension = 'csv';
+  } else {
+    $extension = $params['file_extension'];
+  }
+
+  $encoding = NULL;
+  if (!empty($params['encoding'])) {
+    $encoding = $params['encoding'];
+  }
+
+  $delimiter = NULL;
+  if (!empty($params['delimiter'])) {
+    $delimiter = $params['delimiter'];
+  }
+
   $source_file = NULL;
   if (!empty($params['filepath'])) {
     // filepath is given, import that file
@@ -68,8 +84,8 @@ function civicrm_api3_streetimport_importcsvfile($params) {
     }
 
     // find the files to process
-    $files = glob($source_folder . DIRECTORY_SEPARATOR . "*.csv");
-    $files += glob($source_folder . DIRECTORY_SEPARATOR . "*.CSV");
+    $files = glob($source_folder . DIRECTORY_SEPARATOR . "*." . strtolower($extension));
+    $files += glob($source_folder . DIRECTORY_SEPARATOR . "*." . strtoupper($extension));
 
     // make sure it's sorted
     sort($files);
@@ -105,7 +121,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
       $result->logMessage("Moved file '{$source_file}' to '{$processing_file}' for processing.", NULL, BE_AIVL_STREETIMPORT_ERROR);
 
       // STEP 2: process the file
-      $dataSource = new CRM_Streetimport_FileCsvDataSource($processing_file, $result);
+      $dataSource = new CRM_Streetimport_FileCsvDataSource($processing_file, $result, NULL, $encoding, $delimiter);
       CRM_Streetimport_RecordHandler::processDataSource($dataSource);
 
       // STEP 3: move file + log to completed folder

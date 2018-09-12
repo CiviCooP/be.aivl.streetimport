@@ -15,7 +15,7 @@
 class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Handler_GPRecordHandler {
 
   /** file name pattern as used by TM company */
-  protected static $DD_PATTERN = '#(?P<org>[a-zA-Z\-]+)_Spender_(?P<agency>\w+)_(?P<date>\d{8})[.](csv|CSV)$#';
+  protected static $DD_PATTERN = '#(?P<org>[a-zA-Z\-]+)_Spender_(?P<agency>\w+)_(?P<date>\d{8})[.](csv|CSV|txt|TXT)$#';
 
   /** stores the parsed file name */
   protected $file_name_data = 'not parsed';
