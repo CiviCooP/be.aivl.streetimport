@@ -584,6 +584,7 @@ class CRM_Streetimport_Config {
     return [
       'GP' => 'Greenpeace Austria',
       'GPPL' => 'Greenpeace Poland',
+      'GPHU' => 'Greenpeace Hungary',
       'AIVL' => 'Amnesty International Flanders',
     ];
   }
