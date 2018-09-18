@@ -23,7 +23,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
   /** 
    * process the given record
    *
-   * @param $record  an array of key=>value pairs
+   * @param array $record  an array of key=>value pairs
    * @return true
    * @throws exception if failed
    */
@@ -40,7 +40,6 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     // STEP 3: look up / create donor
     // issue 2822 - check consistency for organization/person mandate pattern comparing to street recruitment
     $contact = new CRM_Streetimport_Contact();
-    //$orgDiscrepancy = array();
     $orgDiscrepancy = $contact->checkOrganizationPersonConsistency($record);
     if ($orgDiscrepancy['valid'] == FALSE) {
       $discrepancyInfo = array(
@@ -90,7 +89,6 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $welcomeCallActivityStatusId = $config->getWelcomeCallActivityStatusId();
         $activityDateTime = date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date'])));
         $activityDetails = CRM_Streetimport_Utils::renderTemplate('activities/WelcomeCall.tpl', $this->_genericActivityTplInfo);
-
         $createdActivity = $this->createActivity(array(
           'activity_type_id' => $welcomeCallActvityType,
           'subject' => $concatActivitySubject,

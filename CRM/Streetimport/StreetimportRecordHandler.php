@@ -141,6 +141,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         $this->additionalPhone($record, $donor['contact_id']);
         $this->additionalEmail($record, $donor['contact_id']);
         $this->additionalAddress($record, $donor['contact_id']);
+        $donor['mandate_contact_id'] = $donor['id'];
         return $donor;
       }
     }
