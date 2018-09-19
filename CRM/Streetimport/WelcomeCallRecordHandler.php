@@ -51,12 +51,11 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         'activity_type_id' => $config->getOrganizationDiscrepancyActivityType('value'),
         'subject' => $config->translate('Welkomstgesprek niet consistent met Straatwerving qua organisatie / persoon'),
         'status_id' => $config->getScheduledActivityStatusId(),
-        //'activity_date_time' => date('d-m-Y h:i:s'),
-        'assignee_contact_id'=> $config->getAdminContactID(),
+        'activity_date_time' => date('Ymdhis'),
         'source_contact_id' => $recruiter['id'],
         'details' => CRM_Streetimport_Utils::renderTemplate('activities/OrgDiscrepancy.tpl', $discrepancyInfo),
       );
-      $this->createActivity($orgDiscrepancyActivityData, $record);
+      $this->createActivity($orgDiscrepancyActivityData, $record, array($config->getAdminContactID()));
     } else {
       // store company info if it makes sense
       $acceptedYesValues = $config->getAcceptedYesValues();
