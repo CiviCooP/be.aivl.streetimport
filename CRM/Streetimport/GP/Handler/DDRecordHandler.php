@@ -218,7 +218,9 @@ class CRM_Streetimport_GP_Handler_DDRecordHandler extends CRM_Streetimport_GP_Ha
         $this->addContactToGroup($contact_id, $config->getGPGroupID('Wald'), $record);
         break;
 
-      // TODO: extend?
+      case 'I_PLASTIK':
+        $this->addContactToGroup($contact_id, $config->getGPGroupID('Plastik'), $record);
+        break;
 
       default:
         $this->logger->logError("Unknown Interesse2 '{$interesse_2}'. Ignored.", $record);
