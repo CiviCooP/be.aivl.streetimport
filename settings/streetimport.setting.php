@@ -1,6 +1,6 @@
 <?php
 /*-------------------------------------------------------------+
-| GP StreetImporter Record Handlers                            |
+| StreetImporter Settings                                      |
 | Copyright (C) 2017 SYSTOPIA                                  |
 | Author: M. McAndrew (michaelmcandrew@thirdsectordesign.org)  |
 |         B. Endres (endres -at- systopia.de)                  |
@@ -17,7 +17,7 @@ return array(
     'group' => 'StreetImporter',
     'name' => 'streetimporter_domain',
     'type' => 'String',
-    'default' => "GP",
+    'default' => "",
     'add' => '4.6',
     'is_domain' => 1,
     'is_contact' => 0,

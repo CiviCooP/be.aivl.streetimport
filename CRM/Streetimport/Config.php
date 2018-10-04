@@ -580,13 +580,32 @@ class CRM_Streetimport_Config {
    * get the list of available domains
    */
   public static function getDomains() {
-    // TODO: refer to an option group
-    return [
-      'GP' => 'Greenpeace Austria',
-      'GPPL' => 'Greenpeace Poland',
-      'GPHU' => 'Greenpeace Hungary',
-      'AIVL' => 'Amnesty International Flanders',
-    ];
+    $domains = [];
+    // TODO: scan system
+//    $extension_dir = Civi::settings()->get('extensionsDir');
+//    $extension_path = Civi::paths()->getPath($extension_dir);
+//      $browser = CRM_Extension_System::singleton()->getBrowser();
+//      $extensions = $browser->getExtensions();
+//    $persist_location =
+
+    $extension_query = civicrm_api3('Extension', 'get', [
+        'sequential'   => 1,
+        'is_active'    => 1,
+        'option.limit' => 0,
+        'return'       => 'status,path'
+    ]);
+    foreach ($extension_query['values'] as $extension) {
+      if ($extension['status'] == 'installed') {
+        $potential_base = $extension['path'] . DIRECTORY_SEPARATOR . 'CRM/Streetimport';
+        if (is_dir($potential_base)) {
+          CRM_Core_Error::debug_log_message($potential_base);
+        }
+        $extension_paths[] = $extension['path'];
+      }
+    }
+//    CRM_Core_Error::debug_log_message("loc: " . json_encode($extension_paths));
+
+    return [];
   }
 
   /**
