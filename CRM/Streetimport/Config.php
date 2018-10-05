@@ -581,31 +581,59 @@ class CRM_Streetimport_Config {
    */
   public static function getDomains() {
     $domains = [];
-    // TODO: scan system
-//    $extension_dir = Civi::settings()->get('extensionsDir');
-//    $extension_path = Civi::paths()->getPath($extension_dir);
-//      $browser = CRM_Extension_System::singleton()->getBrowser();
-//      $extensions = $browser->getExtensions();
-//    $persist_location =
 
+    // scan all extension for potential DOMAINs
     $extension_query = civicrm_api3('Extension', 'get', [
         'sequential'   => 1,
         'is_active'    => 1,
         'option.limit' => 0,
-        'return'       => 'status,path'
+        'return'       => 'status,path,key'
     ]);
     foreach ($extension_query['values'] as $extension) {
+      if ($extension['key'] == 'be.aivl.streetimport') {
+        // exclude ourselves
+        continue;
+      }
+
       if ($extension['status'] == 'installed') {
         $potential_base = $extension['path'] . DIRECTORY_SEPARATOR . 'CRM/Streetimport';
         if (is_dir($potential_base)) {
-          CRM_Core_Error::debug_log_message($potential_base);
+          // CRM_Core_Error::debug_log_message("Checking $potential_base");
+          foreach (scandir($potential_base) as $domain_candidate) {
+            // investiate the domain candidate
+            if ($domain_candidate == '.' || $domain_candidate == '..') {
+              continue;
+            }
+
+            try {
+              $domain_config_file_candidate = $potential_base . DIRECTORY_SEPARATOR . $domain_candidate . DIRECTORY_SEPARATOR . 'Config.php';
+              // CRM_Core_Error::debug_log_message("Testing $domain_config_file_candidate");
+              if (file_exists($domain_config_file_candidate)) {
+                // try to import it
+                include $domain_config_file_candidate;
+                // CRM_Core_Error::debug_log_message("included $domain_config_file_candidate");
+
+                // try to instantiate the class
+                $domain_config_class_candidate = "CRM_Streetimport_{$domain_candidate}_Config";
+                // CRM_Core_Error::debug_log_message("class $domain_config_class_candidate");
+                if (   class_exists($domain_config_class_candidate)
+                    && is_subclass_of($domain_config_class_candidate, CRM_Streetimport_Config)) {
+
+                  // this all seems alright:
+                  $domains[] = $domain_candidate;
+                }
+              }
+            } catch (Exception $ex) {
+              // TODO: error handling or just ignore?
+              CRM_Core_Error::debug_log_message("Exception: " . $ex->getMessage());
+            }
+          }
         }
         $extension_paths[] = $extension['path'];
       }
     }
-//    CRM_Core_Error::debug_log_message("loc: " . json_encode($extension_paths));
 
-    return [];
+    return $domains;
   }
 
   /**
