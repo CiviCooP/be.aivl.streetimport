@@ -64,12 +64,13 @@ class CRM_Streetimport_Form_DomainSettings extends CRM_Core_Form {
    */
   public function postProcess() {
     $config = CRM_Streetimport_Config::singleton();
+    $values = $this->exportValues();
 
     // update domain
-    if (!empty($this->_submitValues['domain'])) {
-      $new_domain = $this->_submitValues['domain'];
+    if (!empty($values['domain'])) {
+      $new_domain = $values['domain'];
       if ($new_domain != $config->getDomain()) {
-        $config->setDomain($this->_submitValues['domain']);
+        $config->setDomain($values['domain']);
         CRM_Core_Session::setStatus($config->translate('Domain changed'), 'Saved', 'success');
       }
     }

@@ -442,7 +442,7 @@ class CRM_Streetimport_Utils {
   public static function getMaxNavID($menu)   {
     $maxId = 1;
     foreach ($menu as $entry) {
-      $maxId = max($maxId, $entry['attributes']['navID']);
+      $maxId = max($maxId, CRM_Utils_Array::value('navID', $entry['attributes'], 0));
       if (!empty($entry['child'])) {
         $maxIdChildren = self::getMaxNavID($entry['child']);
         $maxId = max($maxId, $maxIdChildren);

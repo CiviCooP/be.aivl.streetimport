@@ -60,14 +60,7 @@ class CRM_Streetimport_Config {
    * @return the currently set domain
    */
   public static function getDomain() {
-    if (self::$_domain == NULL) {
-      // query domain
-      $domain = civicrm_api3('Setting', 'getvalue', array(
-        'name'  => 'streetimporter_domain',
-        'group' => 'StreetImporter'));
-      self::$_domain = $domain;
-    }
-    return self::$_domain;
+    return CRM_Core_BAO_Setting::getItem('StreetImporter', 'streetimporter_domain');
   }
 
   /**
@@ -78,12 +71,7 @@ class CRM_Streetimport_Config {
    *
    */
   public static function setDomain($domain) {
-    $current_domain = self::getDomain();
-    if ($domain != $current_domain) {
-      $query = civicrm_api3('Setting', 'create', array('streetimporter_domain' => $domain));
-      self::$_singleton = NULL; // drop singleton
-      self::$_domain = $domain; // drop domain
-    }
+    CRM_Core_BAO_Setting::setItem($domain, 'StreetImporter', 'streetimporter_domain');
   }
 
   /**
@@ -617,10 +605,10 @@ class CRM_Streetimport_Config {
                 $domain_config_class_candidate = "CRM_Streetimport_{$domain_candidate}_Config";
                 // CRM_Core_Error::debug_log_message("class $domain_config_class_candidate");
                 if (   class_exists($domain_config_class_candidate)
-                    && is_subclass_of($domain_config_class_candidate, CRM_Streetimport_Config)) {
+                    && is_subclass_of($domain_config_class_candidate, 'CRM_Streetimport_Config')) {
 
                   // this all seems alright:
-                  $domains[] = $domain_candidate;
+                  $domains[$domain_candidate] = $domain_candidate;
                 }
               }
             } catch (Exception $ex) {

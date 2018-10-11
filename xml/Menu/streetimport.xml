@@ -30,4 +30,10 @@
     <page_callback>CRM_Streetimport_Update_Controller</page_callback>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/streetimport/upload</path>
+    <page_callback>CRM_Streetimport_Form_Upload</page_callback>
+    <title>Upload</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>
