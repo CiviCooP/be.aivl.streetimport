@@ -689,4 +689,12 @@ abstract class CRM_Streetimport_RecordHandler {
     }
     return $this->membership_types;
   }
+
+  /**
+   * Get the logger
+   * @return CRM_Streetimport_ImportResult logger
+   */
+  protected function getLogger() {
+    return $this->logger;
+  }
 }

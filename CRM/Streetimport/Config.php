@@ -60,7 +60,19 @@ class CRM_Streetimport_Config {
    * @return the currently set domain
    */
   public static function getDomain() {
-    return CRM_Core_BAO_Setting::getItem('StreetImporter', 'streetimporter_domain');
+    $domain = CRM_Core_BAO_Setting::getItem('StreetImporter', 'streetimporter_domain');
+    if ($domain) {
+      return $domain;
+
+    } else {
+      // if there's only one domain, return that
+      $domains = self::getDomains();
+      if (count($domains) == 1) {
+        return reset($domains);
+      } else {
+        return NULL;
+      }
+    }
   }
 
   /**

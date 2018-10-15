@@ -50,10 +50,10 @@ class CRM_Streetimport_ImportResult {
   /**
    * log the import of an individual record
    *
-   * @param $record   the whole record
-   * @param $success  true if successfully processed
-   * @param $type     optional string representing the type of record
-   * @param $message  optional additional message
+   * @param $record   array  the whole record
+   * @param $success  bool   true if successfully processed
+   * @param $type     string optional string representing the type of record
+   * @param $message  string optional additional message
    */
   public function logImport($record, $success, $type = 'UNKNOWN', $message = '') {
     $record_id = $this->getIDforRecord($record);
