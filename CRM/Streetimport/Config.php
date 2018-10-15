@@ -597,12 +597,15 @@ class CRM_Streetimport_Config {
               $domain_config_file_candidate = $potential_base . DIRECTORY_SEPARATOR . $domain_candidate . DIRECTORY_SEPARATOR . 'Config.php';
               // CRM_Core_Error::debug_log_message("Testing $domain_config_file_candidate");
               if (file_exists($domain_config_file_candidate)) {
-                // try to import it
-                include $domain_config_file_candidate;
-                // CRM_Core_Error::debug_log_message("included $domain_config_file_candidate");
+                // define the class
+                $domain_config_class_candidate = "CRM_Streetimport_{$domain_candidate}_Config";
+
+                if (!class_exists($domain_config_class_candidate)) {
+                  // try to import it
+                  include $domain_config_file_candidate;
+                }
 
                 // try to instantiate the class
-                $domain_config_class_candidate = "CRM_Streetimport_{$domain_candidate}_Config";
                 // CRM_Core_Error::debug_log_message("class $domain_config_class_candidate");
                 if (   class_exists($domain_config_class_candidate)
                     && is_subclass_of($domain_config_class_candidate, 'CRM_Streetimport_Config')) {
