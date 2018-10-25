@@ -1,3 +1,13 @@
+# CAUTION!
+
+``master`` branch has changed to a neutral, stripped version. In order to use it, you would have to implement your configuration/handlers in a separate extension. For an example, have a look at [this extension](https://github.com/systopia/com.proveg.importer).
+
+The original ``master`` has now moved to the ``aivl_master`` branch.
+
+    
+
+### [ORIGINAL README - needs update]
+
 # CiviCRM extension be.aivl.streetimport
 Native CiviCRM extension for Amnesty International Flanders (AIVL) to import street recruitment and welcome call csvfiles into CiviCRM.
 The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres (Systopia) for AIVL.
