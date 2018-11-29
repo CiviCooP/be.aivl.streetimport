@@ -65,6 +65,7 @@ class CRM_Streetimport_Contact {
             try {
               civicrm_api3('Contact', 'create', array(
                 'id' => $individualId,
+                'contact_type' => 'Individual',
                 'job_title' => $organizationData['job_title'],
                 'employer_id' => $organization['id']
               ));
