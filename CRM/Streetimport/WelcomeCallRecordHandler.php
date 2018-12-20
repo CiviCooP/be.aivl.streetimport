@@ -62,6 +62,14 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       if (isset($record['Organization Yes/No']) && in_array($record['Organization Yes/No'], $acceptedYesValues)) {
         $this->_genericActivityTplInfo = CRM_Streetimport_Utils::getCompanyInfoWithMandateRef($record['Mandate Reference']);
       }
+      else {
+        if (isset($this->_genericActivityTplInfo['company_id'])) {
+          unset($this->_genericActivityTplInfo['company_id']);
+        }
+        if (isset($this->_genericActivityTplInfo['company_name'])) {
+          unset($this->_genericActivityTplInfo['company_name']);
+        }
+      }
       $donor = $this->processDonor($record, $recruiting_organisation);
       if (empty($donor)) {
         $this->logger->logError("Donor ".$record['DonorID']." ".$config->translate("should already exist. Created new contact in order to process record anyway."), $record);

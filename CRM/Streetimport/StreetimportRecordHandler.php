@@ -171,6 +171,14 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
           $this->logger->logError($newOrganization, $record, $config->translate("Create Organization for Donor Error"), "Warning");
         }
       }
+      else {
+        if (isset($this->_genericActivityTplInfo['company_id'])) {
+          unset($this->_genericActivityTplInfo['company_id']);
+        }
+        if (isset($this->_genericActivityTplInfo['company_name'])) {
+          unset($this->_genericActivityTplInfo['company_name']);
+        }
+      }
 
       // create address
       if (!empty($record['Country'])) {
