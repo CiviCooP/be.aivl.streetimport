@@ -633,19 +633,44 @@ class CRM_Streetimport_Utils {
   }
 
   /**
+   * In some cases the date separator is not consistent in files from the street recruiter
+   * This function should replace possible other separators with the one according to the settings
+   *
+   * @param $date
+   * @return mixed
+   */
+  public static function correctDateSeparator($date) {
+    $dateFormatSetting = CRM_Streetimport_Config::singleton()->getCsvDateFormat();
+    $minus = [0, 2, 4, 6, 8, 10];
+    $slashes  = [1, 3, 5, 7 ,9 ,11];
+    if (in_array($dateFormatSetting, $minus)) {
+      $date = str_replace('/', '-', $date);
+      $date = str_replace('.', '-', $date);
+      $date = str_replace('_', '-', $date);
+    }
+    if (in_array($dateFormatSetting, $slashes)) {
+      $date = str_replace('-', '/', $date);
+      $date = str_replace('.', '/', $date);
+      $date = str_replace('_', '/', $date);
+    }
+    return $date;
+  }
+  /**
    * Method to format the CSV import date if new DateTime has thrown error
    *
    * @param $inDate
    * @return string
    */
   public static function formatCsvDate($inDate) {
+    // replace date separator if necessary
+    $inDate = CRM_Streetimport_Utils::correctDateSeparator($inDate);
     if (empty($inDate)) {
       return $inDate;
     }
     $config = CRM_Streetimport_Config::singleton();
-    $inDay = null;
-    $inMonth = null;
-    $inYear = null;
+    $inDay = NULL;
+    $inMonth = NULL;
+    $inYear = NULL;
     switch ($config->getCsvDateFormat()) {
       case 0:
         $dateParts = explode("-", $inDate);
