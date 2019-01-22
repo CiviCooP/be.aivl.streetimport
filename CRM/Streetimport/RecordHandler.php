@@ -81,7 +81,7 @@ abstract class CRM_Streetimport_RecordHandler {
       if (!$record_processed) {
         $config = CRM_Streetimport_Config::singleton();
         // no handlers found.
-        $dataSource->logger->logImport($record, false, '', $config->translate('No handlers found'));
+        $dataSource->logger->logImport($record, FALSE, '', $config->translate('No handlers found'));
       }
     }
   }

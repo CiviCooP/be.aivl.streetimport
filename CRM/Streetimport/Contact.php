@@ -123,7 +123,7 @@ class CRM_Streetimport_Contact {
    * @return string
    */
   private function formatBirthDate($birthDate) {
-    $correctDate = new DateTime(CRM_Streetimport_Utils::formatCsvDate($birthDate));
+    $correctDate = new DateTime($birthDate);
     return $correctDate->format('d-m-Y');
   }
 

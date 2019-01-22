@@ -51,7 +51,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         'activity_type_id' => $config->getOrganizationDiscrepancyActivityType('value'),
         'subject' => $config->translate('Welkomstgesprek niet consistent met Straatwerving qua organisatie / persoon'),
         'status_id' => $config->getScheduledActivityStatusId(),
-        'activity_date_time' => date('Ymdhis'),
+        'activity_date_time' => date("YmdHis", strtotime($record['Recruitment Date'])),
         'source_contact_id' => $recruiter['id'],
         'details' => CRM_Streetimport_Utils::renderTemplate('activities/OrgDiscrepancy.tpl', $discrepancyInfo),
       );
@@ -94,7 +94,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $welcomeCallActvityType = $config->getWelcomeCallActivityType();
         $concatActivitySubject = $this->concatActivitySubject("Welcome Call", $campaignId);
         $welcomeCallActivityStatusId = $config->getWelcomeCallActivityStatusId();
-        $activityDateTime = date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date'])));
+        $activityDateTime = date("Ymdhis", strtotime($record['Recruitment Date']));
         $activityDetails = CRM_Streetimport_Utils::renderTemplate('activities/WelcomeCall.tpl', $this->_genericActivityTplInfo);
         $createdActivity = $this->createActivity(array(
           'activity_type_id' => $welcomeCallActvityType,
@@ -310,10 +310,10 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $customData['wc_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
     $customData['wc_sdd_freq_unit'] = array('value' => $frequencyUnit, 'type' => 'Integer');
     if (!empty($record['Start Date'])) {
-      $customData['wc_sdd_start_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Start Date']))), 'type' => 'Date');
+      $customData['wc_sdd_start_date'] = array('value' => date('Ymd', strtotime($record['Start Date'])), 'type' => 'Date');
     }
     if (!empty($record['End Date'])) {
-      $customData['wc_sdd_end_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['End Date']))), 'type' => 'Date');
+      $customData['wc_sdd_end_date'] = array('value' => date('Ymd', strtotime($record['End Date'])), 'type' => 'Date');
     }
     return $customData;
   }
