@@ -64,7 +64,7 @@ abstract class CRM_Streetimport_DataSource {
    * @param $record    an array with the data
    * @param $restrict  if true, only the fields specified in the mapping will be copied
    *
-   * @return array a new array with the transformed keys
+   * @return array|bool a new array with the transformed keys
    */
   protected function applyMapping($record, $restrict=false) {
     $new_record = array();
@@ -81,16 +81,22 @@ abstract class CRM_Streetimport_DataSource {
       $new_record[$new_key] = $value;
     }
     // check if we need to do specific and weird date formatting because the incoming file has strange stuff
-    $this->checkDateFormatting($new_record);
-    return $new_record;
+    $new_record = $this->checkDateFormatting($new_record);
+    if ($new_record) {
+      return $new_record;
+    }
+    else {
+      return FALSE;
+    }
   }
 
   /**
    * Method to fix the date formatting issues at central import level
    *
-   * @param &$record
+   * @param $record
+   * @return array|bool
    */
-  private function checkDateFormatting(&$record) {
+  private function checkDateFormatting($record) {
     $datesInRecord = ['Birth date', 'Recruitment Date', 'Import Date', 'Start Date', 'End Date'];
     foreach ($datesInRecord as $dateFieldName) {
       if (isset($record[$dateFieldName]) && !empty($record[$dateFieldName])) {
@@ -107,9 +113,13 @@ abstract class CRM_Streetimport_DataSource {
         $dateToBeFixed = str_replace(',', '-', $dateToBeFixed);
         // assuming last part is year and if it is not 4 digits, put 4 digits!!!!!
         $dateParts = explode('-', $dateToBeFixed);
-        if (isset($dateParts[2]) && strlen($dateParts[2]) == 2) {
+        if (isset($dateParts[2]) && strlen($dateParts[2]) == 2 && $dateFieldName != 'Birth date') {
           $dateToBeFixed = $dateParts[0] . '-' . $dateParts[1] . '-20' . $dateParts[2];
           $this->logger->logWarning(CRM_Streetimport_Config::singleton()->translate("Incoming date from streetrecruitment with 2 digit year rather than 4 digit year, assumed format is dd-mm-jj, inserted 20 before year. Incoming date was " . $record[$dateFieldName] . ' translated to ' . $dateToBeFixed), $record);
+        }
+        if (isset($dateParts[2]) && strlen($dateParts[2]) == 2 && $dateFieldName == 'Birth date') {
+          $this->logger->logFatal(CRM_Streetimport_Config::singleton()->translate("Birth date from streetrecruitment with 2 digit year rather than 4 digit year, needs manual correction!!!! Incoming date was " . $record[$dateFieldName]), $record, 'Birth date wrong format');
+          return FALSE;
         }
         if (!empty($timeToBeFixed)) {
           $record[$dateFieldName] = $dateToBeFixed . ' ' . $timeToBeFixed;
@@ -119,6 +129,7 @@ abstract class CRM_Streetimport_DataSource {
         }
       }
     }
+    return $record;
   }
 
 }
