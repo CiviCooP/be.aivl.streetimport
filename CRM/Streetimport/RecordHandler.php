@@ -144,7 +144,7 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   protected function createContact($contactData, $importRecord) {
     $config = CRM_Streetimport_Config::singleton();
-    $contact = new CRM_Streetimport_Contact();
+    $contact = new CRM_Streetimport_Contact($this->logger, $importRecord);
     // validate contact data
     $valid = $contact->validateContactData($contactData);
     if (!$valid) {

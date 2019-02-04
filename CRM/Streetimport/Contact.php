@@ -7,10 +7,26 @@
  * @license AGPL-3.0
  */
 class CRM_Streetimport_Contact {
+
+  /**
+   * stores the result/logging object
+   */
+  protected $_logger = NULL;
+  
+  /**
+   * stores the import record
+   */
+  private $_record;
+
   /**
    * CRM_Streetimport_Contact constructor.
+   *
+   * @param $logger
+   * @param $record
    */
-  function __construct() {
+  function __construct($logger, $record) {
+    $this->_logger = $logger;
+    $this->_record = $record;
   }
 
   /**
@@ -123,8 +139,20 @@ class CRM_Streetimport_Contact {
    * @return string
    */
   private function formatBirthDate($birthDate) {
-    $correctDate = new DateTime($birthDate);
-    return $correctDate->format('d-m-Y');
+    try {
+      $result = date('d-m-Y', strtotime($birthDate));
+      if ($result == '01-01-1970') {
+        $this->_logger->logError(CRM_Streetimport_Config::singleton()->translate('Could not format birth date ')
+          . $birthDate . CRM_Streetimport_Config::singleton()->translate(', empty birth date assumed. Correct manually!'),
+          $this->_record, CRM_Streetimport_Config::singleton()->translate("Create Contact Warning"), "Warning");
+        return '';
+      }
+    }
+    catch (Exception $ex) {
+      $this->_logger->logError(CRM_Streetimport_Config::singleton()->translate('Could not format birth date ')
+        . $birthDate . CRM_Streetimport_Config::singleton()->translate(', empty birth date assumed. Correct manually!'),
+        $this->_record, CRM_Streetimport_Config::singleton()->translate("Create Contact Warning"), "Warning");
+    }
   }
 
   /**

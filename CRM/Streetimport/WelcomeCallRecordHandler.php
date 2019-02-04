@@ -39,7 +39,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
 
     // STEP 3: look up / create donor
     // issue 2822 - check consistency for organization/person mandate pattern comparing to street recruitment
-    $contact = new CRM_Streetimport_Contact();
+    $contact = new CRM_Streetimport_Contact($this->logger, $record);
     $orgDiscrepancy = $contact->checkOrganizationPersonConsistency($record);
     if ($orgDiscrepancy['valid'] == FALSE) {
       $discrepancyInfo = array(

@@ -153,7 +153,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
       // issue 677 - add organization details if required
       if (in_array(CRM_Utils_Array::value('Organization Yes/No', $record), $config->getAcceptedYesValues())) {
-        $organization = new CRM_Streetimport_Contact();
+        $organization = new CRM_Streetimport_Contact($this->logger, $record);
         $newOrganization = $organization->createOrganizationFromImportData($donor['id'], CRM_Utils_Array::value('Notes', $record));
         if (is_array($newOrganization)) {
           if (!isset($newOrganization['id'])) {

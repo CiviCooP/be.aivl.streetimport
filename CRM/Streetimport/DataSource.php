@@ -119,7 +119,7 @@ abstract class CRM_Streetimport_DataSource {
         }
         if (isset($dateParts[2]) && strlen($dateParts[2]) == 2 && $dateFieldName == 'Birth date') {
           $this->logger->logFatal(CRM_Streetimport_Config::singleton()->translate("Birth date from streetrecruitment with 2 digit year rather than 4 digit year, needs manual correction!!!! Incoming date was " . $record[$dateFieldName]), $record, 'Birth date wrong format');
-          return FALSE;
+          //return FALSE;
         }
         if (!empty($timeToBeFixed)) {
           $record[$dateFieldName] = $dateToBeFixed . ' ' . $timeToBeFixed;
