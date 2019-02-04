@@ -12,7 +12,7 @@ class CRM_Streetimport_Contact {
    * stores the result/logging object
    */
   protected $_logger = NULL;
-  
+
   /**
    * stores the import record
    */
