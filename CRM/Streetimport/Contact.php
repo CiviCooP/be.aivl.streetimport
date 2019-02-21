@@ -59,7 +59,8 @@ class CRM_Streetimport_Contact {
   public function createOrganizationFromImportData($individualId, $importNotes) {
     $config = CRM_Streetimport_Config::singleton();
     // todo check if organization does not exist yet with organisation number
-    $organizationData = $this->getOrganizationDataFromImportData($importNotes);
+    $notes = new CRM_Streetimport_Notes();
+    $organizationData = $notes->getOrganizationDataFromImportData($importNotes);
     if (!empty($organizationData)) {
       // create organization as soon as we have an organization name
       if (isset($organizationData['organization_name']) && !empty($organizationData['organization_name'])) {
@@ -153,40 +154,6 @@ class CRM_Streetimport_Contact {
         . $birthDate . CRM_Streetimport_Config::singleton()->translate(', empty birth date assumed. Correct manually!'),
         $this->_record, CRM_Streetimport_Config::singleton()->translate("Create Contact Warning"), "Warning");
     }
-  }
-
-  /**
-   * Method to get the organization data from the import data (notes column)
-   * https://civicoop.plan.io/issues/677
-   *
-   * @param string $importNote
-   * @return array
-   */
-  private function getOrganizationDataFromImportData($importNote) {
-    $result = array();
-    $orgParts = explode('/', $importNote);
-    if (!empty($orgParts)) {
-      // split first element on ':', first part should be companyName and second contain name data
-      $nameParts = explode(':', trim($orgParts[0]));
-      if (trim($nameParts[0]) == 'companyName' && isset($nameParts[1]) && !empty($nameParts[1])) {
-        $result['organization_name'] = trim($nameParts[1]);
-      }
-      // split second element on ':', second part should be companyNumber going to custom field organization number
-      if (isset($orgParts[1])) {
-        $orgNumberParts = explode(':', trim($orgParts[1]));
-        if (trim($orgNumberParts[0]) == 'companyNumber' && isset($orgNumberParts[1]) && !empty($orgNumberParts[1])) {
-          $result['organization_number'] = trim($orgNumberParts[1]);
-        }
-      }
-      // split third element on ':', first part should be companyFunction and second job title data
-      if (isset($orgParts[2])) {
-        $jobTitleParts = explode(':', trim($orgParts[2]));
-        if (trim($jobTitleParts[0]) == 'companyFunction' && isset($jobTitleParts[1]) && !empty($jobTitleParts[1])) {
-          $result['job_title'] = trim($jobTitleParts[1]);
-        }
-      }
-    }
-    return $result;
   }
 
   /**

@@ -137,56 +137,70 @@ class CRM_Streetimport_StreetRecruitmentRecordHandler extends CRM_Streetimport_S
    * @access protected
    */
   protected function buildActivityCustomData($record) {
-    $config = CRM_Streetimport_Config::singleton();
-    $acceptedYesValues = $config->getAcceptedYesValues();
+    $acceptedYesValues = CRM_Streetimport_Config::singleton()->getAcceptedYesValues();
     $frequencyUnit = $this->getFrequencyUnit($record['Frequency Unit']);
     $areasOfInterest = $this->getAreasOfInterest($record['Interests']);
-    $customData = array();
+    $customData = [];
     if (isset($record['source'])) {
-      $customData['new_import_file'] = array('value' => $record['source'], 'type' => 'String');
+      $customData['new_import_file'] = ['value' => $record['source'], 'type' => 'String'];
     }
-    $customData['new_org_mandate'] = array('value' => 0, 'type' => 'Integer');
+    $customData['new_org_mandate'] = ['value' => 0, 'type' => 'Integer'];
     if (isset($record['Organization Yes/No'])) {
       if (in_array($record['Organization Yes/No'], $acceptedYesValues)) {
-        $customData['new_org_mandate'] = array('value' => 1, 'type' => 'Integer');
+        $customData['new_org_mandate'] = ['value' => 1, 'type' => 'Integer'];
       }
     }
-    $customData['new_date_import'] = array('value' => date('Ymd'), 'type' => 'Date');
+    $customData['new_date_import'] = ['value' => date('Ymd'), 'type' => 'Date'];
     if (in_array($record['Follow Up Call'], $acceptedYesValues)) {
-      $customData['new_follow_up_call'] = array('value' => 1, 'type' => 'Integer');
-    } else {
-      $customData['new_follow_up_call'] = array('value' => 0, 'type' => 'Integer');
+      $customData['new_follow_up_call'] = ['value' => 1, 'type' => 'Integer'];
+    }
+    else {
+      $customData['new_follow_up_call'] = ['value' => 0, 'type' => 'Integer'];
     }
     if (in_array($record['Newsletter'], $acceptedYesValues)) {
-      $customData['new_newsletter'] = array('value' => 1, 'type' => 'Integer');
-    } else {
-      $customData['new_newsletter'] = array('value' => 0, 'type' => 'Integer');
+      $customData['new_newsletter'] = ['value' => 1, 'type' => 'Integer'];
+    }
+    else {
+      $customData['new_newsletter'] = ['value' => 0, 'type' => 'Integer'];
     }
     if (in_array($record['Member'], $acceptedYesValues)) {
-      $customData['new_member'] = array('value' => 1, 'type' => 'Integer');
-    } else {
-      $customData['new_member'] = array('value' => 0, 'type' => 'Integer');
+      $customData['new_member'] = ['value' => 1, 'type' => 'Integer'];
+    }
+    else {
+      $customData['new_member'] = ['value' => 0, 'type' => 'Integer'];
     }
     if (in_array($record['Cancellation'], $acceptedYesValues)) {
-      $customData['new_sdd_cancel'] = array('value' => 1, 'type' => 'Integer');
-    } else {
-      $customData['new_sdd_cancel'] = array('value' => 0, 'type' => 'Integer');
+      $customData['new_sdd_cancel'] = ['value' => 1, 'type' => 'Integer'];
     }
-    $customData['new_areas_interest'] = array('value' => $areasOfInterest, 'type' => 'String');
-    $customData['new_remarks'] = array('value' => $record['Notes'], 'type' => 'String');
-    $customData['new_sdd_mandate'] = array('value' => $record['Mandate Reference'], 'type' => 'String');
-    $customData['new_sdd_iban'] = array('value' => $record['IBAN'], 'type' => 'String');
-    $customData['new_sdd_bank_name'] = array('value' => $record['Bank Name'], 'type' => 'String');
-    $customData['new_sdd_bic'] = array('value' => $record['Bic'], 'type' => 'String');
+    else {
+      $customData['new_sdd_cancel'] = ['value' => 0, 'type' => 'Integer'];
+    }
+    $customData['new_areas_interest'] = ['value' => $areasOfInterest, 'type' => 'String'];
+    $notes = new CRM_Streetimport_Notes();
+    if (!$notes->isNotesEmptyCompany($record['Notes'])) {
+      // only add notes part
+      if ($notes->hasOrganizationStuff($record['Notes'])) {
+        $notesTxt = trim($notes->splitRealNoteAndOrganization($record['Notes'])['notes_bit']);
+      }
+      else {
+        $notesTxt = trim($record['Notes']);
+
+      }
+      $customData['new_remarks'] = ['value' => $notesTxt, 'type' => 'String'];
+    }
+    $customData['new_sdd_mandate'] = ['value' => $record['Mandate Reference'], 'type' => 'String'];
+    $customData['new_sdd_iban'] = ['value' => $record['IBAN'], 'type' => 'String'];
+    $customData['new_sdd_bank_name'] = ['value' => $record['Bank Name'], 'type' => 'String'];
+    $customData['new_sdd_bic'] = ['value' => $record['Bic'], 'type' => 'String'];
     $fixedAmount = $this->fixImportedAmount($record['Amount']);
-    $customData['new_sdd_amount'] = array('value' => $fixedAmount, 'type' => 'Money');
-    $customData['new_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
-    $customData['new_sdd_freq_unit'] = array('value' => $frequencyUnit, 'type' => 'Integer');
+    $customData['new_sdd_amount'] = ['value' => $fixedAmount, 'type' => 'Money'];
+    $customData['new_sdd_freq_interval'] = ['value' => $record['Frequency Interval'], 'type' => 'Integer'];
+    $customData['new_sdd_freq_unit'] = ['value' => $frequencyUnit, 'type' => 'Integer'];
     if (!empty($record['Start Date'])) {
-      $customData['new_sdd_start_date'] = array('value' => date('Ymd', strtotime($record['Start Date'])), 'type' => 'Date');
+      $customData['new_sdd_start_date'] = ['value' => date('Ymd', strtotime($record['Start Date'])), 'type' => 'Date'];
     }
     if (!empty($record['End Date'])) {
-      $customData['new_sdd_end_date'] = array('value' => date('Ymd', strtotime($record['End Date'])), 'type' => 'Date');
+      $customData['new_sdd_end_date'] = ['value' => date('Ymd', strtotime($record['End Date'])), 'type' => 'Date'];
     }
     return $customData;
   }
