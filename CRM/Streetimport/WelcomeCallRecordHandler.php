@@ -300,7 +300,17 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $customData['wc_sdd_cancel'] = array('value' => 0, 'type' => 'Integer');
     }
     $customData['wc_areas_interest'] = array('value' => $areasOfInterest, 'type' => 'String');
-    $customData['wc_remarks'] = array('value' => $record['Notes'], 'type' => 'String');
+    $notes = new CRM_Streetimport_Notes();
+    if (!$notes->isNotesEmptyCompany($record['Notes'])) {
+      // only add notes part
+      if ($notes->hasOrganizationStuff($record['Notes'])) {
+        $notesTxt = trim($notes->splitRealNoteAndOrganization($record['Notes'])['notes_bit']);
+      }
+      else {
+        $notesTxt = trim($record['Notes']);
+      }
+      $customData['wc_remarks'] = ['value' => $notesTxt, 'type' => 'String'];
+    }
     $customData['wc_sdd_mandate'] = array('value' => $record['Mandate Reference'], 'type' => 'String');
     $customData['wc_sdd_iban'] = array('value' => $record['IBAN'], 'type' => 'String');
     $customData['wc_sdd_bank_name'] = array('value' => $record['Bank Name'], 'type' => 'String');
