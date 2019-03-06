@@ -668,15 +668,15 @@ class CRM_Streetimport_Config {
     $unit_ln10 = strtolower(trim($unit_ln10));
 
     if ($unit_ln10 == 'maand') {
-      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 1);
+      $sdd_type = ['type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 1];
     } elseif ($unit_ln10 == 'kwartaal') {
-      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 3);
+      $sdd_type = ['type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 3];
     } elseif ($unit_ln10 == 'half jaar') {
-      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 6);
+      $sdd_type = ['type' => 'RCUR', 'frequency_unit' => 'month', 'frequency_interval' => 6];
     } elseif ($unit_ln10 == 'jaar') {
-      $sdd_type = array('type' => 'RCUR', 'frequency_unit' => 'year', 'frequency_interval' => 1);
+      $sdd_type = ['type' => 'RCUR', 'frequency_unit' => 'year', 'frequency_interval' => 1];
     } elseif ($unit_ln10 == 'eenmalig') {
-      $sdd_type = array('type' => 'OOFF', 'frequency_unit' => NULL, 'frequency_interval' => NULL);
+      $sdd_type = ['type' => 'OOFF', 'frequency_unit' => NULL, 'frequency_interval' => NULL];
     } else {
       $sdd_type = NULL;
     }
@@ -888,7 +888,8 @@ class CRM_Streetimport_Config {
         $fh = fopen($fileName, 'w');
         fwrite($fh, json_encode($this->importSettings));
         fclose($fh);
-      } catch (Exception $ex) {
+      }
+      catch (Exception $ex) {
         throw new Exception('Could not open import_settings.json, contact your system administrator. Error reported: ' . $ex->getMessage());
       }
     }
@@ -950,8 +951,7 @@ class CRM_Streetimport_Config {
    *
    * @throws Exception when resource file could not be loaded
    */
-  protected function setContactSubTypes()
-  {
+  protected function setContactSubTypes() {
     $jsonFile = $this->_resourcesPath . 'contact_sub_types.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load contact sub types configuration file for extension,
@@ -1086,12 +1086,12 @@ class CRM_Streetimport_Config {
    * @access protected
    */
   protected function buildCustomFieldParams($customFieldData) {
-    $customFieldParams = array();
+    $customFieldParams = [];
     foreach ($customFieldData as $name => $value) {
       if ($name == "option_group") {
         $optionGroup = CRM_Streetimport_Utils::getOptionGroupWithName($value);
         if (empty($optionGroup)) {
-          $optionGroup = CRM_Streetimport_Utils::createOptionGroup(array('name' => $value));
+          $optionGroup = CRM_Streetimport_Utils::createOptionGroup(['name' => $value]);
         }
         $customFieldParams['option_group_id'] = $optionGroup['id'];
       } else {
@@ -1113,7 +1113,7 @@ class CRM_Streetimport_Config {
       throw new Exception('Could not load import_settings configuration file for extension, contact your system administrator!');
     }
     $importSettingsJson = file_get_contents($jsonFile);
-    $this->importSettings = json_decode($importSettingsJson, true);
+    $this->importSettings = json_decode($importSettingsJson, TRUE);
   }
 
   /**
@@ -1126,10 +1126,10 @@ class CRM_Streetimport_Config {
     $jsonFile = $this->_resourcesPath.$config->lcMessages.'_translate.json';
     if (file_exists($jsonFile)) {
       $translateJson = file_get_contents($jsonFile);
-      $this->translatedStrings = json_decode($translateJson, true);
+      $this->translatedStrings = json_decode($translateJson, TRUE);
 
     } else {
-      $this->translatedStrings = array();
+      $this->translatedStrings = [];
     }
   }
 
@@ -1140,17 +1140,18 @@ class CRM_Streetimport_Config {
    * @link https://github.com/CiviCooP/be.aivl.streetimport/issues/36
    */
   protected function setDefaultEmployeeTypes() {
-    $relationshipTypes = array();
-    $relationshipTypeParams = array(
+    $relationshipTypes = [];
+    $relationshipTypeParams = [
       'is_active' => 1,
       'return' => 'id',
-      'options' => array('limit' => 999));
+      'options' => ['limit' => 999],
+      ];
     $apiTypes = civicrm_api3('RelationshipType', 'Get', $relationshipTypeParams);
     foreach ($apiTypes['values'] as $apiType) {
       $relationshipTypes[] = $apiType['id'];
     }
     $this->importSettings['employee_type_id']['value'] = $relationshipTypes;
-    $params = array();
+    $params = [];
     foreach ($this->importSettings as $settingName => $settingValue) {
       $params[$settingValue['name']] = $settingValue['value'];
     }
@@ -1164,8 +1165,9 @@ class CRM_Streetimport_Config {
    */
   private function setResourcesPath() {
     try {
-      $civiVersion = civicrm_api3('Domain', 'getvalue', array('return' => 'version'));
-    } catch (CiviCRM_API3_Exception $ex) {
+      $civiVersion = civicrm_api3('Domain', 'getvalue', ['return' => 'version']);
+    }
+    catch (CiviCRM_API3_Exception $ex) {
       $civiVersion = '4.7';
     }
     if (version_compare($civiVersion, '4.7', '>=')) {
@@ -1192,35 +1194,35 @@ class CRM_Streetimport_Config {
     $this->_companyIdentityOptionValueName = 'aivl_comp_number';
     // create company number contact identity type if it does not exist
     try {
-      $count = civicrm_api3('OptionValue', 'getcount', array(
+      $count = civicrm_api3('OptionValue', 'getcount', [
         'option_group_id' => $this->_identityOptionGroupName,
         'name' => $this->_companyIdentityOptionValueName,
-      ));
+      ]);
       if ($count == 0) {
-        $optionValue = civicrm_api3('OptionValue', 'create', array(
+        $optionValue = civicrm_api3('OptionValue', 'create', [
           'option_group_id' => $this->_identityOptionGroupName,
           'name' => $this->_companyIdentityOptionValueName,
           'label' => 'Company Number',
           'is_active' => 1,
-        ));
+        ]);
         // add identity tracker setting for company number
         $query = "SELECT value FROM civicrm_setting WHERE name = %1";
-        $idTrackerValue = CRM_Core_DAO::singleValueQuery($query, array(1 => array('identitytracker_mapping', 'String')));
+        $idTrackerValue = CRM_Core_DAO::singleValueQuery($query, [1 => ['identitytracker_mapping', 'String']]);
         $current = unserialize($idTrackerValue);
         foreach ($this->aivlOrganizationDataCustomFields as $customFieldId => $customField) {
           if ($customField['name'] == 'aivl_organization_id') {
             if (!empty($current)) {
-              $new = $current + array($customFieldId, $optionValue['values'][$optionValue['id']]['value']);
+              $new = $current + [$customFieldId, $optionValue['values'][$optionValue['id']]['value']];
             } else {
-              $new = array($customFieldId=> $optionValue['values'][$optionValue['id']]['value']);
+              $new = [$customFieldId=> $optionValue['values'][$optionValue['id']]['value']];
             }
-            civicrm_api3('Setting', 'create', array('identitytracker_mapping' => $new));
+            civicrm_api3('Setting', 'create', ['identitytracker_mapping' => $new]);
           }
         }
       }
     }
     catch (CiviCRM_API3_Exception $ex) {
-      CRM_Core_Error::debug_log_message('Problem getting or creating the company number contact identity in '
+      Civi::log()->error('Problem getting or creating the company number contact identity in '
         . __METHOD__ .' , message from API OptionValue: ' . $ex->getMessage());
     }
   }
@@ -1230,10 +1232,10 @@ class CRM_Streetimport_Config {
    */
   public function setActivityStatus() {
     try {
-      $actStatuses = civicrm_api3('OptionValue', 'get', array(
+      $actStatuses = civicrm_api3('OptionValue', 'get', [
         'option_group_id' => 'activity_status',
-        'options' => array('limit' => 0),
-      ));
+        'options' => ['limit' => 0],
+      ]);
       foreach ($actStatuses['values'] as $optionValueId => $optionValue) {
         switch ($optionValue['name']) {
           case 'Scheduled':
@@ -1243,7 +1245,7 @@ class CRM_Streetimport_Config {
       }
     }
     catch (CiviCRM_API3_Exception $ex) {
-      CRM_Core_Error::debug_log_message('Could not find activity statuses in with OptionValue get in ' . __METHOD__);
+      Civi::log()->error('Could not find activity statuses in with OptionValue get in ' . __METHOD__);
     }
   }
 
@@ -1252,10 +1254,10 @@ class CRM_Streetimport_Config {
    */
   public function setRecordTypes() {
     try {
-      $recordTypes = civicrm_api3('OptionValue', 'get', array(
+      $recordTypes = civicrm_api3('OptionValue', 'get', [
         'option_group_id' => 'activity_contacts',
-        'options' => array('limit' => 0),
-      ));
+        'options' => ['limit' => 0],
+      ]);
       foreach ($recordTypes['values'] as $optionValueId => $optionValue) {
         switch ($optionValue['name']) {
           case 'Activity Targets':
@@ -1265,7 +1267,7 @@ class CRM_Streetimport_Config {
       }
     }
     catch (CiviCRM_API3_Exception $ex) {
-      CRM_Core_Error::debug_log_message('Could not find activity contact record types in with OptionValue get in ' . __METHOD__);
+      Civi::log()->error('Could not find activity contact record types in with OptionValue get in ' . __METHOD__);
     }
   }
 }

@@ -171,6 +171,14 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
           $this->logger->logError($newOrganization, $record, $config->translate("Create Organization for Donor Error"), "Warning");
         }
       }
+      else {
+        if (isset($this->_genericActivityTplInfo['company_id'])) {
+          unset($this->_genericActivityTplInfo['company_id']);
+        }
+        if (isset($this->_genericActivityTplInfo['company_name'])) {
+          unset($this->_genericActivityTplInfo['company_name']);
+        }
+      }
 
       // create address
       if (!empty($record['Country'])) {
@@ -541,7 +549,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
    * This function will make sure, that the donor
    * has a (CiviBanking) bank account entry with the given data
    *
-   * @param $mandate_data   mandate entity data
+   * @param $mandate_data array mandate entity data
    */
   protected function saveBankAccount($mandate_data, $record) {
     $config = CRM_Streetimport_Config::singleton();

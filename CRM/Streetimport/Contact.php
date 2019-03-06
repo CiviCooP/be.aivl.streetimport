@@ -7,6 +7,7 @@
  * @license AGPL-3.0
  */
 class CRM_Streetimport_Contact {
+
   /**
    * CRM_Streetimport_Contact constructor.
    */
@@ -28,7 +29,8 @@ class CRM_Streetimport_Contact {
       $result  = civicrm_api3('Contact', 'create', $contactData);
       $contact = $result['values'][$result['id']];
       return $contact;
-    } catch (CiviCRM_API3_Exception $ex) {
+    }
+    catch (CiviCRM_API3_Exception $ex) {
       return $ex->getMessage();
     }
   }
@@ -41,38 +43,39 @@ class CRM_Streetimport_Contact {
    * @return string $ex->getMessage()
    */
   public function createOrganizationFromImportData($individualId, $importNotes) {
-    $config = CRM_Streetimport_Config::singleton();
-    // todo check if organization does not exist yet with organisation number
-    $organizationData = $this->getOrganizationDataFromImportData($importNotes);
+    $notes = new CRM_Streetimport_Notes();
+    $organizationData = $notes->getOrganizationDataFromImportData($importNotes);
     if (!empty($organizationData)) {
       // create organization as soon as we have an organization name
       if (isset($organizationData['organization_name']) && !empty($organizationData['organization_name'])) {
         try {
-          $organizationParams = array(
+          $organizationParams = [
             'contact_type' => 'Organization',
             'organization_name' => $organizationData['organization_name'],
-          );
+          ];
           // add organization number if in data
           if (isset($organizationData['organization_number']) && !empty($organizationData['organization_number'])) {
             $organizationNumber = CRM_Streetimport_Utils::formatOrganisationNumber($organizationData['organization_number']);
-            $customField = $config->getAivlOrganizationDataCustomFields('aivl_organization_id');
-            $organizationParams['custom_'.$customField['id']] = $organizationNumber;
+            $customField = CRM_Streetimport_Config::singleton()->getAivlOrganizationDataCustomFields('aivl_organization_id');
+            $organizationParams['custom_' . $customField['id']] = $organizationNumber;
           }
           $result = civicrm_api3('Contact', 'create', $organizationParams);
           $organization = $result['values'][$result['id']];
-          // if job title in organization data, update individual with job_title and current employer
+          $employerParams = [
+            'id' => $individualId,
+            'contact_type' => 'Individual',
+            'employer_id' => $organization['id']
+          ];
           if (isset($organizationData['job_title']) && !empty($organizationData['job_title'])) {
-            try {
-              civicrm_api3('Contact', 'create', array(
-                'id' => $individualId,
-                'contact_type' => 'Individual',
-                'job_title' => $organizationData['job_title'],
-                'employer_id' => $organization['id']
-              ));
-            } catch (CiviCRM_API3_Exception $ex) {}
+            $employerParams['job_title'] = $organizationData['job_title'];
           }
+          try {
+            civicrm_api3('Contact', 'create', $employerParams);
+          }
+          catch (CiviCRM_API3_Exception $ex) {}
           return $organization;
-        } catch (CiviCRM_API3_Exception $ex) {
+        }
+        catch (CiviCRM_API3_Exception $ex) {
           return $ex->getMessage();
         }
       }
@@ -86,30 +89,29 @@ class CRM_Streetimport_Contact {
    * @return string|bool
    */
   public function validateContactData($contactData) {
-    $config = CRM_Streetimport_Config::singleton();
     // validate contact type
     if (!isset($contactData['contact_type']) || empty($contactData['contact_type'])) {
-      return $config->translate("Contact missing contact_type");
+      return CRM_Streetimport_Config::singleton()->translate("Contact missing contact_type");
     }
     // validate household name for household
     if ($contactData['contact_type'] == 'Household') {
       if (empty($contactData['household_name'])) {
-        return $config->translate("Contact missing household_name");
+        return CRM_Streetimport_Config::singleton()->translate("Contact missing household_name");
       }
     }
     // validate first and last name for individual
     if ($contactData['contact_type'] == 'Individual') {
       if (empty($contactData['first_name']) && empty($contactData['last_name'])) {
-        return $config->translate("Contact missing first_name and last_name");
+        return CRM_Streetimport_Config::singleton()->translate("Contact missing first_name and last_name");
       }
       if (!isset($contactData['first_name']) && !isset($contactData['last_name'])) {
-        return $config->translate("Contact missing first_name and last_name");
+        return CRM_Streetimport_Config::singleton()->translate("Contact missing first_name and last_name");
       }
       if (!isset($contactData['first_name']) || empty($contactData['first_name'])) {
-        return $config->translate("Donor missing first_name, contact created without first name");
+        return CRM_Streetimport_Config::singleton()->translate("Donor missing first_name, contact created without first name");
       }
       if (!isset($contactData['last_name']) || empty($contactData['last_name'])) {
-        return $config->translate("Donor missing last_name, contact created without first name");
+        return CRM_Streetimport_Config::singleton()->translate("Donor missing last_name, contact created without first name");
       }
     }
     return TRUE;
@@ -123,8 +125,14 @@ class CRM_Streetimport_Contact {
    * @return string
    */
   private function formatBirthDate($birthDate) {
-    $correctDate = new DateTime(CRM_Streetimport_Utils::formatCsvDate($birthDate));
-    return $correctDate->format('d-m-Y');
+    try {
+      $correctDate = new DateTime(CRM_Streetimport_Utils::formatCsvDate($birthDate));
+      return $correctDate->format('d-m-Y');
+    }
+    catch (Exception $ex) {
+      Civi::log()->error(ts('Could not parse birth date into DateTime object in ') . __METHOD__);
+      return "";
+    }
   }
 
   /**
@@ -135,7 +143,7 @@ class CRM_Streetimport_Contact {
    * @return array
    */
   private function getOrganizationDataFromImportData($importNote) {
-    $result = array();
+    $result = [];
     $orgParts = explode('/', $importNote);
     if (!empty($orgParts)) {
       // split first element on ':', first part should be companyName and second contain name data
@@ -172,7 +180,7 @@ class CRM_Streetimport_Contact {
   public function checkOrganizationPersonConsistency($sourceData) {
     // no sense in checking if no mandate reference
     if (!isset($sourceData['Mandate Reference'])) {
-      return array('valid' => TRUE);
+      return ['valid' => TRUE];
     }
     $config = CRM_Streetimport_Config::singleton();
     // find street recruitment organization
@@ -182,21 +190,21 @@ class CRM_Streetimport_Contact {
     LEFT JOIN civicrm_value_street_recruitment AS s ON a.id =s.entity_id
     WHERE a.activity_type_id = %2 AND s.new_sdd_mandate = %3
     ORDER BY a.activity_date_time DESC LIMIT 1';
-    $queryParams = array(
-      1 => array($config->getTargetRecordTypeId(), 'Integer'),
-      2 => array($config->getStreetRecruitmentActivityType('value'), 'Integer'),
-      3 => array(trim($sourceData['Mandate Reference']), 'String'),
-    );
+    $queryParams = [
+      1 => [$config->getTargetRecordTypeId(), 'Integer'],
+      2 => [$config->getStreetRecruitmentActivityType('value'), 'Integer'],
+      3 => [trim($sourceData['Mandate Reference']), 'String'],
+    ];
     $streetOrg = CRM_Core_DAO::singleValueQuery($query, $queryParams);
     $acceptedYesValues = $config->getAcceptedYesValues();
     switch ($streetOrg) {
       case 0:
         if (isset($sourceData['Organization Yes/No'])) {
           if (in_array($sourceData['Organization Yes/No'], $acceptedYesValues)) {
-            return array(
+            return [
               'valid' => FALSE,
               'message' => 'Street Recruitment did not mention a company where Welcome Call now does! Please check and fix manually',
-            );
+            ];
           }
         }
         break;
@@ -205,17 +213,17 @@ class CRM_Streetimport_Contact {
         if (isset($sourceData['Organization Yes/No'])) {
           $acceptedYesValues = $config->getAcceptedYesValues();
           if (!in_array($sourceData['Organization Yes/No'], $acceptedYesValues)) {
-            return array(
+            return [
               'valid' => FALSE,
               'message' => 'Street Recruitment did mention a company where Welcome Call now does not! Please check and fix manually',
-            );
+            ];
           }
         }
         break;
       default:
-        return array('valid' => TRUE);
+        return ['valid' => TRUE];
         break;
     }
-    return array('valid' => TRUE);
+    return ['valid' => TRUE];
   }
 }
