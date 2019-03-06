@@ -1220,7 +1220,7 @@ class CRM_Streetimport_Config {
       }
     }
     catch (CiviCRM_API3_Exception $ex) {
-      Civi::log()->warning('Problem getting or creating the company number contact identity in '
+      CRM_Core_Error::debug_log_message('Problem getting or creating the company number contact identity in '
         . __METHOD__ .' , message from API OptionValue: ' . $ex->getMessage());
     }
   }
@@ -1243,7 +1243,7 @@ class CRM_Streetimport_Config {
       }
     }
     catch (CiviCRM_API3_Exception $ex) {
-      Civi::log()->warning('Could not find activity statuses in with OptionValue get in ' . __METHOD__);
+      CRM_Core_Error::debug_log_message('Could not find activity statuses in with OptionValue get in ' . __METHOD__);
     }
   }
 
@@ -1265,7 +1265,7 @@ class CRM_Streetimport_Config {
       }
     }
     catch (CiviCRM_API3_Exception $ex) {
-      Civi::log()->warning('Could not find activity contact record types in with OptionValue get in ' . __METHOD__);
+      CRM_Core_Error::debug_log_message('Could not find activity contact record types in with OptionValue get in ' . __METHOD__);
     }
   }
 }

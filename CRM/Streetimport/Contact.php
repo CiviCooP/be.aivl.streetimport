@@ -7,26 +7,10 @@
  * @license AGPL-3.0
  */
 class CRM_Streetimport_Contact {
-
-  /**
-   * stores the result/logging object
-   */
-  protected $_logger = NULL;
-
-  /**
-   * stores the import record
-   */
-  private $_record;
-
   /**
    * CRM_Streetimport_Contact constructor.
-   *
-   * @param $logger
-   * @param $record
    */
-  function __construct($logger, $record) {
-    $this->_logger = $logger;
-    $this->_record = $record;
+  function __construct() {
   }
 
   /**
@@ -59,8 +43,7 @@ class CRM_Streetimport_Contact {
   public function createOrganizationFromImportData($individualId, $importNotes) {
     $config = CRM_Streetimport_Config::singleton();
     // todo check if organization does not exist yet with organisation number
-    $notes = new CRM_Streetimport_Notes();
-    $organizationData = $notes->getOrganizationDataFromImportData($importNotes);
+    $organizationData = $this->getOrganizationDataFromImportData($importNotes);
     if (!empty($organizationData)) {
       // create organization as soon as we have an organization name
       if (isset($organizationData['organization_name']) && !empty($organizationData['organization_name'])) {
@@ -140,20 +123,42 @@ class CRM_Streetimport_Contact {
    * @return string
    */
   private function formatBirthDate($birthDate) {
-    try {
-      $result = date('d-m-Y', strtotime($birthDate));
-      if ($result == '01-01-1970') {
-        $this->_logger->logError(CRM_Streetimport_Config::singleton()->translate('Could not format birth date ')
-          . $birthDate . CRM_Streetimport_Config::singleton()->translate(', empty birth date assumed. Correct manually!'),
-          $this->_record, CRM_Streetimport_Config::singleton()->translate("Create Contact Warning"), "Warning");
-        return '';
+    $correctDate = new DateTime(CRM_Streetimport_Utils::formatCsvDate($birthDate));
+    return $correctDate->format('d-m-Y');
+  }
+
+  /**
+   * Method to get the organization data from the import data (notes column)
+   * https://civicoop.plan.io/issues/677
+   *
+   * @param string $importNote
+   * @return array
+   */
+  private function getOrganizationDataFromImportData($importNote) {
+    $result = array();
+    $orgParts = explode('/', $importNote);
+    if (!empty($orgParts)) {
+      // split first element on ':', first part should be companyName and second contain name data
+      $nameParts = explode(':', trim($orgParts[0]));
+      if (trim($nameParts[0]) == 'companyName' && isset($nameParts[1]) && !empty($nameParts[1])) {
+        $result['organization_name'] = trim($nameParts[1]);
+      }
+      // split second element on ':', second part should be companyNumber going to custom field organization number
+      if (isset($orgParts[1])) {
+        $orgNumberParts = explode(':', trim($orgParts[1]));
+        if (trim($orgNumberParts[0]) == 'companyNumber' && isset($orgNumberParts[1]) && !empty($orgNumberParts[1])) {
+          $result['organization_number'] = trim($orgNumberParts[1]);
+        }
+      }
+      // split third element on ':', first part should be companyFunction and second job title data
+      if (isset($orgParts[2])) {
+        $jobTitleParts = explode(':', trim($orgParts[2]));
+        if (trim($jobTitleParts[0]) == 'companyFunction' && isset($jobTitleParts[1]) && !empty($jobTitleParts[1])) {
+          $result['job_title'] = trim($jobTitleParts[1]);
+        }
       }
     }
-    catch (Exception $ex) {
-      $this->_logger->logError(CRM_Streetimport_Config::singleton()->translate('Could not format birth date ')
-        . $birthDate . CRM_Streetimport_Config::singleton()->translate(', empty birth date assumed. Correct manually!'),
-        $this->_record, CRM_Streetimport_Config::singleton()->translate("Create Contact Warning"), "Warning");
-    }
+    return $result;
   }
 
   /**

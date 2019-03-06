@@ -153,7 +153,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
 
       // issue 677 - add organization details if required
       if (in_array(CRM_Utils_Array::value('Organization Yes/No', $record), $config->getAcceptedYesValues())) {
-        $organization = new CRM_Streetimport_Contact($this->logger, $record);
+        $organization = new CRM_Streetimport_Contact();
         $newOrganization = $organization->createOrganizationFromImportData($donor['id'], CRM_Utils_Array::value('Notes', $record));
         if (is_array($newOrganization)) {
           if (!isset($newOrganization['id'])) {
@@ -169,14 +169,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
           }
         } else {
           $this->logger->logError($newOrganization, $record, $config->translate("Create Organization for Donor Error"), "Warning");
-        }
-      }
-      else {
-        if (isset($this->_genericActivityTplInfo['company_id'])) {
-          unset($this->_genericActivityTplInfo['company_id']);
-        }
-        if (isset($this->_genericActivityTplInfo['company_name'])) {
-          unset($this->_genericActivityTplInfo['company_name']);
         }
       }
 
@@ -401,39 +393,45 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     // get the start date
     $now = strtotime("now");
     $start_date = CRM_Utils_Array::value('Start Date', $record);
+    $start_date = CRM_Streetimport_Utils::formatCsvDate($start_date);
 
-    //$start_date_parsed = strtotime($start_date);
+    $start_date_parsed = strtotime($start_date);
     $offset = (int) $config->getOffsetDays();
     $earliest_start_date = strtotime("+$offset days");
-    if (empty($start_date)) {
+    if (empty($start_date_parsed)) {
       if (!empty($start_date)) {
         $this->logger->logWarning("Couldn't parse start date '$start_date'. Set to start now.", $record);
       }
-      $start_date = $earliest_start_date;
-    } elseif ($start_date < $earliest_start_date) {
+      $start_date_parsed = $earliest_start_date;
+    } elseif ($start_date_parsed < $earliest_start_date) {
       $this->logger->logWarning("Given start date is in the past. Set to start now.", $record);
-      $start_date = $earliest_start_date;
+      $start_date_parsed = $earliest_start_date;
     }
+    unset($start_date);
 
     // get the signature date
     $signature_date = CRM_Utils_Array::value("Recruitment Date", $record);
-    //$signature_date_parsed = strtotime($signature_date);
-    if (empty($signature_date)) {
-      $this->logger->logWarning("Couldn't parse signature date '$signature_date'. Set to start now.", $record);
-      $signature_date = $now;
+    $signature_date = CRM_Streetimport_Utils::formatCsvDate($signature_date);
+    $signature_date_parsed = strtotime($signature_date);
+    if (empty($signature_date_parsed)) {
+      if (!empty($signature_date)) {
+        $this->logger->logWarning("Couldn't parse signature date '$signature_date'. Set to start now.", $record);
+      }
+      $signature_date_parsed = $now;
     }
 
-    // get the end date
+    // get the start date
     $mandate_data['end_date'] = '';
     $end_date = CRM_Utils_Array::value('End Date', $record);
-    //$end_date_parsed = strtotime($end_date);
-    if (empty($end_date)) {
+    $end_date = CRM_Streetimport_Utils::formatCsvDate($end_date);
+    $end_date_parsed = strtotime($end_date);
+    if (empty($end_date_parsed)) {
       if (!empty($end_date)) {
         $this->logger->logWarning("Couldn't parse start end date '$end_date'.", $record);
       }
     } else {
-      $end_date = max($start_date, $end_date);
-      $mandate_data['end_date'] = date('YmdHis', $end_date);
+      $end_date_parsed = max($start_date_parsed, $end_date_parsed);
+      $mandate_data['end_date'] = date('YmdHis', $end_date_parsed);
     }
 
     // fill the other required fields
@@ -441,10 +439,10 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $mandate_data['reference']          = CRM_Utils_Array::value('Mandate Reference', $record);
     $mandate_data['amount']             = (float) $this->fixImportedAmount(CRM_Utils_Array::value('Amount', $record));
     $mandate_data['currency']           = 'EUR';
-    $mandate_data['start_date']         = date('YmdHis', strtotime($start_date));
+    $mandate_data['start_date']         = date('YmdHis', $start_date_parsed);
     $mandate_data['creation_date']      = date('YmdHis'); // NOW
-    $mandate_data['date']               = date('YmdHis', strtotime($signature_date));
-    $mandate_data['validation_date']    = date('YmdHis', strtotime($signature_date)); // NOW
+    $mandate_data['date']               = date('YmdHis', $signature_date_parsed);
+    $mandate_data['validation_date']    = date('YmdHis'); // NOW
     $mandate_data['iban']               = $iban;
     $mandate_data['bic']                = $bic;
     $mandate_data['source']             = $config->translate('Street Recruitment');
@@ -831,7 +829,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       return TRUE;
     }
     $donorBirthDate = date('Ymd', strtotime($donor['birth_date']));
-    $recordBirthDate = date('Ymd', strtotime($record['Birth date']));
+    $recordBirthDate = date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Birth date'])));
     if ($donorBirthDate != $recordBirthDate) {
       return TRUE;
     }
@@ -858,7 +856,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $params['last_name'] = $record['Last Name'];
     }
     $donorBirthDate = date('Ymd', strtotime($donor['birth_date']));
-    $recordBirthDate = date('Ymd', strtotime($record['Birth date']));
+    $recordBirthDate = date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Birth date'])));
     if ($recordBirthDate != $donorBirthDate) {
       $params['birth_date'] = $recordBirthDate;
     }

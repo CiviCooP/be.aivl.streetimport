@@ -81,7 +81,7 @@ abstract class CRM_Streetimport_RecordHandler {
       if (!$record_processed) {
         $config = CRM_Streetimport_Config::singleton();
         // no handlers found.
-        $dataSource->logger->logImport($record, FALSE, '', $config->translate('No handlers found'));
+        $dataSource->logger->logImport($record, false, '', $config->translate('No handlers found'));
       }
     }
   }
@@ -144,7 +144,7 @@ abstract class CRM_Streetimport_RecordHandler {
    */
   protected function createContact($contactData, $importRecord) {
     $config = CRM_Streetimport_Config::singleton();
-    $contact = new CRM_Streetimport_Contact($this->logger, $importRecord);
+    $contact = new CRM_Streetimport_Contact();
     // validate contact data
     $valid = $contact->validateContactData($contactData);
     if (!$valid) {

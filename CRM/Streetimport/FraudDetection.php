@@ -69,12 +69,12 @@ class CRM_Streetimport_FraudDetection {
    */
   function createFraudWarning($activityData) {
     if (!isset($activityData['target_id']) || empty($activityData['target_id'])) {
-      Civi::log()->error('Attempting to create a fraud detection activity without target_id in '
+      CRM_Core_Error::debug_log_message('Attempting to create a fraud detection activity without target_id in '
         .__METHOD__.', no activity created.');
       return FALSE;
     }
     if (!isset($activityData['warning_message']) || empty($activityData['warning_message'])) {
-      Civi::log()->error('Attempting to create a fraud detection activity without warning_message in '
+      CRM_Core_Error::debug_log_message('Attempting to create a fraud detection activity without warning_message in '
         .__METHOD__.', no activity created');
       return FALSE;
     }
@@ -119,7 +119,7 @@ class CRM_Streetimport_FraudDetection {
       civicrm_api3('Activity', 'create', $activityParams);
     }
     catch (CiviCRM_API3_Exception $ex) {
-      Civi::log()->error('Could not create fraud detection activity in '.__METHOD__.', error from API Activity create: '.$ex->getMessage());
+      CRM_Core_Error::debug_log_message('Could not create fraud detection activity in '.__METHOD__.', error from API Activity create: '.$ex->getMessage());
     }
   }
 

@@ -39,7 +39,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
 
     // STEP 3: look up / create donor
     // issue 2822 - check consistency for organization/person mandate pattern comparing to street recruitment
-    $contact = new CRM_Streetimport_Contact($this->logger, $record);
+    $contact = new CRM_Streetimport_Contact();
     $orgDiscrepancy = $contact->checkOrganizationPersonConsistency($record);
     if ($orgDiscrepancy['valid'] == FALSE) {
       $discrepancyInfo = array(
@@ -51,7 +51,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         'activity_type_id' => $config->getOrganizationDiscrepancyActivityType('value'),
         'subject' => $config->translate('Welkomstgesprek niet consistent met Straatwerving qua organisatie / persoon'),
         'status_id' => $config->getScheduledActivityStatusId(),
-        'activity_date_time' => date("YmdHis", strtotime($record['Recruitment Date'])),
+        'activity_date_time' => date('Ymdhis'),
         'source_contact_id' => $recruiter['id'],
         'details' => CRM_Streetimport_Utils::renderTemplate('activities/OrgDiscrepancy.tpl', $discrepancyInfo),
       );
@@ -61,14 +61,6 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $acceptedYesValues = $config->getAcceptedYesValues();
       if (isset($record['Organization Yes/No']) && in_array($record['Organization Yes/No'], $acceptedYesValues)) {
         $this->_genericActivityTplInfo = CRM_Streetimport_Utils::getCompanyInfoWithMandateRef($record['Mandate Reference']);
-      }
-      else {
-        if (isset($this->_genericActivityTplInfo['company_id'])) {
-          unset($this->_genericActivityTplInfo['company_id']);
-        }
-        if (isset($this->_genericActivityTplInfo['company_name'])) {
-          unset($this->_genericActivityTplInfo['company_name']);
-        }
       }
       $donor = $this->processDonor($record, $recruiting_organisation);
       if (empty($donor)) {
@@ -94,7 +86,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         $welcomeCallActvityType = $config->getWelcomeCallActivityType();
         $concatActivitySubject = $this->concatActivitySubject("Welcome Call", $campaignId);
         $welcomeCallActivityStatusId = $config->getWelcomeCallActivityStatusId();
-        $activityDateTime = date("Ymdhis", strtotime($record['Recruitment Date']));
+        $activityDateTime = date("Ymdhis", strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Recruitment Date'])));
         $activityDetails = CRM_Streetimport_Utils::renderTemplate('activities/WelcomeCall.tpl', $this->_genericActivityTplInfo);
         $createdActivity = $this->createActivity(array(
           'activity_type_id' => $welcomeCallActvityType,
@@ -300,17 +292,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
       $customData['wc_sdd_cancel'] = array('value' => 0, 'type' => 'Integer');
     }
     $customData['wc_areas_interest'] = array('value' => $areasOfInterest, 'type' => 'String');
-    $notes = new CRM_Streetimport_Notes();
-    if (!$notes->isNotesEmptyCompany($record['Notes'])) {
-      // only add notes part
-      if ($notes->hasOrganizationStuff($record['Notes'])) {
-        $notesTxt = trim($notes->splitRealNoteAndOrganization($record['Notes'])['notes_bit']);
-      }
-      else {
-        $notesTxt = trim($record['Notes']);
-      }
-      $customData['wc_remarks'] = ['value' => $notesTxt, 'type' => 'String'];
-    }
+    $customData['wc_remarks'] = array('value' => $record['Notes'], 'type' => 'String');
     $customData['wc_sdd_mandate'] = array('value' => $record['Mandate Reference'], 'type' => 'String');
     $customData['wc_sdd_iban'] = array('value' => $record['IBAN'], 'type' => 'String');
     $customData['wc_sdd_bank_name'] = array('value' => $record['Bank Name'], 'type' => 'String');
@@ -320,10 +302,10 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     $customData['wc_sdd_freq_interval'] = array('value' => $record['Frequency Interval'], 'type' => 'Integer');
     $customData['wc_sdd_freq_unit'] = array('value' => $frequencyUnit, 'type' => 'Integer');
     if (!empty($record['Start Date'])) {
-      $customData['wc_sdd_start_date'] = array('value' => date('Ymd', strtotime($record['Start Date'])), 'type' => 'Date');
+      $customData['wc_sdd_start_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['Start Date']))), 'type' => 'Date');
     }
     if (!empty($record['End Date'])) {
-      $customData['wc_sdd_end_date'] = array('value' => date('Ymd', strtotime($record['End Date'])), 'type' => 'Date');
+      $customData['wc_sdd_end_date'] = array('value' => date('Ymd', strtotime(CRM_Streetimport_Utils::formatCsvDate($record['End Date']))), 'type' => 'Date');
     }
     return $customData;
   }
