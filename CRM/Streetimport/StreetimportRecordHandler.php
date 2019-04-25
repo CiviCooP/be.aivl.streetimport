@@ -996,14 +996,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     } else {
       $countryId = $config->getDefaultCountryId();
     }
-    $params = array(
-      'contact_id' => $contactId,
-      'street_name' => CRM_Utils_Array::value('Street Name', $record),
-      'street_number' => CRM_Utils_Array::value('Street Number', $record),
-      'postal_code' => CRM_Utils_Array::value('Postal code', $record),
-      'city' => CRM_Utils_Array::value('City', $record),
-      'country_id' => $countryId
-    );
     $streetUnitFromRecord = CRM_Utils_Array::value('Street Unit', $record);
     $streetNameFromRecord = CRM_Utils_Array::value('Street Name', $record);
     $streetNumberFromRecord = CRM_Utils_Array::value('Street Number', $record);
@@ -1012,35 +1004,19 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     }
     $locationTypeId = $config->getLocationTypeId();
     $streetAddress = trim($streetNameFromRecord.' '.$streetNumberFromRecord.' '.$streetUnitFromRecord);
-    try {
-      $addressCount = civicrm_api3('Address', 'Getcount', $params);
-      if ($addressCount == 0) {
-        $this->createAddress(array(
-          'contact_id'       => $contactId,
-          'location_type_id' => $locationTypeId,
-          'street_name'      => CRM_Utils_Array::value('Street Name', $record),
-          'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
-          'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
-          'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
-          'street_address'   => $streetAddress,
-          'city'             => CRM_Utils_Array::value('City', $record),
-          'is_primary'       => 1,
-          'country_id'       => $countryId
-        ), $record);
-      }
-    } catch (CiviCRM_API3_Exception $ex) {
-      $this->createAddress(array(
-        'contact_id'       => $contactId,
-        'location_type_id' => $locationTypeId,
-        'street_name'      => CRM_Utils_Array::value('Street Name', $record),
-        'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
-        'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
-        'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
-        'street_address'   => $streetAddress,
-        'is_primary'       => 1,
-        'country_id'       => $countryId
-      ), $record);
-    }
+    $addressData = array(
+      'contact_id'       => $contactId,
+      'location_type_id' => $locationTypeId,
+      'street_name'      => CRM_Utils_Array::value('Street Name', $record),
+      'street_number'    => (int) CRM_Utils_Array::value('Street Number', $record),
+      'street_unit'      => CRM_Utils_Array::value('Street Unit', $record),
+      'postal_code'      => CRM_Utils_Array::value('Postal code', $record),
+      'street_address'   => $streetAddress,
+      'city'             => CRM_Utils_Array::value('City', $record),
+      'is_primary'       => 1,
+      'country_id'       => $countryId
+    );
+    $this->createAddress($addressData, $record);
   }
 
   /**

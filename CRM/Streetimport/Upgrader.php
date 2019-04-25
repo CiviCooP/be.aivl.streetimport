@@ -3,8 +3,19 @@
 /**
  * Collection of upgrade steps.
  */
-class CRM_Streetimport_Upgrader extends CRM_Streetimport_Upgrader_Base
-{
+class CRM_Streetimport_Upgrader extends CRM_Streetimport_Upgrader_Base {
+
+  /**
+   * Create custom data after install
+   *
+   * @throws
+   */
+  public function install() {
+    if (!CRM_Streetimport_Utils::isFcdExtensionInstalled()) {
+      throw new Exception(ts('This extensions has a dependency on the extension formercommunicationdata, which is not installed. Please first install the formercommunicationdata extension and then try installing this extension again'));
+    }
+  }
+
   /**
    * Upgrade 1001 - remove recruitment type from custom fields and tables (issue #29) with api
    * @author Erik Hommel (CiviCooP) <erik.hommel@civicoop.org>
@@ -58,6 +69,20 @@ class CRM_Streetimport_Upgrader extends CRM_Streetimport_Upgrader_Base
     $this->ctx->log->info('Applying update 1003 (add fraud warning)');
     // add activity type warning fraude if not exists yet
     CRM_Streetimport_Config::singleton()->setActivityTypes();
+    return TRUE;
+  }
+
+  /**
+   * Upgrade 1005 - check task 4195: https://civicoop.plan.io/issues/4195
+   * - check if extension former communication data is installed
+   *
+   * @throws
+   */
+  public function upgrade_1005() {
+    $this->ctx->log->info('Applying update 1005');
+    if (!CRM_Streetimport_Utils::isFcdExtensionInstalled()) {
+      throw new Exception(ts('This extensions has a dependency on the extension formercommunicationdata, which is not installed. Please first install the formercommunicationdata extension and then try upgrading this extension again'));
+    }
     return TRUE;
   }
 

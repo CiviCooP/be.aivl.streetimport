@@ -864,4 +864,25 @@ class CRM_Streetimport_Utils {
     }
   }
 
+  /**
+   * Method to establish if extension former communication data is installed
+   * @return bool
+   */
+  public static function isFcdExtensionInstalled() {
+    try {
+      $count = civicrm_api3('Extension', 'getcount', [
+        'full_name' => "formercommunicationdata",
+        'status' => "installed",
+      ]);
+      if ($count == 1) {
+        return TRUE;
+      }
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      Civi::log()->error(ts('Unexpected error from API Extension getcount when trying to establish if extension formercommunicationdata is installed in ') . __METHOD__
+        . ts(', error message from API: ') . $ex->getMessage());
+    }
+    return FALSE;
+  }
+
 }

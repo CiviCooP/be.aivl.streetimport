@@ -234,13 +234,15 @@ abstract class CRM_Streetimport_RecordHandler {
       }
     }
 
-    // create via API
-    try {
-      $address = civicrm_api3('Address', 'create', $data);
-      $this->logger->logDebug($config->translate("Address created")." ".$address['id']." ".$config->translate("for contact").$data['contact_id'], $record);
+    // create
+    $address = new CRM_Streetimport_Address();
+    $newAddress = $address->create($data);
+    if ($newAddress) {
+      $this->logger->logDebug($config->translate("Address created")." ".$newAddress['id']." ".$config->translate("for contact").$data['contact_id'], $record);
       return $address;
-    } catch (CiviCRM_API3_Exception $ex) {
-      $this->logger->logError($ex->getMessage(), $record, $config->translate("Create Address Error"));
+    }
+    else {
+      $this->logger->logError($config->translate("Address NOT created"), $record, $config->translate("Create Address Error"));
       return NULL;
     }
   }

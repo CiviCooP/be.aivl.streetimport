@@ -900,7 +900,7 @@ class CRM_Streetimport_Config {
    *
    * @throws Exception when resource file could not be loaded
    */
-  protected function setActivityTypes() {
+  public function setActivityTypes() {
     $jsonFile = $this->_resourcesPath.'activity_types.json';
     if (!file_exists($jsonFile)) {
       throw new Exception('Could not load activity types configuration file for extension,
