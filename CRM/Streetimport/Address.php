@@ -39,6 +39,9 @@ class CRM_Streetimport_Address {
           return FALSE;
         }
       }
+      else {
+        return TRUE;
+      }
     }
   }
 
@@ -65,7 +68,9 @@ class CRM_Streetimport_Address {
             $sameAddress = FALSE;
           }
           else {
-            if ($currentAddress[$checkField] != $newAddressData[$checkField]) {
+            $currentValue = strtolower(trim($currentAddress[$checkField]));
+            $newValue = strtolower(trim($newAddressData[$checkField]));
+            if ($currentValue != $newValue) {
               $sameAddress = FALSE;
             }
           }
