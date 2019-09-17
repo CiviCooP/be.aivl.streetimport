@@ -49,13 +49,12 @@ class CRM_Streetimport_Config {
   protected $_companyIdentityOptionValueName = NULL;
   private $_scheduledActivityStatusId = NULL;
   private $_targetRecordTypeId = NULL;
+  private $_employeeRelationshipTypeId = NULL;
 
   /**
    * Constructor method
-   *
-   * @param string $context
    */
-  function __construct($context) {
+  function __construct() {
     $this->setResourcesPath();
     $this->aivlLegalName = 'Amnesty International Vlaanderen vzw';
     $this->streetRecruitmentImportType = 1;
@@ -87,9 +86,6 @@ class CRM_Streetimport_Config {
     $this->setCustomData();
     $this->setContactIdentities();
     $this->setImportSettings();
-    if ($context == 'install') {
-      $this->setDefaultEmployeeTypes();
-    }
     $this->setGroups();
     $this->setTranslationFile();
   }
@@ -614,14 +610,13 @@ class CRM_Streetimport_Config {
   }
 
   /**
-   * Method to get relationship types for employee
+   * Method to get relationship type for employee
    *
-   * @return array
+   * @return int
    * @access public
    */
-  public function getEmployeeRelationshipTypeIds() {
-    $importSettings = $this->getImportSettings();
-    return $importSettings['employee_type_id']['value'];
+  public function getEmployeeRelationshipTypeId() {
+    return $this->_employeeRelationshipTypeId;
   }
 
   /**
@@ -857,14 +852,13 @@ class CRM_Streetimport_Config {
   /**
    * Singleton method
    *
-   * @param string $context to determine if triggered from install hook
    * @return CRM_Streetimport_Config
    * @access public
    * @static
    */
-  public static function singleton($context = null) {
+  public static function singleton() {
     if (!self::$_singleton) {
-      self::$_singleton = new CRM_Streetimport_Config($context);
+      self::$_singleton = new CRM_Streetimport_Config();
     }
     return self::$_singleton;
   }
@@ -886,7 +880,7 @@ class CRM_Streetimport_Config {
       $fileName = $this->_resourcesPath . 'import_settings.json';
       try {
         $fh = fopen($fileName, 'w');
-        fwrite($fh, json_encode($this->importSettings));
+        fwrite($fh, json_encode($this->importSettings, JSON_PRETTY_PRINT));
         fclose($fh);
       }
       catch (Exception $ex) {
@@ -1134,31 +1128,6 @@ class CRM_Streetimport_Config {
   }
 
   /**
-   * Method to set all relationship types as employee types at start up to
-   * avoid not being able to set the admin and fundraiser id
-   *
-   * @link https://github.com/CiviCooP/be.aivl.streetimport/issues/36
-   */
-  protected function setDefaultEmployeeTypes() {
-    $relationshipTypes = [];
-    $relationshipTypeParams = [
-      'is_active' => 1,
-      'return' => 'id',
-      'options' => ['limit' => 999],
-      ];
-    $apiTypes = civicrm_api3('RelationshipType', 'Get', $relationshipTypeParams);
-    foreach ($apiTypes['values'] as $apiType) {
-      $relationshipTypes[] = $apiType['id'];
-    }
-    $this->importSettings['employee_type_id']['value'] = $relationshipTypes;
-    $params = [];
-    foreach ($this->importSettings as $settingName => $settingValue) {
-      $params[$settingValue['name']] = $settingValue['value'];
-    }
-    $this->saveImportSettings($params);
-  }
-
-  /**
    * Setting resource path
    *
    * @throws Exception
@@ -1268,6 +1237,24 @@ class CRM_Streetimport_Config {
     }
     catch (CiviCRM_API3_Exception $ex) {
       Civi::log()->error('Could not find activity contact record types in with OptionValue get in ' . __METHOD__);
+    }
+  }
+
+  /**
+   * Method to set the employee relationship type id
+   */
+  public function setEmployeeRelationshipTypeId() {
+    try {
+      $relationshipTypeId = (int) civicrm_api3('RelationshipType', 'getvalue', [
+        'return' => "id",
+        'name_a_b' => "Employee of",
+      ]);
+      if ($relationshipTypeId) {
+        $this->_employeeRelationshipTypeId = $relationshipTypeId;
+      }
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+      Civi::log()->error('Could not find relationship type with name_a_b Employee of in ' . __METHOD__);
     }
   }
 }

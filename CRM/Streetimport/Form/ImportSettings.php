@@ -88,12 +88,6 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
           $prefixSelect->setButtonAttributes('add', array('value' => $config->translate('Household')." >>"));
           $prefixSelect->setButtonAttributes('remove', array('value' => '<< '.$config->translate('Individual')));
           break;
-        case 'employee_type_id':
-          $employeeTypeSelect = $this->addElement('advmultiselect', $settingName, $config->translate($settingValues['label']), $relationshipTypeList,
-            array('size' => 5, 'style' => 'width:300px', 'class' => 'advmultselect'),TRUE);
-          $employeeTypeSelect->setButtonAttributes('add', array('value' => $config->translate('Employee')." >>"));
-          $employeeTypeSelect->setButtonAttributes('remove', array('value' => "<< ".$config->translate('Other')));
-          break;
         default:
           $this->add('text', $settingName, $config->translate($settingValues['label']), array('size' => 50), TRUE);
           break;
@@ -361,27 +355,28 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * @throws Exception
    */
   protected function getEmployeeList() {
-    $employeeList = array();
+    $employeeList = [];
     $extensionConfig = CRM_Streetimport_Config::singleton();
     $legalName = $extensionConfig->getAivlLegalName();
-    $relationshipTypes = $extensionConfig->getEmployeeRelationshipTypeIds();
-    $aivlParams = array(
+    $aivlParams = [
       'legal_name' => $legalName,
-      'return' => 'id');
+      'return' => 'id',
+    ];
     try {
-      $aivlContactId = civicrm_api3('Contact', 'Getvalue', $aivlParams);
-      foreach ($relationshipTypes as $relationshipTypeId) {
-        $relationshipParams = array(
-          'is_active' => 1,
-          'contact_id_b' => $aivlContactId,
-          'relationship_type_id' => $relationshipTypeId,
-          'options' => array('limit' => 9999));
-        try {
-          $foundRelationships = civicrm_api3('Relationship', 'Get', $relationshipParams);
-          foreach ($foundRelationships['values'] as $foundRelation) {
-            $employeeList[$foundRelation['contact_id_a']] = CRM_Streetimport_Utils::getContactName($foundRelation['contact_id_a']);
-          }
-        } catch (CiviCRM_API3_Exception $ex) {}
+      $aivlContactId = civicrm_api3('Contact', 'getvalue', $aivlParams);
+      $relationshipParams = [
+        'is_active' => 1,
+        'contact_id_b' => $aivlContactId,
+        'relationship_type_id' => CRM_Streetimport_Config::singleton()->getEmployeeRelationshipTypeId(),
+        'options' => ['limit' => 0],
+        ];
+      try {
+        $foundRelationships = civicrm_api3('Relationship', 'get', $relationshipParams);
+        foreach ($foundRelationships['values'] as $foundRelation) {
+          $employeeList[$foundRelation['contact_id_a']] = CRM_Streetimport_Utils::getContactName($foundRelation['contact_id_a']);
+        }
+      }
+      catch (CiviCRM_API3_Exception $ex) {
       }
       array_unique($employeeList);
       $employeeList[0] = ts('- select -');

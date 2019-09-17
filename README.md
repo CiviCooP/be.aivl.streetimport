@@ -47,11 +47,9 @@ The extension was created initially by Erik Hommel (CiviCooP) and Björn Endres 
 
 [3.19 Gender for unknown import] (#gender-for-unknown-import)
 
-[3.20 Relationship types for employees or other] (#relationship-types-for-otheremployee)
+[3.20 Date format used in CSV] (#date-format-of-csv)
 
-[3.21 Date format used in CSV] (#date-format-of-csv)
-
-[3.22 Group for deduping contacts] (#group-for-deduping-new-contacts)
+[3.21 Group for deduping contacts] (#group-for-deduping-new-contacts)
 
 ## BASIC FUNCTIONALITY ##
 AIVL use street recruitment to get new donors and SEPA Direct Debits (SDD). The actual street recruitment is done by a supplier, who follows up the recruitment with a welcoming call to the new donor within a week of recruitment.
@@ -162,9 +160,6 @@ In the CSV record the prefix will determine the gender. The value 'meneer' signi
 
 ### Gender for unknown import ###
 In the CSV record the prefix will determine the gender. If the value is not 'meneer' or 'mevrouw', this is the gender id that will be used when creating the contact in CiviCRM.
-
-### Relationship types for other/employee ###
-When specifying the employee dealing with the Import Errors or Folluw Up Calls, you do not get a select list of all contacts in your database but only 'your' employees. By default the 'Employee of' relationship type id will be used, but here you can specify more relationsships to be seen as employees.
 
 ### Date Format of CSV ###
 Details the date format that is used in the CSV import files. You can select an option from the list, other types are not allowed.
