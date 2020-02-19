@@ -18,5 +18,15 @@
         "gender": "1",
         "import_prefix": "Mevrouw",
         "civicrm_prefix": "1"
+    },
+    "5": {
+        "import_prefix": "mijnheer",
+        "civicrm_prefix": "2",
+        "gender": "2"
+    },
+    "6": {
+        "import_prefix": "Mijnheer",
+        "civicrm_prefix": "2",
+        "gender": "2"
     }
 }
