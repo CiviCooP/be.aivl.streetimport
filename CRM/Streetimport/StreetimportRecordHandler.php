@@ -127,22 +127,30 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
   protected function processDonor($record, $recruitingOrganisation) {
     $config = CRM_Streetimport_Config::singleton();
     $donor = $this->getDonorWithExternalId($record['DonorID'], $recruitingOrganisation['id'], $record);
+    $loadingType = (int) $record['Loading type'];
+    $allowedLoadingTypes = $config->getLoadingTypes();
     if (!empty($donor)) {
       // issue #82 if loading type is street recruitment, donor should be new so error if already known
-      $loadingType = (int) $record['Loading type'];
-      $allowedLoadingTypes = $config->getLoadingTypes();
       if ($allowedLoadingTypes[$loadingType] == "Street Recruitment") {
         $this->logger->logError($config->translate("Donor with ID")." ".$record['DonorID']." ".$config->translate("for recr. org.")
             ." ".$recruitingOrganisation['id']." ".$config->translate("already exists where new donor expected in StreetRecruitment.
             No act. or mandate created"), $record);
         return array();
-      } else {
+      }
+      else {
+        $this->logger->logDebug($config->translate("Donor [{$donor['id']}] identified."), $record);
         $donor = $this->updateDonor($record, $donor);
         $this->additionalPhone($record, $donor['contact_id']);
         $this->additionalEmail($record, $donor['contact_id']);
         $this->additionalAddress($record, $donor['contact_id']);
         $donor['mandate_contact_id'] = $donor['id'];
         return $donor;
+      }
+    }
+    else {
+      // warning if no donor found for welcome call just before creating one
+      if ($allowedLoadingTypes[$loadingType] == "Welcome Call") {
+        $this->logger->logWarning("Donor ".$record['DonorID']." ".$config->translate("should already exist. Create new contact in order to process record anyway."), $record);
       }
     }
     $contactData = $this->setDonorData($record);
@@ -1109,7 +1117,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $query = "SELECT act.activity_type_id
       FROM civicrm_activity_contact AS actcont
       JOIN civicrm_activity AS act ON actcont.activity_id = act.id
-      WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3 
+      WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3
       AND act.is_test = %4 AND act.is_deleted = %4 AND act.activity_type_id IN (%5, %6)
       ORDER BY act.created_date DESC LIMIT 1";
     }
@@ -1117,7 +1125,7 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
       $query = "SELECT act.activity_type_id
       FROM civicrm_activity_contact AS actcont
       JOIN civicrm_activity AS act ON actcont.activity_id = act.id
-      WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3 
+      WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3
       AND act.is_test = %4 AND act.is_deleted = %4 AND act.activity_type_id IN (%5, %6)
       ORDER BY act.activity_date_time DESC LIMIT 1";
     }

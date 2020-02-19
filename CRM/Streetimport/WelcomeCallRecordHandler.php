@@ -9,7 +9,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
 
   private $_replaceCausedByField = NULL;
 
-  /** 
+  /**
    * Check if the given handler implementation can process the record
    *
    * @param $record array of key=>value pairs
@@ -20,7 +20,7 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
     return isset($record['Loading type']) && $record['Loading type'] == $config->getWelcomeCallImportType();
   }
 
-  /** 
+  /**
    * process the given record
    *
    * @param array $record  an array of key=>value pairs
@@ -69,15 +69,9 @@ class CRM_Streetimport_WelcomeCallRecordHandler extends CRM_Streetimport_Streeti
         if (isset($this->_genericActivityTplInfo['company_name'])) {
           unset($this->_genericActivityTplInfo['company_name']);
         }
-      }      $donor = $this->processDonor($record, $recruiting_organisation);
-      if (empty($donor)) {
-        $this->logger->logError("Donor ".$record['DonorID']." ".$config->translate("should already exist. Created new contact in order to process record anyway."), $record);
-        $donor = $this->processDonor($record, $recruiting_organisation);
-        $donor['mandate_contact_id'] = $donor['id'];
-      } else {
-        $this->logger->logDebug($config->translate("Donor [{$donor['id']}] identified."), $record);
       }
-
+      $donor = $this->processDonor($record, $recruiting_organisation);
+      $donor['mandate_contact_id'] = $donor['id'];
       // STEP 4: issue 86 do not process welcome call if street import activity pattern does not allow one
       $errorMessage = $this->donorAlreadyHasIncomingActivity($donor, 'WelcomeCall');
       if ($errorMessage) {

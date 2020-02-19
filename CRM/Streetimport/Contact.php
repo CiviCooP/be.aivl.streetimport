@@ -18,16 +18,27 @@ class CRM_Streetimport_Contact {
    * Method to create contact from import data
    *
    * @param $contactData
+   * @param $importRecord
    * @return array|string with contact data or $ex->getMessage() when CiviCRM API Exception
    */
-  public function createFromImportData($contactData) {
+  public function createFromImportData($contactData, $importRecord) {
     if (isset($contactData['birth_date'])) {
       $contactData['birth_date'] = $this->formatBirthDate($contactData['birth_date']);
     }
-    // create via API
+    // create via API (issue 2823 use xcm if present
     try {
-      $result  = civicrm_api3('Contact', 'create', $contactData);
-      $contact = $result['values'][$result['id']];
+      if (CRM_Streetimport_Utils::isXcmInstalled()) {
+        $findParams = $contactData;
+        if (isset($importRecord['Email']) && !empty($importRecord['Email'])) {
+          $findParams['email'] = $importRecord['Email'];
+        }
+        $result = civicrm_api3('Contact', 'getorcreate', $findParams);
+        $contact = civicrm_api3('Contact', 'getsingle', ['id' => $result['id']]);
+      }
+      else {
+        $result  = civicrm_api3('Contact', 'create', $contactData);
+        $contact = $result['values'][$result['id']];
+      }
       return $contact;
     }
     catch (CiviCRM_API3_Exception $ex) {

@@ -151,10 +151,10 @@ abstract class CRM_Streetimport_RecordHandler {
       $this->logger->logError($config->translate($valid), $importRecord, $config->translate("Create Contact Error"), "Error");
       return NULL;
     }
-    $newContact = $contact->createFromImportData($contactData);
+    $newContact = $contact->createFromImportData($contactData, $importRecord);
     if (isset($newContact['id'])) {
       $this->addContactToGroup($newContact['id'], $config->getDedupeContactsGroupID(), $importRecord);
-      $this->logger->logDebug($config->translate("Contact created").": ".$newContact['id'], $importRecord);
+      $this->logger->logDebug($config->translate("Contact created/found").": ".$newContact['id'], $importRecord);
       return $newContact;
     } else {
       $this->logger->logError($newContact, $importRecord, $config->translate("Create Contact Error"), "Error");

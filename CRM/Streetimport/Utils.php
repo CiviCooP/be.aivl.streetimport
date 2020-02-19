@@ -28,6 +28,26 @@ class CRM_Streetimport_Utils {
   }
 
   /**
+   * Method to determine if the xcm extension is installed
+   *
+   * @return bool
+   */
+  public static function isXcmInstalled() {
+    try {
+      $count = civicrm_api3('Extension', 'getcount', [
+        'full_name' => "de.systopia.xcm",
+        'status' => "installed",
+      ]);
+      if ($count > 0) {
+        return TRUE;
+      }
+    }
+    catch (CiviCRM_API3_Exception $ex) {
+    }
+    return FALSE;
+  }
+
+  /**
    * Method to get custom group with name
    *
    * @param string $customGroupName
