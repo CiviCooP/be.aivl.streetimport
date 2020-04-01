@@ -243,13 +243,6 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
         'location_type_id' => $otherLocationTypeId,
         'phone' => CRM_Utils_Array::value('Mobile2', $record),
       ), $record);
-
-      // create email
-      $this->createEmail(array(
-        'contact_id' => $donor['id'],
-        'location_type_id' => $locationTypeId,
-        'email' => CRM_Utils_Array::value('Email', $record),
-      ), $record);
     }
     return $donor;
   }
