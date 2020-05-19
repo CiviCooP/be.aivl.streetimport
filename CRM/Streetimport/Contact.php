@@ -29,8 +29,11 @@ class CRM_Streetimport_Contact {
     try {
       if (CRM_Streetimport_Utils::isXcmInstalled()) {
         $findParams = $contactData;
-        if (isset($importRecord['Email']) && !empty($importRecord['Email'])) {
-          $findParams['email'] = $importRecord['Email'];
+        // email alleen gebruiken als het geen fake email adres is
+        if (!CRM_Streetimport_Utils::isFakeEmailAddress($importRecord['Email'])) {
+          if (isset($importRecord['Email']) && !empty($importRecord['Email'])) {
+            $findParams['email'] = $importRecord['Email'];
+          }
         }
         $result = civicrm_api3('Contact', 'getorcreate', $findParams);
         $contact = civicrm_api3('Contact', 'getsingle', ['id' => $result['id']]);
