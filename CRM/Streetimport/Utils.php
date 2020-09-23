@@ -537,8 +537,8 @@ class CRM_Streetimport_Utils {
       FROM civicrm_value_external_donor_id AS cd
       JOIN civicrm_contact AS cc ON cd.entity_id = cc.id WHERE cd.'.$donorCustomField['column_name'].' = %1 AND cd.'.$orgCustomField['column_name'].' = %2';
     $params = array(
-      1 => array($donorId, 'Positive'),
-      2 => array($recruitingOrganizationId, 'Positive'));
+      1 => array($donorId, 'String'),
+      2 => array($recruitingOrganizationId, 'String'));
 
     $dao = CRM_Core_DAO::executeQuery($query, $params);
     // more than 2 never allowed
