@@ -87,6 +87,46 @@ class CRM_Streetimport_Upgrader extends CRM_Streetimport_Upgrader_Base {
   }
 
   /**
+   * Upgrade 1010 - check if there are any recruiters with email addresses that belong to other contacts
+   * and if so, delete the email
+   *
+   * @link https://issues.civicoop.org/issues/7882
+   * @return bool
+   */
+  public function upgrade_1010() {
+    $this->ctx->log->info('Applying update 1010');
+    $this->fixWerverEmails();
+    return TRUE;
+  }
+
+  /**
+   * check if there are any recruiters with email addresses that belong to other contacts
+   * and if so, delete the email
+   *
+   * @link https://issues.civicoop.org/issues/7882
+   */
+  private function fixWerverEmails() {
+    // find all recruiters that have an email address
+    $query = "SELECT a.id, a.contact_id, a.email
+        FROM civicrm_email AS a JOIN civicrm_contact AS b on a.contact_id = b.id
+        WHERE b.contact_sub_type = %1";
+    $dao = CRM_Core_DAO::executeQuery($query, [1 => ["recruiter", "String"]]);
+    while ($dao->fetch()) {
+      // count how many times the same email address occurs on other contacts
+      $countQry = "SELECT COUNT(*) FROM civicrm_email WHERE email = %1 AND contact_id <> %2";
+      $count = CRM_Core_DAO::singleValueQuery($countQry, [
+        1 => [$dao->email, "String"],
+        2 => [$dao->contact_id, "Integer"],
+      ]);
+      // if email occurs on other contacts, delete from recruiter
+      if ($count > 0) {
+        $delete = "DELETE FROM civicrm_email WHERE id = %1";
+        CRM_Core_DAO::executeQuery($delete, [1 => [$dao->id, "Integer"]]);
+      }
+   }
+  }
+
+  /**
    * Method to update contact sub types for recruiting organizations with upgrade 1002
    */
   private function updateContactSubTypes() {

@@ -29,10 +29,13 @@ class CRM_Streetimport_Contact {
     try {
       if (CRM_Streetimport_Utils::isXcmInstalled()) {
         $findParams = $contactData;
-        // email alleen gebruiken als het geen fake email adres is
-        if (!CRM_Streetimport_Utils::isFakeEmailAddress($importRecord['Email'])) {
-          if (isset($importRecord['Email']) && !empty($importRecord['Email'])) {
-            $findParams['email'] = $importRecord['Email'];
+        // email alleen gebruiken als het geen fake email adres is en als we geen recruiter aan het maken zijn
+        $recruiterSubType = CRM_Streetimport_Config::singleton()->getRecruiterContactSubType();
+        if (!isset($contactData['contact_sub_type']) || $contactData['contact_sub_type'] != $recruiterSubType) {
+          if (!CRM_Streetimport_Utils::isFakeEmailAddress($importRecord['Email'])) {
+            if (isset($importRecord['Email']) && !empty($importRecord['Email'])) {
+              $findParams['email'] = $importRecord['Email'];
+            }
           }
         }
         $result = civicrm_api3('Contact', 'getorcreate', $findParams);
