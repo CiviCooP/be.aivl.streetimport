@@ -23,6 +23,12 @@
     <title>StreetImporter Settings</title>
   </item>
   <item>
+    <path>civicrm/admin/setting/streetimport/files</path>
+    <page_callback>CRM_Admin_Page_StreetimportFiles</page_callback>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <title>StreetImporter Files</title>
+  </item>
+  <item>
     <path>civicrm/streetimport/update</path>
     <page_callback>CRM_Streetimport_Update_Page_Update</page_callback>
     <access_arguments>access CiviCRM</access_arguments>

@@ -18,6 +18,11 @@
        class="button">
       <span>{ts domain="be.aivl.streetimport"}Import Settings{/ts}</span>
     </a>
+    <a href="{crmURL p="civicrm/admin/setting/streetimport/files"}"
+       title="{ts domain="be.aivl.streetimport"}Files processed by the StreetImporter bulk processing tool{/ts}"
+       class="button">
+      <span>{ts domain="be.aivl.streetimport"}Files{/ts}</span>
+    </a>
 
   </div>
 </div>
