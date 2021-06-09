@@ -7,7 +7,7 @@
     <access_arguments>administer CiviCRM</access_arguments>
     <desc>Settings for the "StreetImporter" bulk processing tool</desc>
     <access_arguments>administer CiviCRM</access_arguments>
-    <adminGroup>CiviContribute</adminGroup>
+    <adminGroup>System Settings</adminGroup>
     <icon>admin/import_export_map.png</icon>
   </item>
   <item>
