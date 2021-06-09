@@ -24,7 +24,14 @@
       {if $locations.$current.count > 0}
           <table>
             {foreach from=$locations.$current.files item='file'}
-                <tr><td>{$file.path}</td></tr>
+                <tr>
+                  <td>
+                    <a href="{$file.url}">
+                      <i class="crm-i {$file.icon}" aria-hidden="true"></i>
+                      {$file.name}
+                    </a>
+                  </td>
+                </tr>
             {/foreach}
           </table>
       {else}

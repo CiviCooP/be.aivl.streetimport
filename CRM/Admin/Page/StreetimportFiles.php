@@ -38,17 +38,14 @@ class CRM_Admin_Page_StreetimportFiles extends CRM_Core_Page {
       ],
     ];
     foreach ($locations as $type => &$location) {
-      $location['files'] = array_diff(
-        scandir(rtrim($location['path'], DIRECTORY_SEPARATOR)),
-        ['..', '.']
-      );
-      $location['count'] = count($location['files']);
-
+      $files = CRM_Utils_File::findFiles($location['path'], '*');
+      $location['count'] = count($files);
       if ($type == $current_location) {
-        foreach ($location['files'] as &$file) {
-          $file = [
-            'path' => $file,
-            // TODO: URL
+        foreach ($files as $file) {
+          $location['files'][] = [
+            'url' => CRM_Utils_System::url('civicrm/streetimport/file?file=' . base64_encode($file)),
+            'name' => basename($file),
+            'icon' =>CRM_Utils_File::getIconFromMimeType(mime_content_type($file)),
           ];
         }
       }

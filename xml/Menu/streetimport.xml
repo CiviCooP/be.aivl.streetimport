@@ -44,4 +44,9 @@
     <title>Upload</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/streetimport/file</path>
+    <page_callback>CRM_Streetimport_Page_File</page_callback>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
 </menu>
