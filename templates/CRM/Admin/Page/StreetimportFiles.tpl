@@ -21,8 +21,8 @@
     </ul>
 
     <div class="ui-tabs-panel ui-widget-content ui-corner-bottom">
-      {if $locations.$current.count > 0}
-          <table>
+      <table>
+        {if $locations.$current.count > 0}
             {foreach from=$locations.$current.files item='file'}
                 <tr>
                   <td>
@@ -33,10 +33,10 @@
                   </td>
                 </tr>
             {/foreach}
-          </table>
-      {else}
-          {ts domain="be.aivl.streetimport"}No files{/ts}
-      {/if}
+        {else}
+          <tr><td>{ts domain="be.aivl.streetimport"}No files{/ts}</td></tr>
+        {/if}
+      </table>
     </div>
 
   </div>
