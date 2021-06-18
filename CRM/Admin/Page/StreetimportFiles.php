@@ -41,11 +41,29 @@ class CRM_Admin_Page_StreetimportFiles extends CRM_Core_Page {
       $files = CRM_Utils_File::findFiles($location['path'], '*');
       $location['count'] = count($files);
       if ($type == $current_location) {
+        // Sort by file date DESC.
+        usort($files, function($a, $b) {
+          return filemtime($b) - filemtime($a);
+        });
         foreach ($files as $file) {
+          // Format file size.
+          $bytes = filesize($file);
+          $sz = 'BKMGTP';
+          $factor = floor((strlen($bytes) - 1) / 3);
+          $filesize = sprintf("%.2f", $bytes / pow(1024, $factor)) . ' ' . @$sz[$factor];
+
+          // Format URL (including encoded location and basename.
+          $url = CRM_Utils_System::url(
+            'civicrm/streetimport/file?file='
+            . base64_encode($type . ',' . basename($file))
+          );
+
           $location['files'][] = [
-            'url' => CRM_Utils_System::url('civicrm/streetimport/file?file=' . base64_encode($file)),
+            'url' => $url,
             'name' => basename($file),
             'icon' =>CRM_Utils_File::getIconFromMimeType(mime_content_type($file)),
+            'size' => $filesize,
+            'date' => CRM_Utils_Date::customFormatTs(filemtime($file)),
           ];
         }
       }
