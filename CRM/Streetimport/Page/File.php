@@ -19,7 +19,7 @@ class CRM_Streetimport_Page_File extends CRM_Core_Page {
     if (!$location = CRM_Streetimport_Config::singleton()->getFileLocation($file[0])) {
       throw new Exception(E::ts('Invalid Streetimport file location.'));
     }
-    $path = $location . DIRECTORY_SEPARATOR . $file[1];
+    $path = $location . DIRECTORY_SEPARATOR . basename($file[1]);
 
     $buffer = file_get_contents($path);
     CRM_Utils_System::download(
