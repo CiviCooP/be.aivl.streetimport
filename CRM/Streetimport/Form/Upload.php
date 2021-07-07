@@ -33,6 +33,8 @@ class CRM_Streetimport_Form_Upload extends CRM_Core_Form {
         ),
     ));
 
+    // TODO: Add checkbox for whether to immediately process the uploaded file.
+
     parent::buildQuickForm();
   }
 
@@ -49,11 +51,13 @@ class CRM_Streetimport_Form_Upload extends CRM_Core_Form {
         // then, move all files there
         for ($i = 0; $i < count($_FILES['import_files']['tmp_name']); $i++) {
           $tmp_name = $_FILES['import_files']['tmp_name'][$i];
+          // TODO: Move to configured import directory.
           $new_name = $tmp_dir . DIRECTORY_SEPARATOR . $_FILES['import_files']['name'][$i];
           copy($tmp_name, $new_name);
         }
 
         // finally: run the import
+        // TODO: Only process when requested (checkbox).
         $result = civicrm_api3('Streetimport', 'importcsvfile', array('source_folder' => $tmp_dir));
         CRM_Core_Session::setStatus($result['values'], E::ts('Done'));
 

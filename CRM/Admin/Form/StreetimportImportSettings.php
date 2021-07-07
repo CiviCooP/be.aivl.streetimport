@@ -7,15 +7,13 @@
 | http://www.systopia.de/                                      |
 +--------------------------------------------------------------*/
 
-require_once 'CRM/Core/Form.php';
-
 /**
  * Form controller class
  * Used to show and save import settings for be.aivl.streetimport
  *
  * @see http://wiki.civicrm.org/confluence/display/CRMDOC43/QuickForm+Reference
  */
-class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
+class CRM_Admin_Form_StreetimportImportSettings extends CRM_Admin_Form {
 
   /** a list of processed settings */
   protected $settings_list = array();
@@ -128,7 +126,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
     $userContext = CRM_Core_Session::USER_CONTEXT;
     if (empty($userContext) || $userContext == 'userContext') {
       $session = CRM_Core_Session::singleton();
-      $session->pushUserContext(CRM_Utils_System::url('civicrm', '', true));
+      $session->pushUserContext(CRM_Utils_System::url('civicrm/admin/setting/streetimport', '', true));
     }
     CRM_Core_Session::setStatus($config->translate('Settings saved'), 'Saved', 'success');
   }
@@ -137,7 +135,7 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
    * Overridden parent method to add validation rules
    */
   function addRules() {
-    $this->addFormRule(array('CRM_Streetimport_Form_ImportSettings', 'validateImportSettings'));
+    $this->addFormRule(array('CRM_Admin_Form_StreetimportImportSettings', 'validateImportSettings'));
   }
 
   /**
@@ -305,5 +303,10 @@ class CRM_Streetimport_Form_ImportSettings extends CRM_Core_Form {
       $encodings[$mb_encoding] = $mb_encoding;
     }
     return $encodings;
+  }
+
+  public function cancelAction() {
+    $session = CRM_Core_Session::singleton();
+    $session->replaceUserContext(CRM_Utils_System::url('civicrm/admin/setting/streetimport', array('reset' => 1)));
   }
 }

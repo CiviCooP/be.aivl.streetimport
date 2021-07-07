@@ -355,6 +355,30 @@ class CRM_Streetimport_Config {
   }
 
   /**
+   * Retrieves the file location of the given type.
+   *
+   * @param string $type
+   *   One of "import", "processing", "processed", and "failed".
+   *
+   * @return string | NULL
+   *   The file location path, or NULL when an invalid type was given.
+   */
+  public function getFileLocation($type) {
+    switch ($type) {
+      case 'import':
+        return $this->getImportFileLocation();
+      case 'processing':
+        return $this->getProcessingFileLocation();
+      case 'processed':
+        return $this->getProcessedFileLocation();
+      case 'failed':
+        return $this->getFailFileLocation();
+      default:
+        return NULL;
+    }
+  }
+
+  /**
    * Method to retrieve import file location
    *
    * @return string
