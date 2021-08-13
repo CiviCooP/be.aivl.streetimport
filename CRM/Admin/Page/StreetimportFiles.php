@@ -21,7 +21,7 @@ class CRM_Admin_Page_StreetimportFiles extends CRM_Core_Page {
 
     $locations = [
       'import' => [
-        'title' => E::ts('Import'),
+        'title' => E::ts('Imported'),
         'path' => $config->getImportFileLocation(),
       ],
       'processing' => [
