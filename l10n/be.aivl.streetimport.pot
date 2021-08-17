@@ -1,0 +1,168 @@
+#: ./CRM/Admin/Form/StreetimportDomainSettings.php ./CRM/Admin/Form/StreetimportImportSettings.php
+msgid "Save"
+msgstr ""
+
+#: ./CRM/Admin/Form/StreetimportDomainSettings.php ./CRM/Admin/Form/StreetimportImportSettings.php
+msgid "Cancel"
+msgstr ""
+
+#: ./CRM/Admin/Form/StreetimportImportSettings.php ./CRM/Streetimport/Utils.php
+msgid "- select -"
+msgstr ""
+
+#: ./CRM/Admin/Page/StreetimportFiles.php
+msgid "Imported"
+msgstr ""
+
+#: ./CRM/Admin/Page/StreetimportFiles.php
+msgid "Processing"
+msgstr ""
+
+#: ./CRM/Admin/Page/StreetimportFiles.php
+msgid "Processed"
+msgstr ""
+
+#: ./CRM/Admin/Page/StreetimportFiles.php ./CRM/Streetimport/Form/Upload.php
+msgid "Failed"
+msgstr ""
+
+#: ./CRM/Streetimport/Form/Upload.php
+msgid "SI - Import CSV Files"
+msgstr ""
+
+#: ./CRM/Streetimport/Form/Upload.php
+msgid "Select files to import"
+msgstr ""
+
+#: ./CRM/Streetimport/Form/Upload.php
+msgid "Import"
+msgstr ""
+
+#: ./CRM/Streetimport/Form/Upload.php
+msgid "Done"
+msgstr ""
+
+#: ./CRM/Streetimport/Form/Upload.php
+msgid "No import files selected"
+msgstr ""
+
+#: ./CRM/Streetimport/Form/Upload.php
+msgid "Error"
+msgstr ""
+
+#: ./CRM/Streetimport/Form/Upload.php
+msgid "Import/update failed: %1"
+msgstr ""
+
+#: ./CRM/Streetimport/Page/File.php
+msgid "Invalid Streetimport file location."
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Form/Base.php
+msgid "Update import"
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Form/Confirm.php
+msgid "back"
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Form/Confirm.php
+msgid "update"
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Form/Define.php
+msgid "Could not find a custom field with the name external_recruiter_id, contact your system administrator"
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Form/Define.php
+msgid "Campaign"
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Form/Define.php
+msgid "Recruiter"
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Form/Define.php
+msgid "cancel"
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Form/Define.php
+msgid "next"
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Form/Result.php
+msgid "OK"
+msgstr ""
+
+#: ./CRM/Streetimport/Update/Page/Update.php
+msgid "Update a street import"
+msgstr ""
+
+#: ./CRM/Streetimport/Upgrader/Base.php
+msgid "Upgrade %1 to revision %2"
+msgstr ""
+
+#: ./streetimport.php
+msgid "AIVL Import Settings"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportFiles.tpl
+msgid "File"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportFiles.tpl
+msgid "Size"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportFiles.tpl
+msgid "Last Changed"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportFiles.tpl
+msgid "No files"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportSettings.tpl
+msgid "DOMAIN for the StreetImporter bulk processing tool"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportSettings.tpl
+msgid "Domain Settings"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportSettings.tpl
+msgid "Settings for the StreetImporter bulk processing tool"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportSettings.tpl
+msgid "Import Settings"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportSettings.tpl
+msgid "Files processed by the StreetImporter bulk processing tool"
+msgstr ""
+
+#: ./templates/CRM/Admin/Page/StreetimportSettings.tpl
+msgid "Files"
+msgstr ""
+
+#: ./templates/CRM/Streetimport/Form/Upload.tpl
+msgid "Files uploaded here will immediately imported via the StreetImport framework."
+msgstr ""
+
+#: ./templates/CRM/Streetimport/Form/Upload.tpl
+msgid "Please make sure that they are not too big, otherwise they might hit a timeout half way through the import. Larger files should be processed by a scheduled job."
+msgstr ""
+
+#: ./templates/CRM/Streetimport/Page/LoadType.tpl
+msgid "Add Load Type"
+msgstr ""
+
+#: ./templates/CRM/Streetimport/Page/LoadType.tpl
+msgid "Load Type ID"
+msgstr ""
+
+#: ./templates/CRM/Streetimport/Page/LoadType.tpl
+msgid "Load Type"
+msgstr ""
+
