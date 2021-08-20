@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <extension key="be.aivl.streetimport" type="module">
   <file>streetimport</file>
-  <name>Custom Importer Base</name>
+  <name>Street Importer: Custom Importer Base</name>
   <description>Processes Custom Import Files</description>
   <license>AGPL-3.0</license>
   <maintainer>
@@ -14,13 +14,13 @@
     <url desc="Support">http://www.civicoop.org</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
-  <releaseDate>2021-08-20</releaseDate>
-  <version>2.0.alpha3</version>
-  <develStage>alpha</develStage>
+  <releaseDate></releaseDate>
+  <version>2.0.dev</version>
+  <develStage>dev</develStage>
   <compatibility>
     <ver>5</ver>
   </compatibility>
-  <comments>This is a base module, you need to implement your own handlers for your files. Have a look at the documentation.</comments>
+  <comments>This is a base module, you need to implement your own handlers for your files. Have a look at the documentation. The foundation of this project is the StreetImporter project of Amnesty International Vlaandern, developed by Erik Hommel and Björn Endres</comments>
   <civix>
     <namespace>CRM/Streetimport</namespace>
   </civix>
