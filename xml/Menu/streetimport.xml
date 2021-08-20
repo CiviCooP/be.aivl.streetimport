@@ -1,24 +1,32 @@
 <?xml version="1.0"?>
 <menu>
   <item>
-    <path>civicrm/admin/setting/streetimport_domain</path>
-    <page_callback>CRM_Streetimport_Form_DomainSettings</page_callback>
-    <title>StreetImporter Domain</title>
-    <access_arguments>administer CiviCRM</access_arguments>
-    <desc>DOMAIN for the "StreetImporter" bulk processing tool</desc>
-    <access_arguments>administer CiviCRM</access_arguments>
-    <adminGroup>CiviContribute</adminGroup>
-    <icon>admin/import_export_map.png</icon>
-  </item>
-  <item>
-    <path>civicrm/admin/setting/streetimport_settings</path>
-    <page_callback>CRM_Streetimport_Form_ImportSettings</page_callback>
+    <path>civicrm/admin/setting/streetimport</path>
+    <page_callback>CRM_Admin_Page_StreetimportSettings</page_callback>
     <title>StreetImporter Settings</title>
     <access_arguments>administer CiviCRM</access_arguments>
     <desc>Settings for the "StreetImporter" bulk processing tool</desc>
     <access_arguments>administer CiviCRM</access_arguments>
-    <adminGroup>CiviContribute</adminGroup>
+    <adminGroup>System Settings</adminGroup>
     <icon>admin/import_export_map.png</icon>
+  </item>
+  <item>
+    <path>civicrm/admin/setting/streetimport/domain</path>
+    <page_callback>CRM_Admin_Form_StreetimportDomainSettings</page_callback>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <title>StreetImporter Domain</title>
+  </item>
+  <item>
+    <path>civicrm/admin/setting/streetimport/import</path>
+    <page_callback>CRM_Admin_Form_StreetimportImportSettings</page_callback>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <title>StreetImporter Settings</title>
+  </item>
+  <item>
+    <path>civicrm/admin/setting/streetimport/files</path>
+    <page_callback>CRM_Admin_Page_StreetimportFiles</page_callback>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <title>StreetImporter Files</title>
   </item>
   <item>
     <path>civicrm/streetimport/update</path>
@@ -35,5 +43,10 @@
     <page_callback>CRM_Streetimport_Form_Upload</page_callback>
     <title>Upload</title>
     <access_arguments>access CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/streetimport/file</path>
+    <page_callback>CRM_Streetimport_Page_File</page_callback>
+    <access_arguments>administer CiviCRM</access_arguments>
   </item>
 </menu>
