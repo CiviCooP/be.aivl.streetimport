@@ -24,6 +24,7 @@
  */
 function civicrm_api3_streetimport_importcsvfile($params) {
   $config = CRM_Streetimport_Config::singleton();
+  $data_source_class = $config->getDataSourceClass();
   $result = new CRM_Streetimport_ImportResult();
 
   // first, get the parameters sorted out
@@ -121,7 +122,7 @@ function civicrm_api3_streetimport_importcsvfile($params) {
       $result->logMessage("Moved file '{$source_file}' to '{$processing_file}' for processing.", NULL, BE_AIVL_STREETIMPORT_ERROR);
 
       // STEP 2: process the file
-      $dataSource = new CRM_Streetimport_FileCsvDataSource($processing_file, $result, NULL, $encoding, $delimiter);
+      $dataSource = new $data_source_class($processing_file, $result, NULL, $encoding, $delimiter);
       CRM_Streetimport_RecordHandler::processDataSource($dataSource);
 
       // STEP 3: move file + log to completed folder
@@ -220,7 +221,7 @@ function civicrm_api3_streetimport_tm($params) {
 
         //TODO The mapping is currently defined at the data source level, but we want to use a different mapping per handler.
 
-        $dataSource = new CRM_Streetimport_FileCsvDataSource($source_file, $result);
+        $dataSource = new $data_source_class($source_file, $result);
 
         CRM_Streetimport_RecordHandler::processDataSource($dataSource);
         exit;
