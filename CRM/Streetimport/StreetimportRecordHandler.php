@@ -881,12 +881,31 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
   }
 
   /**
+   * Method to check if phone already exists for contact
+   *
+   * @param int $contactId
+   * @param $phone
+   * @return bool
+   */
+  public function existsPhone(int $contactId, $phone) {
+    $query = "SELECT COUNT(*) FROM civicrm_phone WHERE contact_id = %1 AND (phone_numeric = %2 || phone = %2)";
+    $phoneCount = CRM_Core_DAO::singleValueQuery($query, [
+      1 => [(int) $contactId, "Integer"],
+      2 => [$phone, "String"],
+    ]);
+    if ($phoneCount > 0) {
+      return TRUE;
+    }
+    return FALSE;
+  }
+
+  /**
    * Method to add additional phones to contact if they do not exist yet
    *
    * @param array $record
    * @param int $contactId
    */
-  public function additionalPhone($record, $contactId) {
+  public function additionalPhone(array $record, int $contactId) {
     $config = CRM_Streetimport_Config::singleton();
     $locationTypeId = $config->getLocationTypeId();
     $phoneTypeId = $config->getPhonePhoneTypeId();
@@ -894,53 +913,23 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $phoneArray = array(CRM_Utils_Array::value('Telephone1', $record), CRM_Utils_Array::value('Telephone2', $record));
     foreach ($phoneArray as $phone) {
       if (!empty($phone)) {
-        $params = array(
-          'contact_id' => $contactId,
-          'phone_numeric' => $phone);
-        try {
-          $phoneCount = civicrm_api3('Phone', 'Getcount', $params);
-          if ($phoneCount == 0) {
-            $this->createPhone(array(
-              'contact_id'       => $contactId,
-              'phone_type_id'    => $phoneTypeId,
-              'location_type_id' => $locationTypeId,
-              'phone'            => $phone
-            ), $record);
-          }
-        } catch (CiviCRM_API3_Exception $ex) {
-          $this->createPhone(array(
-            'contact_id' => $contactId,
-            'phone_type_id' => $phoneTypeId,
-            'location_type_id' => $locationTypeId,
-            'phone' => $phone
-          ), $record);
-        }
+        $this->createPhone(array(
+          'contact_id'       => $contactId,
+          'phone_type_id'    => $phoneTypeId,
+          'location_type_id' => $locationTypeId,
+          'phone'            => $phone
+        ), $record);
       }
     }
     $mobileArray = array($record['Mobile1'], $record['Mobile2']);
     foreach ($mobileArray as $mobile) {
       if (!empty($mobile)) {
-        $params = array(
-          'contact_id' => $contactId,
-          'phone_numeric' => $mobile);
-        try {
-          $phoneCount = civicrm_api3('Phone', 'Getcount', $params);
-          if ($phoneCount == 0) {
-            $this->createPhone(array(
-              'contact_id'       => $contactId,
-              'phone_type_id'    => $mobileTypeId,
-              'location_type_id' => $locationTypeId,
-              'phone'            => $mobile
-            ), $record);
-          }
-        } catch (CiviCRM_API3_Exception $ex) {
-          $this->createPhone(array(
-            'contact_id' => $contactId,
-            'phone_type_id' => $mobileTypeId,
-            'location_type_id' => $locationTypeId,
-            'phone' => $mobile
-          ), $record);
-        }
+        $this->createPhone(array(
+          'contact_id'       => $contactId,
+          'phone_type_id'    => $mobileTypeId,
+          'location_type_id' => $locationTypeId,
+          'phone'            => $mobile
+        ), $record);
       }
     }
   }
@@ -1104,52 +1093,59 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $config = CRM_Streetimport_Config::singleton();
     $streetRecruitmentTypeId = $config->getStreetRecruitmentActivityType('value');
     $welcomeCallTypeId = $config->getWelcomeCallActivityType('value');
-    // get the latest streetimport activity for the contact ordered by create_date if it exists or
-    // by activity_date_time for earlier versions
-    if (CRM_Core_DAO::checkFieldExists('civicrm_activity', 'created_date')) {
-      $query = "SELECT act.activity_type_id
-      FROM civicrm_activity_contact AS actcont
-      JOIN civicrm_activity AS act ON actcont.activity_id = act.id
-      WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3
-      AND act.is_test = %4 AND act.is_deleted = %4 AND act.activity_type_id IN (%5, %6)
-      ORDER BY act.created_date DESC LIMIT 1";
-    }
-    else {
-      $query = "SELECT act.activity_type_id
-      FROM civicrm_activity_contact AS actcont
-      JOIN civicrm_activity AS act ON actcont.activity_id = act.id
-      WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3
-      AND act.is_test = %4 AND act.is_deleted = %4 AND act.activity_type_id IN (%5, %6)
-      ORDER BY act.activity_date_time DESC LIMIT 1";
-    }
-    $params = array(
-      1 => array(3, 'Integer'),
-      2 => array($donor['id'], 'Integer'),
-      3 => array(1, 'Integer'),
-      4 => array(0, 'Integer'),
-      5 => array($streetRecruitmentTypeId, 'Integer'),
-      6 => array($welcomeCallTypeId, 'Integer'),
-    );
-    $latestActivityTypeId = CRM_Core_DAO::singleValueQuery($query, $params);
-    // check depending on incoming type
-    switch ($type) {
-      // if street recruitment, either no activity or latest is welcome call then it is fine else problem
-      case 'StreetRecruitment':
-        if ($latestActivityTypeId && $latestActivityTypeId == $welcomeCallTypeId) {
-          return 'Donor already has a street recruitment as its latest street import activity';
-        }
-        break;
-        // if welcome call, latest activity has to be streetrecruitment else problem
-      case 'WelcomeCall':
-        if (!$latestActivityTypeId) {
-          return 'Donor has no street recruitment when trying to add a welcome call';
-        }
-        else {
-          if ($latestActivityTypeId == $welcomeCallTypeId) {
-            return 'Donor already has a welcome call as its latest street import activity';
+    // only check if  the donor has an active mandate, if not the donor can be recruited for a second time! (link https://issues.civicoop.org/issues/8658)
+    $contact = new CRM_Streetimport_Contact();
+    if ($contact->hasActiveRecurringMandate((int) $donor['id'])) {
+      // get the latest streetimport activity for the contact ordered by create_date if it exists or
+      // by activity_date_time for earlier versions
+      if (CRM_Core_BAO_SchemaHandler::checkIfFieldExists('civicrm_activity', 'created_date')) {
+        $query = "SELECT act.activity_type_id
+          FROM civicrm_activity_contact AS actcont
+          JOIN civicrm_activity AS act ON actcont.activity_id = act.id
+          WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3
+          AND act.is_test = %4 AND act.is_deleted = %4 AND act.activity_type_id IN (%5, %6)
+          ORDER BY act.created_date DESC LIMIT 1";
+      }
+      else {
+        $query = "SELECT act.activity_type_id
+          FROM civicrm_activity_contact AS actcont
+          JOIN civicrm_activity AS act ON actcont.activity_id = act.id
+          WHERE actcont.record_type_id = %1 AND actcont.contact_id = %2 AND act.is_current_revision = %3
+          AND act.is_test = %4 AND act.is_deleted = %4 AND act.activity_type_id IN (%5, %6)
+          ORDER BY act.activity_date_time DESC LIMIT 1";
+      }
+      $params = array(
+        1 => array(3, 'Integer'),
+        2 => array($donor['id'], 'Integer'),
+        3 => array(1, 'Integer'),
+        4 => array(0, 'Integer'),
+        5 => array($streetRecruitmentTypeId, 'Integer'),
+        6 => array($welcomeCallTypeId, 'Integer'),
+      );
+      $latestActivityTypeId = CRM_Core_DAO::singleValueQuery($query, $params);
+      // check depending on incoming type
+      switch ($type) {
+        // if street recruitment, either no activity or latest is welcome call then it is fine else problem
+        case 'StreetRecruitment':
+          if ($latestActivityTypeId && $latestActivityTypeId == $welcomeCallTypeId) {
+            return 'Donor already has a welcome call as its latest street import activity AND has an active mandate, please check manually.';
           }
-        }
-        break;
+          if ($latestActivityTypeId && $latestActivityTypeId == $streetRecruitmentTypeId) {
+            return 'Donor already has a street recruitment as its latest street import activity AND has an active mandate, please check manually.';
+          }
+          break;
+        // if welcome call, latest activity has to be streetrecruitment else problem
+        case 'WelcomeCall':
+          if (!$latestActivityTypeId) {
+            return 'Donor has no street recruitment when trying to add a welcome call AND donor already has an active mandate, please check manually.';
+          }
+          else {
+            if ($latestActivityTypeId == $welcomeCallTypeId) {
+              return 'Donor already has a welcome call as its latest street import activity AND donor already has an active mandate, please check manually.';
+            }
+          }
+          break;
+      }
     }
     return NULL;
   }

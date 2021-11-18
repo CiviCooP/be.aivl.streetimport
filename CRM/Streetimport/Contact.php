@@ -243,4 +243,27 @@ class CRM_Streetimport_Contact {
     }
     return ['valid' => TRUE];
   }
+
+  /**
+   * Method to determine if the contact has an active recurring mandate
+   *
+   * @param int $contactId
+   * @return bool
+   */
+  public function hasActiveRecurringMandate(int $contactId) {
+    if (!empty($contactId)) {
+      $query = "SELECT COUNT(*) FROM civicrm_sdd_mandate WHERE entity_table = %1 AND contact_id = %2 AND status IN (%3, %4, %5)";
+      $mandates = CRM_Core_DAO::singleValueQuery($query, [
+        1 => ["civicrm_contribution_recur", "String"],
+        2 => [$contactId, "Integer"],
+        3 => ["FRST", "String"],
+        4 => ["RCUR", "String"],
+        5 => ["SENT", "String"],
+      ]);
+      if ($mandates > 0) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
 }

@@ -258,7 +258,12 @@ abstract class CRM_Streetimport_RecordHandler {
     if (empty($data['phone'])) {
       return NULL;
     }
-
+    if (!isset($data['contact_id']) || empty($data['contact_id'])) {
+      return NULL;
+    }
+    if ($this->existsPhone((int) $data['contact_id'], $data['phone'])) {
+      return NULL;
+    }
     // create via API
     try {
       $phone = civicrm_api3('Phone', 'create', $data);
