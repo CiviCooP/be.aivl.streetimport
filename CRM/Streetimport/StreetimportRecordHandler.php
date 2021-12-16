@@ -130,22 +130,13 @@ abstract class CRM_Streetimport_StreetimportRecordHandler extends CRM_Streetimpo
     $loadingType = (int) $record['Loading type'];
     $allowedLoadingTypes = $config->getLoadingTypes();
     if (!empty($donor)) {
-      // issue #82 if loading type is street recruitment, donor should be new so error if already known
-      if ($allowedLoadingTypes[$loadingType] == "Street Recruitment") {
-        $this->logger->logError($config->translate("Donor with ID")." ".$record['DonorID']." ".$config->translate("for recr. org.")
-            ." ".$recruitingOrganisation['id']." ".$config->translate("already exists where new donor expected in StreetRecruitment.
-            No act. or mandate created"), $record);
-        return array();
-      }
-      else {
-        $this->logger->logDebug($config->translate("Donor [{$donor['id']}] identified."), $record);
-        $donor = $this->updateDonor($record, $donor);
-        $this->additionalPhone($record, $donor['contact_id']);
-        $this->additionalEmail($record, $donor['contact_id']);
-        $this->additionalAddress($record, $donor['contact_id']);
-        $donor['mandate_contact_id'] = $donor['id'];
-        return $donor;
-      }
+      $this->logger->logDebug($config->translate("Donor [{$donor['id']}] identified."), $record);
+      $donor = $this->updateDonor($record, $donor);
+      $this->additionalPhone($record, $donor['contact_id']);
+      $this->additionalEmail($record, $donor['contact_id']);
+      $this->additionalAddress($record, $donor['contact_id']);
+      $donor['mandate_contact_id'] = $donor['id'];
+      return $donor;
     }
     else {
       // warning if no donor found for welcome call just before creating one
