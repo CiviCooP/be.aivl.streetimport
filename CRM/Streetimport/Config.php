@@ -212,7 +212,7 @@ class CRM_Streetimport_Config {
    */
   public function getDataSourceClass($logger) {
     // this can be overwritten to provide a customized DataSourceClass
-    return CRM_Streetimport_FileCsvDataSource;
+    return 'CRM_Streetimport_FileCsvDataSource';
   }
 
   /**
@@ -339,7 +339,7 @@ class CRM_Streetimport_Config {
    */
   public function getImportErrorActivityType() {
     if ($this->error_activity_id == NULL) {
-      $this->error_activity_id = CRM_Core_OptionGroup::getValue('activity_type', 'streetimport_error', 'name');
+      $this->error_activity_id = CRM_Streetimport_OptionGroup::getValue('activity_type', 'streetimport_error', 'name');
       if (empty($this->error_activity_id)) {
         // couldn't be found => create
         $activity = civicrm_api3('OptionValue', 'create', array(
