@@ -3,7 +3,7 @@
 /**
  * Collection of upgrade steps.
  */
-class CRM_Streetimport_Upgrader extends CRM_Streetimport_Upgrader_Base
+class CRM_Streetimport_Upgrader extends CRM_Extension_Upgrader_Base
 {
   /**
    * Upgrade 1001 - remove recruitment type from custom fields and tables (issue #29) with api

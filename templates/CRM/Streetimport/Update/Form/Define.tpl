@@ -35,7 +35,6 @@
     <tr>
       <td class="label">{$form.recruiter_id.label}</td>
       <td class="view-value">{$form.recruiter_id.html}</td>
-      </td>
     </tr>
   </table>
 
