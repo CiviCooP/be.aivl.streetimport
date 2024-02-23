@@ -12,17 +12,19 @@ class CRM_Streetimport_Updater{
     if(!in_array($entity, $entities['values'])){
       throw new Exception("'$entity' is not an entity registered in the API.");
     }
-    // $result = civicrm_api3($entity, 'getactions');
-    // exit;
-    // $availableActions=$result['values'];
-    // $necessaryActions = array('get', 'create', 'getfields');
-    // $missingActions = array_diff($necessaryActions, $availableActions);
-    if(0 && $missingActions){
-      $missingActionsString = implode($missingActions, ',');
-      throw new Exception("Cannot update entity '$entity' as it does not have the implement the following API actions: {$missingActionsString}");
-    } else {
-      $this->entity = $entity;
-    }
+// none of the following makes sense to me:
+//    // $result = civicrm_api3($entity, 'getactions');
+//    // exit;
+//    // $availableActions=$result['values'];
+//    // $necessaryActions = array('get', 'create', 'getfields');
+//    // $missingActions = array_diff($necessaryActions, $availableActions);
+//    if(0 && $missingActions){
+//      $missingActionsString = implode($missingActions, ',');
+//      throw new Exception("Cannot update entity '$entity' as it does not have the implement the following API actions: {$missingActionsString}");
+//    } else {
+//      $this->entity = $entity;
+//    }
+    $this->entity = $entity;
     if($type){
       $this->setType($type);
     }else{
@@ -111,7 +113,7 @@ class CRM_Streetimport_Updater{
       $customGroups = $customGroups + $result['values'];
     }
 
-
+    $customGroupsToAdd = [];
     foreach($customGroups as $customGroup){
       // If this is extending a specific type of entity
       if(isset($customGroup['extends_entity_column_value'])){

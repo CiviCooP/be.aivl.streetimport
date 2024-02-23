@@ -723,6 +723,7 @@ class CRM_Streetimport_Utils {
     if($hasHeaders){
       $headers = fgetcsv($pointer, 0, $delimiter);
     }
+    $records = [];
     while ($record = fgetcsv($pointer, 0, $delimiter)){
       $records[] = $hasHeaders ? array_combine($headers, $record) : $record;
     }

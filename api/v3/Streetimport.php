@@ -221,6 +221,7 @@ function civicrm_api3_streetimport_tm($params) {
 
         //TODO The mapping is currently defined at the data source level, but we want to use a different mapping per handler.
 
+        $data_source_class = $config->getDataSourceClass();
         $dataSource = new $data_source_class($source_file, $result);
 
         CRM_Streetimport_RecordHandler::processDataSource($dataSource);

@@ -225,13 +225,16 @@ class CRM_Admin_Form_StreetimportImportSettings extends CRM_Admin_Form {
       'options' => array('limit' => 0));
     try {
       $activeGroups = civicrm_api3('Group', 'Get', $params);
-    } catch (CiviCRM_API3_Exception $ex) {}
-    foreach ($activeGroups['values'] as $activeGroup) {
-      $groupList[$activeGroup['id']] = $activeGroup['title'];
+      foreach ($activeGroups['values'] as $activeGroup) {
+        $groupList[$activeGroup['id']] = $activeGroup['title'];
+      }
+      $groupList[0] = ts('- select -');
+      asort($groupList);
+      return $groupList;
+    } catch (CiviCRM_API3_Exception $ex) {
+      Civi::log()->error("getGroupList failed: " . $ex->getMessage());
+      return [];
     }
-    $groupList[0] = ts('- select -');
-    asort($groupList);
-    return $groupList;
   }
 
   /**
