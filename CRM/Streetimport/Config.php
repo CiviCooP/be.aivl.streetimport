@@ -632,7 +632,7 @@ class CRM_Streetimport_Config {
       if ($extension['status'] == 'installed') {
         $potential_base = $extension['path'] . DIRECTORY_SEPARATOR . 'CRM/Streetimport';
         if (is_dir($potential_base)) {
-          // CRM_Core_Error::debug_log_message("Checking $potential_base");
+          // Civi::log()->warning("Checking $potential_base");
           foreach (scandir($potential_base) as $domain_candidate) {
             // investiate the domain candidate
             if ($domain_candidate == '.' || $domain_candidate == '..') {
@@ -641,7 +641,7 @@ class CRM_Streetimport_Config {
 
             try {
               $domain_config_file_candidate = $potential_base . DIRECTORY_SEPARATOR . $domain_candidate . DIRECTORY_SEPARATOR . 'Config.php';
-              // CRM_Core_Error::debug_log_message("Testing $domain_config_file_candidate");
+              // Civi::log()->warning("Testing $domain_config_file_candidate");
               if (file_exists($domain_config_file_candidate)) {
                 // define the class
                 $domain_config_class_candidate = "CRM_Streetimport_{$domain_candidate}_Config";
@@ -652,7 +652,7 @@ class CRM_Streetimport_Config {
                 }
 
                 // try to instantiate the class
-                // CRM_Core_Error::debug_log_message("class $domain_config_class_candidate");
+                // Civi::log()->warning("class $domain_config_class_candidate");
                 if (   class_exists($domain_config_class_candidate)
                     && is_subclass_of($domain_config_class_candidate, 'CRM_Streetimport_Config')) {
 
@@ -662,7 +662,7 @@ class CRM_Streetimport_Config {
               }
             } catch (Exception $ex) {
               // TODO: error handling or just ignore?
-              CRM_Core_Error::debug_log_message("Exception: " . $ex->getMessage());
+              Civi::log()->warning("Exception: " . $ex->getMessage());
             }
           }
         }
