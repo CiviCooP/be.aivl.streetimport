@@ -27,6 +27,7 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
 
     public function postProcess()
     {
+        $contributionRecurIds = [];
         $recruiterId = $this->controller->exportValue('Define', 'recruiter_id');
         $campaignId = $this->controller->exportValue('Define', 'campaign_id');
 
@@ -44,6 +45,8 @@ class CRM_Streetimport_Update_Form_Confirm extends CRM_Streetimport_Update_Form_
 
         $activityTypeOptionGroupId = civicrm_api3('OptionGroup', 'getsingle', array('name' => 'Activity_Type'))['id'];
         $activityTypeId = civicrm_api3('OptionValue', 'getsingle', array('option_group_id' => $activityTypeOptionGroupId, 'name' => 'streetRecruitment'))['value'];
+        $activityIds = [];
+        $activityContactIds = [];
 
         foreach ($contacts as $Donor_id => $contact) {
             if($contact['id']){

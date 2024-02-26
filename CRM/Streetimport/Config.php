@@ -193,6 +193,7 @@ class CRM_Streetimport_Config {
         return $this->setSetting($setting_name, $value, $sub_settings);
       }
     }
+    return null;
   }
 
   /**

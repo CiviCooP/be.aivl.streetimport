@@ -33,6 +33,7 @@ class CRM_Streetimport_ProcessedBatch
     public function getContacts()
     {
         if (!$this->contacts) {
+            $contactIds = [];
             foreach ($this->records as $record) {
                 $contactIds[$record['Donor_id']] = CRM_Streetimport_Utils::getContactIdFromDonorId($record['Donor_id'], $record['Recruiting_organization_id']);
             }

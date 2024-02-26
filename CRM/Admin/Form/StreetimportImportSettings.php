@@ -244,10 +244,11 @@ class CRM_Admin_Form_StreetimportImportSettings extends CRM_Admin_Form {
    * @access protected
    */
   protected function getLocationTypeList() {
-    $locationTypeList = array();
+    $locationTypeList = [];
+    $activeLocationTypes = [];
     $params = array(
       'is_active' => 1,
-      'options' => array('limit' => 99999));
+      'options' => array('limit' => 0));
     try {
       $activeLocationTypes = civicrm_api3('LocationType', 'Get', $params);
     } catch (CiviCRM_API3_Exception $ex) {}
