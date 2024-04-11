@@ -22,7 +22,7 @@ class CRM_Streetimport_Utils {
     try {
       $customField = civicrm_api3('CustomField', 'Getsingle', array('name' => $customFieldName, 'custom_group_id' => $customGroupId));
       return $customField;
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       return FALSE;
     }
   }
@@ -39,7 +39,7 @@ class CRM_Streetimport_Utils {
     try {
       $customGroup = civicrm_api3('CustomGroup', 'Getsingle', array('name' => $customGroupName));
       return $customGroup;
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       return FALSE;
     }
   }
@@ -61,7 +61,7 @@ class CRM_Streetimport_Utils {
     try {
       $activityType = civicrm_api3('OptionValue', 'Getsingle', $params);
       return $activityType;
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       return FALSE;
     }
   }
@@ -83,7 +83,7 @@ class CRM_Streetimport_Utils {
     try {
       $activityStatus = civicrm_api3('OptionValue', 'Getsingle', $params);
       return $activityStatus['value'];
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       return FALSE;
     }
   }
@@ -100,7 +100,7 @@ class CRM_Streetimport_Utils {
     try {
       $contactSubType = civicrm_api3('ContactType', 'Getsingle', array('name' => $contactSubTypeName));
       return $contactSubType;
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       return FALSE;
     }
   }
@@ -117,7 +117,7 @@ class CRM_Streetimport_Utils {
     try {
       $relationshipType = civicrm_api3('RelationshipType', 'Getsingle', array('name_a_b' => $nameAB));
       return $relationshipType;
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       return FALSE;
     }
   }
@@ -134,7 +134,7 @@ class CRM_Streetimport_Utils {
     try {
       $group = civicrm_api3('Group', 'Getsingle', array('name' => $groupName));
       return $group;
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       return FALSE;
     }
   }
@@ -154,7 +154,7 @@ class CRM_Streetimport_Utils {
     try {
       $optionGroup = civicrm_api3('OptionGroup', 'Getsingle', $params);
       return $optionGroup;
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       return array();
     }
   }
@@ -178,7 +178,7 @@ class CRM_Streetimport_Utils {
       try {
         $optionGroup = civicrm_api3('OptionGroup', 'Create', $params);
         $optionGroupData = $optionGroup['values'];
-      } catch (CiviCRM_API3_Exception $ex) {
+      } catch (CRM_Core_Exception $ex) {
         $config = CRM_Streetimport_Config::singleton();
         throw new Exception($config->translate('Could not create option_group type with name').' '
           .$params['name'].', '.$config->translate('error from API OptionGroup Create').': ' . $ex->getMessage());
@@ -223,7 +223,7 @@ class CRM_Streetimport_Utils {
         }
 
         $groupData = $group['values'];
-      } catch (CiviCRM_API3_Exception $ex) {
+      } catch (CRM_Core_Exception $ex) {
         $config = CRM_Streetimport_Config::singleton();
         throw new Exception($config->translate('Could not create group with name').' '.$params['name']
           .', '.$config->translate('error from API Group Create').': ' . $ex->getMessage());
@@ -261,7 +261,7 @@ class CRM_Streetimport_Utils {
       try {
         $activityType = civicrm_api3('OptionValue', 'Create', $params);
         $activityTypeData = $activityType['values'][$activityType['id']];
-      } catch (CiviCRM_API3_Exception $ex) {
+      } catch (CRM_Core_Exception $ex) {
         $config = CRM_Streetimport_Config::singleton();
         throw new Exception($config->translate('Could not create activity type with name').' '.$params['name']
           .', '.$config->translate('error from API OptionValue Create').': '.$ex->getMessage());
@@ -292,7 +292,7 @@ class CRM_Streetimport_Utils {
     if (self::getContactSubTypeWithName($params['name']) == FALSE) {
       try {
         $contactSubType = civicrm_api3('ContactType', 'Create', $params);
-      } catch (CiviCRM_API3_Exception $ex) {
+      } catch (CRM_Core_Exception $ex) {
         $config = CRM_Streetimport_Config::singleton();
         throw new Exception($config->translate('Could not create contact sub type with name').' '.$params['name']
           .', '.$config->translate('error from API ContactType Create').': '.$ex->getMessage());
@@ -326,7 +326,7 @@ class CRM_Streetimport_Utils {
     if (self::getRelationshipTypeWithName($params['name_a_b']) == FALSE) {
       try {
         $relationshipType = civicrm_api3('RelationshipType', 'Create', $params);
-      } catch (CiviCRM_API3_Exception $ex) {
+      } catch (CRM_Core_Exception $ex) {
         $config = CRM_Streetimport_Config::singleton();
         throw new Exception($config->translate('Could not create relationship type with name').' '.$params['name_a_b']
           .', '.$config->translate('error from API RelationshipType Create').': '.$ex->getMessage());
@@ -357,7 +357,7 @@ class CRM_Streetimport_Utils {
     if (self::getCustomGroupWithName($params['name']) == FALSE) {
       try {
         $customGroup = civicrm_api3('CustomGroup', 'Create', $params);
-      } catch (CiviCRM_API3_Exception $ex) {
+      } catch (CRM_Core_Exception $ex) {
         $config = CRM_Streetimport_Config::singleton();
         throw new Exception($config->translate('Could not create custom group with name').' '.$params['name']
           .' '.$config->translate('to extend').' '.$params['extends'].', '.$config->translate('error from API CustomGroup Create')
@@ -389,7 +389,7 @@ class CRM_Streetimport_Utils {
     if (self::getCustomFieldWithNameCustomGroupId($params['name'], $params['custom_group_id']) == FALSE) {
       try {
         $customField = civicrm_api3('CustomField', 'Create', $params);
-      } catch (CiviCRM_API3_Exception $ex) {
+      } catch (CRM_Core_Exception $ex) {
         $config = CRM_Streetimport_Config::singleton();
         throw new Exception($config->translate('Could not create custom field with name').' '.$params['name']
           .' '.$config->translate('in custom group').' '.$params['custom_group_id']
@@ -488,7 +488,7 @@ class CRM_Streetimport_Utils {
       'return' => 'display_name');
     try {
       $contactName = civicrm_api3('Contact', 'Getvalue', $params);
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       $contactName = '';
     }
     return $contactName;
@@ -601,7 +601,7 @@ class CRM_Streetimport_Utils {
       }
       $valueList[0] = ts('- select -');
       asort($valueList);
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       $config = CRM_Streetimport_Config::singleton();
       throw new Exception($config->translate('Could not find an option group with name').' '.$optionGroupName
         .' ,'.$config->translate('contact your system administrator').' .'

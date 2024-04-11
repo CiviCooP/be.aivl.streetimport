@@ -231,7 +231,7 @@ class CRM_Admin_Form_StreetimportImportSettings extends CRM_Admin_Form {
       $groupList[0] = ts('- select -');
       asort($groupList);
       return $groupList;
-    } catch (CiviCRM_API3_Exception $ex) {
+    } catch (CRM_Core_Exception $ex) {
       Civi::log()->error("getGroupList failed: " . $ex->getMessage());
       return [];
     }
@@ -251,7 +251,7 @@ class CRM_Admin_Form_StreetimportImportSettings extends CRM_Admin_Form {
       'options' => array('limit' => 0));
     try {
       $activeLocationTypes = civicrm_api3('LocationType', 'Get', $params);
-    } catch (CiviCRM_API3_Exception $ex) {}
+    } catch (CRM_Core_Exception $ex) {}
     foreach ($activeLocationTypes['values'] as $activeLocationType) {
       $locationTypeList[$activeLocationType['id']] = $activeLocationType['display_name'];
     }

@@ -42,7 +42,7 @@ class CRM_Streetimport_Update_Form_Define extends CRM_Streetimport_Update_Form_B
         // retrieve external recruiter id custom field id
         try {
           $externalRecruiterIdCustomId = civicrm_api3('CustomField', 'getvalue', array('name' => 'external_recruiter_id', 'return' => 'id'));
-        } catch (CiviCRM_API3_Exception $ex) {
+        } catch (CRM_Core_Exception $ex) {
           throw new Exception(ts('Could not find a custom field with the name external_recruiter_id, contact your system administrator'));
         }
         $fieldName = 'custom_'.$externalRecruiterIdCustomId;
