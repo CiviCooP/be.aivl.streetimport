@@ -212,7 +212,7 @@ class CRM_Streetimport_Config {
    */
   public function getDataSourceClass($logger) {
     // this can be overwritten to provide a customized DataSourceClass
-    return CRM_Streetimport_FileCsvDataSource;
+    return 'CRM_Streetimport_FileCsvDataSource';
   }
 
   /**
