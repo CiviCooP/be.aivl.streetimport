@@ -208,11 +208,11 @@ class CRM_Streetimport_Config {
   /**
    * get the default the DataSourceClass to work with
    *
-   * @return a subclass of CRM_Streetimport_DataSource
+   * @return string - Class name of DataSource handler
    */
-  public function getDataSourceClass($logger) {
+  public function getDataSourceClass() {
     // this can be overwritten to provide a customized DataSourceClass
-    return CRM_Streetimport_FileCsvDataSource;
+    return CRM_Streetimport_FileCsvDataSource::class;
   }
 
   /**

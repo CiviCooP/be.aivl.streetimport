@@ -768,7 +768,7 @@ class CRM_Streetimport_Utils {
    *
    * @return activity BAO object
    */
-  public function createActivity($data, $record, $assigned_contact_ids=NULL) {
+  public static function createActivity($data, $record, $assigned_contact_ids=NULL) {
     $activity = CRM_Activity_BAO_Activity::create($data);
     if (empty($activity->id)) {
       return NULL;
