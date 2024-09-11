@@ -65,9 +65,22 @@ class CRM_Streetimport_Upgrader_Base {
     return call_user_func_array(array($instance, $method), $args);
   }
 
-  public function __construct($extensionName, $extensionDir) {
-    $this->extensionName = $extensionName;
-    $this->extensionDir = $extensionDir;
+  public function __construct($extensionName = '', $extensionDir = '') {
+    $this->init($extensionName, $extensionDir);
+  }
+
+  public function init($extensionName = '', $extensionDir = '') {
+    $this->extensionName = $extensionName ?: 'be.aivl.streetimport';
+    $this->extensionDir = $extensionDir ?: realpath(__DIR__ .'/../../../');
+  }
+
+  /**
+   * Call the updater event methods - copied from CRM_Extension_Upgrader_Base
+   * {@inheritDoc}
+   */
+  public function notify(string $event, array $params = []) {
+    $cb = [$this, 'on' . ucfirst($event)];
+    return is_callable($cb) ? call_user_func_array($cb, $params) : NULL;
   }
 
   // ******** Task helpers ********
