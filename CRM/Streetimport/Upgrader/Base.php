@@ -5,6 +5,7 @@
 /**
  * Base class which provides helpers to execute upgrade logic
  */
+//class CRM_Streetimport_Upgrader_Base extends CRM_Extension_Upgrader_Base {
 class CRM_Streetimport_Upgrader_Base {
 
   /**
@@ -67,6 +68,8 @@ class CRM_Streetimport_Upgrader_Base {
 
   public function __construct($extensionName = '', $extensionDir = '') {
     $this->init($extensionName, $extensionDir);
+//    $this->extensionName = $extensionName ?: 'be.aivl.streetimport';
+//    $this->extensionDir = $extensionDir ?: realpath(__DIR__ .'/../../../');
   }
 
   public function init($extensionName = '', $extensionDir = '') {
@@ -75,7 +78,7 @@ class CRM_Streetimport_Upgrader_Base {
   }
 
   /**
-   * Call the updater event methods - copied from CRM_Extension_Upgrader_Base
+   * notify - copied from CRM_Extension_Upgrader_Base
    * {@inheritDoc}
    */
   public function notify(string $event, array $params = []) {
